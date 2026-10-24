@@ -91,15 +91,15 @@ class PublicRegistrationController extends Controller
                 'data' => ['reference' => $registration->registration_code, 'payment_status' => 'pending'],
             ], 504);
         } catch (RuntimeException $exception) {
-            $payment->update(['status' => 'failed']);
-            $registration->update(['payment_status' => 'failed']);
+            // A rejected, malformed, or intermediary response does not prove that
+            // EasyKash did not create a voucher. Keep the payment reconcilable by callback.
             Log::warning('EasyKash rejected or returned an invalid payment response.', [
                 'registration_reference' => $registration->registration_code,
             ]);
 
             return response()->json([
-                'message' => 'EasyKash could not create a cash voucher. Your registration was saved but no payment was confirmed.',
-                'data' => ['reference' => $registration->registration_code, 'payment_status' => 'failed'],
+                'message' => 'We could not confirm whether EasyKash created a cash voucher. Your registration is saved. Please contact support with your reference before trying again.',
+                'data' => ['reference' => $registration->registration_code, 'payment_status' => 'pending'],
             ], 502);
         }
 
