@@ -6,6 +6,12 @@ import { createRace, createRaceKitPrice, deleteRace, deleteRaceKitPrice, getAdmi
 const moneyText = (value, currency = 'EGP') => new Intl.NumberFormat('en-EG', { style: 'currency', currency, maximumFractionDigits: 2 }).format(Number(value || 0));
 const titleText = value => String(value || '').replaceAll('_', ' ').replace(/\b\w/g, char => char.toUpperCase());
 const TEAM_HEADERS = ['first_name', 'last_name', 'email', 'phone', 'birth_date', 'gender', 'id_number', 'race_slug', 'kit_type', 'shirt_size'];
+const ROSTER_DROPDOWNS = [
+  { column: 'F', name: 'GenderOptions', prompt: 'Choose a gender from the list.' },
+  { column: 'H', name: 'RaceSlugOptions', prompt: 'Choose an active race from the list.' },
+  { column: 'I', name: 'KitTypeOptions', prompt: 'Choose full or basic from the list.' },
+  { column: 'J', name: 'ShirtSizeOptions', prompt: 'Choose a shirt size; leave blank for Basic Kit.' },
+];
 
 function PageTitle({ eyebrow, title, accent, description, action }) {
   return <div className="admin-page-heading"><div><div className="admin-eyebrow">{eyebrow}</div><h1>{title} <span>{accent}</span></h1><p>{description}</p></div>{action && <div className="admin-heading-action">{action}</div>}</div>;
@@ -157,6 +163,7 @@ async function downloadTemplate(races) {
   instructions.addRow(['Gender values', 'male, female, prefer_not_to_say']);
   instructions.addRow(['Kit values', 'full or basic. Full Kit requires shirt_size: S, M, L, XL, or XXL.']);
   instructions.addRow(['Race slugs', races.filter(race => race.is_active).map(race => race.slug).join(', ') || 'Load active race categories in the dashboard first.']);
+  instructions.addRow(['Dropdowns', 'Use the dropdown list in gender, race_slug, kit_type, and shirt_size.']);
   instructions.addRow(['Import limit', '2 to 200 participants per team. All participants are checked before anything is saved.']);
   instructions.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }; instructions.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF064B3E' } };
   instructions.eachRow(row => { row.height = 23; });
@@ -165,6 +172,39 @@ async function downloadTemplate(races) {
   roster.getRow(1).height = 25; roster.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } }; roster.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF064B3E' } };
   roster.views = [{ state: 'frozen', ySplit: 1 }]; roster.autoFilter = { from: 'A1', to: 'J1' };
   roster.getColumn(4).numFmt = '@'; roster.getColumn(7).numFmt = '@'; roster.getColumn(5).numFmt = 'yyyy-mm-dd';
+
+  const activeRaceSlugs = races.filter(race => race.is_active).map(race => race.slug);
+  const optionDefinitions = [
+    { header: 'race_slug', name: 'RaceSlugOptions', values: activeRaceSlugs.length ? activeRaceSlugs : [''] },
+    { header: 'gender', name: 'GenderOptions', values: ['male', 'female', 'prefer_not_to_say'] },
+    { header: 'kit_type', name: 'KitTypeOptions', values: ['full', 'basic'] },
+    { header: 'shirt_size', name: 'ShirtSizeOptions', values: ['S', 'M', 'L', 'XL', 'XXL'] },
+  ];
+  const options = workbook.addWorksheet('Options');
+  options.state = 'hidden';
+  optionDefinitions.forEach((definition, index) => {
+    const column = String.fromCharCode(65 + index);
+    options.getCell(1, index + 1).value = definition.header;
+    definition.values.forEach((value, rowIndex) => { options.getCell(rowIndex + 2, index + 1).value = value; });
+    const lastRow = Math.max(2, definition.values.length + 1);
+    workbook.definedNames.add('Options!$' + column + '$2:$' + column + '$' + lastRow, definition.name);
+  });
+  for (let row = 2; row <= 201; row += 1) {
+    for (const dropdown of ROSTER_DROPDOWNS) {
+      roster.getCell(dropdown.column + row).dataValidation = {
+        type: 'list',
+        allowBlank: true,
+        formulae: ['=' + dropdown.name],
+        showInputMessage: true,
+        promptTitle: 'Choose from the list',
+        prompt: dropdown.prompt,
+        showErrorMessage: true,
+        errorStyle: 'error',
+        errorTitle: 'Invalid choice',
+        error: 'Choose a value from the dropdown list.',
+      };
+    }
+  }
   const bytes = await workbook.xlsx.writeBuffer();
   const url = URL.createObjectURL(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
   const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'kfs-team-roster-template.xlsx'; anchor.click(); URL.revokeObjectURL(url);
