@@ -74,6 +74,11 @@ export default function Register() {
   const price = values.kit === 'full' ? selectedRace.fullPrice : selectedRace.basicPrice;
   const canSubmit = !submitting && !loadingRaceOptions && !raceLoadError;
   const registrationLabel = useMemo(() => `${selectedRace.distance} · ${selectedKit.name}`, [selectedRace, selectedKit]);
+  const registrationButtonLabel = submitting
+    ? 'Creating cash voucher…'
+    : paymentInfo
+      ? (paymentInfo.voucher || paymentInfo.status === 'paid' ? 'Registration submitted' : 'Payment status pending')
+      : 'Continue to payment';
 
   function update(name, value) {
     setValues(prev => ({ ...prev, [name]: value }));
@@ -180,21 +185,21 @@ export default function Register() {
               <label className="upload-drop"><input type="file" accept="image/*,.pdf" onChange={e => update('idFile', e.target.files?.[0] || null)} /><span className="upload-icon"><FileUp size={22}/></span><span><b>{values.idFile ? values.idFile.name : 'Upload ID / passport (optional)'}</b><small>JPG, PNG or PDF · Max 2 MB (backend validation to be added)</small></span></label>
               <label className="team-name-label">Team / running club <small>(optional)</small><input value={values.teamName} onChange={e => update('teamName', e.target.value)} placeholder="e.g. Kafr El-Sheikh Runners" /></label>
               <label className="terms-check"><input type="checkbox" checked={values.terms} onChange={e => update('terms', e.target.checked)} required /><span>I confirm that the details provided are correct and agree to the race terms and conditions. <b>*</b></span></label>
-              {status.message && <div className={`form-alert alert-${status.type}`} role="status">{status.message}</div>}
-              {paymentInfo && <div className={`cash-voucher ${paymentInfo.status === 'paid' ? 'cash-voucher-paid' : ''}`} aria-live="polite">
+              {status.message && !(paymentInfo?.status === 'pending' && status.type === 'error') && <div className={`form-alert alert-${status.type}`} role="status">{status.message}</div>}
+              {paymentInfo && <div className={`cash-voucher ${paymentInfo.status === 'paid' ? 'cash-voucher-paid' : ''} ${!paymentInfo.voucher && paymentInfo.status !== 'paid' ? 'cash-voucher-pending' : ''}`} aria-live="polite">
                 <span className="cash-voucher-kicker">EASYKASH CASH PAYMENT</span>
-                <h3>{paymentInfo.status === 'paid' ? 'Payment confirmed' : 'Your voucher is ready'}</h3>
+                <h3>{paymentInfo.status === 'paid' ? 'Payment confirmed' : paymentInfo.voucher ? 'Your voucher is ready' : 'Registration saved; payment unconfirmed'}</h3>
                 {paymentInfo.status !== 'paid' && <>
                   {paymentInfo.voucher ? <>
                     <p>Pay at the {paymentInfo.provider || 'cash payment provider'} before the voucher expires.</p>
                     <div className="cash-voucher-code"><strong>{paymentInfo.voucher}</strong><button type="button" aria-label="Copy voucher code" onClick={async () => { try { await navigator.clipboard.writeText(String(paymentInfo.voucher)); setVoucherCopied(true); } catch { setVoucherCopied(false); } }}><Copy size={16}/>{voucherCopied ? 'Copied' : 'Copy'}</button></div>
                     {paymentInfo.expiry_date && <small>Expires: {paymentInfo.expiry_date}</small>}
-                  </> : <p>Voucher details are not available yet. Do not submit another registration; contact the race team with your reference.</p>}
+                  </> : <p>EasyKash did not return voucher details, so we cannot confirm whether a voucher was created. Do not submit another registration. Contact the race team with your reference before trying again.</p>}
                 </>}
-                <div className="cash-voucher-meta"><span>Registration reference</span><b>{paymentInfo.reference}</b><span>Payment status</span><b>{paymentInfo.status === 'paid' ? 'Paid' : 'Waiting for payment'}</b></div>
-                <small className="cash-voucher-note">This page checks for payment confirmation automatically. Keep your registration reference.</small>
+                <div className="cash-voucher-meta"><span>Registration reference</span><b>{paymentInfo.reference}</b><span>Payment status</span><b>{paymentInfo.status === 'paid' ? 'Paid' : paymentInfo.voucher ? 'Waiting for payment' : 'Unconfirmed'}</b></div>
+                <small className="cash-voucher-note">{paymentInfo.voucher ? 'This page checks for payment confirmation automatically. Keep your registration reference.' : 'Payment confirmation is checked automatically. Keep your registration reference.'}</small>
               </div>}
-              <button className="btn btn-red form-submit" type="submit" disabled={!canSubmit || Boolean(paymentInfo) || (values.kit === 'full' && !values.shirtSize)}>{submitting ? 'Creating cash voucher…' : paymentInfo ? 'Registration submitted' : 'Continue to payment'} <ArrowRight size={18}/></button>
+              <button className="btn btn-red form-submit" type="submit" disabled={!canSubmit || Boolean(paymentInfo) || (values.kit === 'full' && !values.shirtSize)}>{registrationButtonLabel} <ArrowRight size={18}/></button>
               <p className="form-fineprint"><LockKeyhole size={13}/> Payment is confirmed by EasyKash’s signed server callback.</p>
             </form>
           </div>
