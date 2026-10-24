@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Registration;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class EasyKashCashApi
@@ -21,12 +22,13 @@ class EasyKashCashApi
             throw new RuntimeException('EasyKash cash expiry must be 3, 6, 12, or 48 hours.');
         }
 
+        $phone = preg_replace('/\D+/', '', $registration->phone);
         $response = Http::asJson()
             ->acceptJson()
             ->timeout(20)
             ->post(config('easykash.cash_api_url'), [
                 'payerEmail' => $registration->email,
-                'payerMobile' => $registration->phone,
+                'payerMobile' => $phone,
                 'payerName' => trim($registration->first_name . ' ' . $registration->last_name),
                 'amount' => (float) $registration->amount,
                 'expiryDuration' => $expiryDuration,
@@ -35,15 +37,33 @@ class EasyKashCashApi
                 'type' => 'in',
             ]);
 
-        $data = $response->json();
-        if (! $response->successful() || ! is_array($data)) {
+        $responseData = $response->json();
+        if (! $response->successful() || ! is_array($responseData)) {
+            $errorMessage = is_array($responseData)
+                ? ($responseData['message'] ?? $responseData['error'] ?? null)
+                : null;
+            Log::warning('EasyKash cash API returned an unsuccessful response.', [
+                'http_status' => $response->status(),
+                'response_fields' => is_array($responseData) ? array_keys($responseData) : [],
+                'provider_message' => $this->safeDiagnosticMessage($errorMessage),
+            ]);
             throw new RuntimeException('EasyKash did not create a cash payment reference.');
         }
 
-        foreach (['voucher', 'expiryDate', 'provider', 'easykashRef'] as $required) {
-            if (! isset($data[$required]) || ! is_scalar($data[$required]) || (string) $data[$required] === '') {
-                throw new RuntimeException('EasyKash returned an incomplete cash payment response.');
-            }
+        $data = is_array($responseData['data'] ?? null) ? $responseData['data'] : $responseData;
+        $missing = array_values(array_filter(
+            ['voucher', 'expiryDate', 'provider', 'easykashRef'],
+            static fn (string $field): bool => ! isset($data[$field]) || ! is_scalar($data[$field]) || (string) $data[$field] === '',
+        ));
+        if ($missing !== []) {
+            $errorMessage = $responseData['message'] ?? $responseData['error'] ?? null;
+            Log::warning('EasyKash cash API returned an incomplete response.', [
+                'http_status' => $response->status(),
+                'response_fields' => array_keys($data),
+                'missing_fields' => $missing,
+                'provider_message' => $this->safeDiagnosticMessage($errorMessage),
+            ]);
+            throw new RuntimeException('EasyKash returned an incomplete cash payment response.');
         }
 
         return [
@@ -81,5 +101,24 @@ class EasyKashCashApi
         $expected = hash_hmac('sha512', $message, (string) config('easykash.hmac_secret'));
 
         return hash_equals($expected, strtolower($signature));
+    }
+
+    private function safeDiagnosticMessage(mixed $message): ?string
+    {
+        if (! is_string($message)) {
+            return null;
+        }
+
+        $message = mb_substr(trim($message), 0, 300);
+        foreach ([config('easykash.api_key'), config('easykash.hmac_secret')] as $secret) {
+            if (is_string($secret) && $secret !== '') {
+                $message = str_replace($secret, '[redacted]', $message);
+            }
+        }
+
+        $message = preg_replace('/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i', '[redacted-email]', $message);
+        $message = preg_replace('/(?<!\w)\+?\d[\d\s().-]{7,}\d(?!\w)/', '[redacted-number]', $message);
+
+        return $message;
     }
 }

@@ -110,7 +110,8 @@ export default function Register() {
       if (error.data?.reference && error.data?.payment_status === 'pending') {
         setPaymentInfo({ reference: error.data.reference, status: 'pending' });
       }
-      setStatus({ type: 'error', message: error.message || 'We could not submit your registration. Please try again.' });
+      const referenceHint = error.data?.reference ? ` Registration reference: ${error.data.reference}.` : '';
+      setStatus({ type: 'error', message: `${error.message || 'We could not submit your registration. Please try again.'}${referenceHint}` });
     } finally {
       setSubmitting(false);
     }
