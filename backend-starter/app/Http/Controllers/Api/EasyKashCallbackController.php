@@ -73,6 +73,7 @@ class EasyKashCallbackController extends Controller
                     'provider_status' => $providerStatus,
                     'payment_method' => (string) $payload['PaymentMethod'],
                     'product_code' => (string) $payload['ProductCode'],
+                    'voucher' => isset($payload['voucher']) && is_scalar($payload['voucher']) ? (string) $payload['voucher'] : null,
                 ]),
             ]);
 

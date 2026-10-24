@@ -22,6 +22,7 @@ class PublicPaymentStatusController extends Controller
             'status' => $registration->payment_status,
             'voucher' => $details['voucher'] ?? null,
             'provider' => $details['provider'] ?? null,
+            'payment_method' => $details['payment_method'] ?? null,
             'expiry_date' => $details['expiryDate'] ?? null,
             'amount' => (float) $payment->amount,
             'currency' => $payment->currency,

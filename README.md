@@ -55,9 +55,9 @@ Never deploy with `APP_DEBUG=true`, never reuse the example credentials, and use
 - `PUT /api/admin/race-kit-prices/{id}` — update one price.
 - `GET /api/races` — public race categories and active prices.
 - `POST /api/registrations` — validate and create a pending registration.
-- `GET /api/registrations/{reference}/payment-status` — return the registration's public payment status and cash voucher details.
+- `GET /api/registrations/{reference}/payment-status` — return the registration's public payment status and any verified payment details.
 - `POST /api/payments/easykash/callback` — verify EasyKash HMAC-SHA512 callbacks and update payment status.
 
 ## Payments status
 
-The registration flow creates an EasyKash cash voucher from Laravel and displays it to the runner. Configure `EASYKASH_API_KEY` and `EASYKASH_HMAC_SECRET` in `backend/.env`; never put them in React or a committed file. The EasyKash account must have Cash API enabled, and its Integration Settings callback URL must point to `https://YOUR-API-HOST/api/payments/easykash/callback`. Payment status changes only after a signed callback passes HMAC-SHA512 verification and amount matching. A browser redirect or client request never marks a registration paid.
+The registration flow asks Laravel to create an EasyKash hosted checkout link, then sends the runner to EasyKash to choose among the payment methods enabled for the merchant account. Omitting `paymentOptions` lets EasyKash show all enabled methods. Configure `EASYKASH_API_KEY`, `EASYKASH_HMAC_SECRET`, and the public `EASYKASH_REDIRECT_URL` in the server environment; never put credentials in React or a committed file. Set the EasyKash Integration Settings callback URL to `https://YOUR-API-HOST/api/payments/easykash/callback`. The browser returns to the redirect URL after checkout, while the registration is marked paid only after a signed callback passes HMAC-SHA512 verification and amount matching.

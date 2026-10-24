@@ -12,6 +12,19 @@ const initialValues = {
 
 export default function Register() {
   const [params] = useSearchParams();
+  const checkoutReturn = useMemo(() => ({
+    reference: params.get('customerReference') || params.get('reference') || '',
+    voucher: params.get('voucher') || '',
+    status: (params.get('status') || '').toLowerCase(),
+  }), [params]);
+  const [checkoutReturnReference] = useState(() => {
+    const reference = checkoutReturn.reference || window.sessionStorage.getItem('kfs:lastPaymentReference') || '';
+    if (reference) window.sessionStorage.removeItem('kfs:lastPaymentReference');
+    return reference;
+  });
+  const [checkoutReturnVoucher] = useState(() => checkoutReturn.voucher);
+  const [checkoutReturnStatus] = useState(() => checkoutReturn.status);
+  const returningFromCheckout = Boolean(checkoutReturnReference);
   const initialRace = races.some(r => r.id === params.get('race')) ? params.get('race') : '21k';
   const [values, setValues] = useState({ ...initialValues, race: initialRace });
   const [raceOptions, setRaceOptions] = useState(races);
@@ -29,7 +42,7 @@ export default function Register() {
       try {
         const latest = await getRegistrationPaymentStatus(paymentInfo.reference);
         if (!active) return;
-        setPaymentInfo(previous => ({ ...previous, ...latest }));
+        setPaymentInfo(previous => ({ ...previous, ...latest, voucher: latest.voucher || previous?.voucher || null }));
         if (latest.status === 'paid') setStatus({ type: 'success', message: 'Payment confirmed. Your registration is complete.' });
         if (latest.status === 'failed' || latest.status === 'refunded') setStatus({ type: 'error', message: 'The payment could not be completed. Please contact the race team with your registration reference.' });
       } catch {
@@ -75,10 +88,38 @@ export default function Register() {
   const canSubmit = !submitting && !loadingRaceOptions && !raceLoadError;
   const registrationLabel = useMemo(() => `${selectedRace.distance} · ${selectedKit.name}`, [selectedRace, selectedKit]);
   const registrationButtonLabel = submitting
-    ? 'Creating cash voucher…'
+    ? 'Opening EasyKash…'
+    : returningFromCheckout && !paymentInfo
+      ? 'Checking payment status…'
     : paymentInfo
-      ? (paymentInfo.voucher || paymentInfo.status === 'paid' ? 'Registration submitted' : 'Payment status pending')
+      ? (paymentInfo.status === 'failed' || paymentInfo.status === 'refunded' ? 'Payment not completed' : paymentInfo.voucher || paymentInfo.status === 'paid' ? 'Registration submitted' : 'Payment status pending')
       : 'Continue to payment';
+
+  useEffect(() => {
+    if (!checkoutReturnReference) return undefined;
+    let active = true;
+    getRegistrationPaymentStatus(checkoutReturnReference)
+      .then(latest => {
+        if (!active) return;
+        setPaymentInfo({
+          ...latest,
+          checkout_returned: true,
+          voucher: latest.voucher || checkoutReturnVoucher || null,
+        });
+        if (latest.status === 'paid') setStatus({ type: 'success', message: 'Payment confirmed by EasyKash. Your registration is complete.' });
+        else if (latest.status === 'failed' || latest.status === 'refunded') setStatus({ type: 'error', message: 'EasyKash reports that this payment did not complete. Contact the race team with your registration reference.' });
+        else setStatus({
+          type: 'info',
+          message: checkoutReturnStatus === 'success'
+            ? 'EasyKash returned a successful payment result. We are confirming it securely.'
+            : 'You are back from EasyKash. We are checking the payment confirmation securely.',
+        });
+      })
+      .catch(error => {
+        if (active) setStatus({ type: 'error', message: `${error.message || 'We could not load your payment status.'} Keep your registration reference and contact the race team.` });
+      });
+    return () => { active = false; };
+  }, [checkoutReturnReference, checkoutReturnStatus, checkoutReturnVoucher]);
 
   function update(name, value) {
     setValues(prev => ({ ...prev, [name]: value }));
@@ -102,9 +143,15 @@ export default function Register() {
 
     try {
       const result = await submitRegistration(data);
+      if (result.connected && result.payment?.redirect_url) {
+        const reference = result.payment.reference || result.data?.reference;
+        if (reference) window.sessionStorage.setItem('kfs:lastPaymentReference', reference);
+        window.location.assign(result.payment.redirect_url);
+        return;
+      }
       if (result.connected && result.payment) {
         setPaymentInfo(result.payment);
-        setStatus({ type: 'info', message: result.message || 'Your cash voucher is ready. Complete payment with the provider shown below.' });
+        setStatus({ type: 'info', message: result.message || 'Your registration is saved. Continue to EasyKash to choose a payment method.' });
         return;
       }
       setStatus({
@@ -186,20 +233,22 @@ export default function Register() {
               <label className="team-name-label">Team / running club <small>(optional)</small><input value={values.teamName} onChange={e => update('teamName', e.target.value)} placeholder="e.g. Kafr El-Sheikh Runners" /></label>
               <label className="terms-check"><input type="checkbox" checked={values.terms} onChange={e => update('terms', e.target.checked)} required /><span>I confirm that the details provided are correct and agree to the race terms and conditions. <b>*</b></span></label>
               {status.message && !(paymentInfo?.status === 'pending' && status.type === 'error') && <div className={`form-alert alert-${status.type}`} role="status">{status.message}</div>}
-              {paymentInfo && <div className={`cash-voucher ${paymentInfo.status === 'paid' ? 'cash-voucher-paid' : ''} ${!paymentInfo.voucher && paymentInfo.status !== 'paid' ? 'cash-voucher-pending' : ''}`} aria-live="polite">
-                <span className="cash-voucher-kicker">EASYKASH CASH PAYMENT</span>
-                <h3>{paymentInfo.status === 'paid' ? 'Payment confirmed' : paymentInfo.voucher ? 'Your voucher is ready' : 'Registration saved; payment unconfirmed'}</h3>
-                {paymentInfo.status !== 'paid' && <>
+              {paymentInfo && <div className={`cash-voucher ${paymentInfo.status === 'paid' ? 'cash-voucher-paid' : ''} ${paymentInfo.status === 'failed' || paymentInfo.status === 'refunded' ? 'cash-voucher-failed' : ''} ${!paymentInfo.voucher && paymentInfo.status === 'pending' ? 'cash-voucher-pending' : ''}`} aria-live="polite">
+                <span className="cash-voucher-kicker">EASYKASH PAYMENT</span>
+                <h3>{paymentInfo.status === 'paid' ? 'Payment confirmed' : paymentInfo.status === 'failed' || paymentInfo.status === 'refunded' ? 'Payment not completed' : paymentInfo.voucher ? 'Cash voucher ready' : paymentInfo.checkout_returned ? 'Checking payment status' : 'Registration saved; payment unconfirmed'}</h3>
+                {paymentInfo.status !== 'paid' && paymentInfo.status !== 'failed' && paymentInfo.status !== 'refunded' && <>
                   {paymentInfo.voucher ? <>
-                    <p>Pay at the {paymentInfo.provider || 'cash payment provider'} before the voucher expires.</p>
+                    <p>Use this voucher at the payment provider selected in EasyKash.</p>
                     <div className="cash-voucher-code"><strong>{paymentInfo.voucher}</strong><button type="button" aria-label="Copy voucher code" onClick={async () => { try { await navigator.clipboard.writeText(String(paymentInfo.voucher)); setVoucherCopied(true); } catch { setVoucherCopied(false); } }}><Copy size={16}/>{voucherCopied ? 'Copied' : 'Copy'}</button></div>
                     {paymentInfo.expiry_date && <small>Expires: {paymentInfo.expiry_date}</small>}
-                  </> : <p>EasyKash did not return voucher details, so we cannot confirm whether a voucher was created. Do not submit another registration. Contact the race team with your reference before trying again.</p>}
+                  </> : paymentInfo.checkout_returned
+                    ? <p>Your registration is saved. EasyKash’s signed server confirmation will update this page automatically. Keep your reference while we verify the result.</p>
+                    : <p>EasyKash did not return a checkout link, so we cannot confirm whether payment was started. Do not submit another registration. Contact the race team with your reference before trying again.</p>}
                 </>}
-                <div className="cash-voucher-meta"><span>Registration reference</span><b>{paymentInfo.reference}</b><span>Payment status</span><b>{paymentInfo.status === 'paid' ? 'Paid' : paymentInfo.voucher ? 'Waiting for payment' : 'Unconfirmed'}</b></div>
-                <small className="cash-voucher-note">{paymentInfo.voucher ? 'This page checks for payment confirmation automatically. Keep your registration reference.' : 'Payment confirmation is checked automatically. Keep your registration reference.'}</small>
+                <div className="cash-voucher-meta"><span>Registration reference</span><b>{paymentInfo.reference}</b><span>Payment status</span><b>{paymentInfo.status === 'paid' ? 'Paid' : paymentInfo.status === 'failed' || paymentInfo.status === 'refunded' ? 'Not completed' : paymentInfo.voucher ? 'Waiting for payment' : paymentInfo.checkout_returned ? 'Confirming' : 'Unconfirmed'}</b></div>
+                <small className="cash-voucher-note">Payment confirmation comes from EasyKash’s signed server callback. Keep your registration reference.</small>
               </div>}
-              <button className="btn btn-red form-submit" type="submit" disabled={!canSubmit || Boolean(paymentInfo) || (values.kit === 'full' && !values.shirtSize)}>{registrationButtonLabel} <ArrowRight size={18}/></button>
+              <button className="btn btn-red form-submit" type="submit" disabled={!canSubmit || returningFromCheckout || Boolean(paymentInfo) || (values.kit === 'full' && !values.shirtSize)}>{registrationButtonLabel} <ArrowRight size={18}/></button>
               <p className="form-fineprint"><LockKeyhole size={13}/> Payment is confirmed by EasyKash’s signed server callback.</p>
             </form>
           </div>
@@ -216,7 +265,7 @@ export default function Register() {
               <div className="order-price-line"><span>Entry fee</span><strong>{money(price)}</strong></div>
               <div className="order-price-total"><span>Total preview</span><strong>{money(price)}</strong></div>
               <p className="order-tax-note">Final price, availability, and payment status will be confirmed by the Laravel backend.</p>
-              <div className="order-benefits"><span><ShieldCheck size={15}/> Secure registration</span><span><CreditCard size={15}/> EasyKash cash voucher</span></div>
+              <div className="order-benefits"><span><ShieldCheck size={15}/> Secure registration</span><span><CreditCard size={15}/> EasyKash checkout</span></div>
             </div>
             <div className="need-help-card"><h4>Need help choosing?</h4><p>Choose the distance that feels right for you. The best race is the one you show up for.</p><Link to="/" className="text-link">Explore the event <ArrowRight size={16}/></Link></div>
           </aside>

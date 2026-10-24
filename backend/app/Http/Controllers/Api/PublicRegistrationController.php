@@ -46,7 +46,7 @@ class PublicRegistrationController extends Controller
 
         if ($easyKash->normalizePayerName($validated['firstName'] . $validated['lastName']) === '') {
             return response()->json([
-                'message' => 'The runner name must include letters so EasyKash can create a cash voucher.',
+                'message' => 'The runner name must include letters so EasyKash can create a payment link.',
             ], 422);
         }
 
@@ -56,8 +56,8 @@ class PublicRegistrationController extends Controller
         if (! $easyKash->configured()) {
             return response()->json(['message' => 'EasyKash payment credentials are not configured on the Laravel server.'], 503);
         }
-        if (! in_array((int) config('easykash.expiry_duration', 48), [3, 6, 12, 48], true)) {
-            return response()->json(['message' => 'EasyKash cash voucher expiry is not configured correctly.'], 503);
+        if (! in_array((int) config('easykash.cash_expiry', 48), [3, 6, 12, 48], true)) {
+            return response()->json(['message' => 'EasyKash cash checkout expiry is not configured correctly.'], 503);
         }
 
         $documentPath = $request->file('idFile')?->store('runner-documents', 'local');
@@ -94,40 +94,33 @@ class PublicRegistrationController extends Controller
 
         $payment = $registration->payments()->latest()->firstOrFail();
         try {
-            $gatewayPayment = $easyKash->createCashPayment($registration);
+            $gatewayPayment = $easyKash->createPaymentLink($registration);
         } catch (ConnectionException $exception) {
             Log::warning('EasyKash payment initiation connection failed.', [
                 'registration_reference' => $registration->registration_code,
             ]);
 
             return response()->json([
-                'message' => 'We could not confirm whether EasyKash created a voucher. Please contact support with your registration reference before trying again.',
+                'message' => 'We could not confirm whether EasyKash created a checkout link. Please contact support with your registration reference before trying again.',
                 'data' => ['reference' => $registration->registration_code, 'payment_status' => 'pending'],
             ], 504);
         } catch (RuntimeException $exception) {
             // A rejected, malformed, or intermediary response does not prove that
-            // EasyKash did not create a voucher. Keep the payment reconcilable by callback.
+            // EasyKash did not create a payment. Keep it reconcilable by callback.
             Log::warning('EasyKash rejected or returned an invalid payment response.', [
                 'registration_reference' => $registration->registration_code,
             ]);
 
             return response()->json([
-                'message' => 'We could not confirm whether EasyKash created a cash voucher. Your registration is saved. Please contact support with your reference before trying again.',
+                'message' => 'We could not confirm whether EasyKash created a checkout link. Your registration is saved. Please contact support with your reference before trying again.',
                 'data' => ['reference' => $registration->registration_code, 'payment_status' => 'pending'],
             ], 502);
         }
 
-        $payment->update([
-            'gateway_reference' => $gatewayPayment['easykashRef'],
-            'payload' => [
-                'voucher' => $gatewayPayment['voucher'],
-                'expiryDate' => $gatewayPayment['expiryDate'],
-                'provider' => $gatewayPayment['provider'],
-            ],
-        ]);
+        $payment->update(['payload' => ['checkout_url_created' => true]]);
 
         return response()->json([
-            'message' => 'Registration saved. Use the cash voucher below to complete payment.',
+            'message' => 'Registration saved. Continue to EasyKash to choose a payment method.',
             'data' => [
                 'id' => $registration->id,
                 'reference' => $registration->registration_code,
@@ -137,12 +130,8 @@ class PublicRegistrationController extends Controller
             ],
             'payment' => [
                 'reference' => $registration->registration_code,
-                'provider' => $gatewayPayment['provider'],
-                'voucher' => $gatewayPayment['voucher'],
-                'expiry_date' => $gatewayPayment['expiryDate'],
+                'redirect_url' => $gatewayPayment['redirectUrl'],
                 'status' => 'pending',
-                'amount' => (float) $registration->amount,
-                'currency' => $registration->currency,
             ],
             'payment_integration_ready' => true,
         ], 201);

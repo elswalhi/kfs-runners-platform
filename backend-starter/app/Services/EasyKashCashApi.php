@@ -15,61 +15,55 @@ class EasyKashCashApi
             && filled(config('easykash.hmac_secret'));
     }
 
-    public function createCashPayment(Registration $registration): array
+    public function createPaymentLink(Registration $registration): array
     {
-        $expiryDuration = (int) config('easykash.expiry_duration', 48);
-        if (! in_array($expiryDuration, [3, 6, 12, 48], true)) {
+        $cashExpiry = (int) config('easykash.cash_expiry', 48);
+        if (! in_array($cashExpiry, [3, 6, 12, 48], true)) {
             throw new RuntimeException('EasyKash cash expiry must be 3, 6, 12, or 48 hours.');
         }
 
         $phone = preg_replace('/\D+/', '', $registration->phone);
-        $response = Http::asJson()
+        $response = Http::withHeaders(['authorization' => (string) config('easykash.api_key')])
+            ->asJson()
             ->acceptJson()
             ->timeout(20)
-            ->post(config('easykash.cash_api_url'), [
-                'payerEmail' => $registration->email,
-                'payerMobile' => $phone,
-                'payerName' => $this->normalizePayerName($registration->first_name . $registration->last_name),
+            ->post(config('easykash.pay_api_url'), [
                 'amount' => (float) $registration->amount,
-                'expiryDuration' => $expiryDuration,
-                'apiKey' => config('easykash.api_key'),
-                'VoucherData' => 'KFS Runners ' . $registration->registration_code,
-                'type' => 'in',
+                'currency' => $registration->currency,
+                // Omitting paymentOptions asks EasyKash to show every method enabled for this account.
+                'cashExpiry' => $cashExpiry,
+                'name' => trim($registration->first_name . ' ' . $registration->last_name),
+                'email' => $registration->email,
+                'mobile' => $phone,
+                'redirectUrl' => config('easykash.redirect_url'),
+                'customerReference' => $registration->registration_code,
             ]);
 
         $responseData = $response->json();
         if (! $response->successful() || ! is_array($responseData)) {
             $errorMessage = $this->providerErrorMessage($responseData);
-            Log::warning('EasyKash cash API returned an unsuccessful response.', [
+            Log::warning('EasyKash pay API returned an unsuccessful response.', [
                 'http_status' => $response->status(),
                 'response_fields' => $this->responseFieldNames($responseData),
                 'provider_message' => $this->safeDiagnosticMessage($errorMessage),
             ]);
-            throw new RuntimeException('EasyKash did not create a cash payment reference.');
+            throw new RuntimeException('EasyKash did not create a payment link.');
         }
 
         $data = is_array($responseData['data'] ?? null) ? $responseData['data'] : $responseData;
-        $missing = array_values(array_filter(
-            ['voucher', 'expiryDate', 'provider', 'easykashRef'],
-            static fn (string $field): bool => ! isset($data[$field]) || ! is_scalar($data[$field]) || (string) $data[$field] === '',
-        ));
-        if ($missing !== []) {
+        $redirectUrl = $data['redirectUrl'] ?? null;
+        $redirectHost = is_string($redirectUrl) ? parse_url($redirectUrl, PHP_URL_HOST) : null;
+        if (! is_string($redirectUrl) || ! in_array($redirectHost, ['easykash.net', 'www.easykash.net'], true) || parse_url($redirectUrl, PHP_URL_SCHEME) !== 'https') {
             $errorMessage = $this->providerErrorMessage($responseData);
-            Log::warning('EasyKash cash API returned an incomplete response.', [
+            Log::warning('EasyKash pay API returned an invalid redirect response.', [
                 'http_status' => $response->status(),
                 'response_fields' => array_keys($data),
-                'missing_fields' => $missing,
                 'provider_message' => $this->safeDiagnosticMessage($errorMessage),
             ]);
-            throw new RuntimeException('EasyKash returned an incomplete cash payment response.');
+            throw new RuntimeException('EasyKash returned an invalid payment link.');
         }
 
-        return [
-            'voucher' => (string) $data['voucher'],
-            'expiryDate' => (string) $data['expiryDate'],
-            'provider' => (string) $data['provider'],
-            'easykashRef' => (string) $data['easykashRef'],
-        ];
+        return ['redirectUrl' => $redirectUrl];
     }
 
     public function normalizePayerName(string $name): string
