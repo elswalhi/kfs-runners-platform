@@ -29,7 +29,7 @@ class EasyKashCashApi
             ->post(config('easykash.cash_api_url'), [
                 'payerEmail' => $registration->email,
                 'payerMobile' => $phone,
-                'payerName' => trim($registration->first_name . ' ' . $registration->last_name),
+                'payerName' => $this->normalizePayerName($registration->first_name . $registration->last_name),
                 'amount' => (float) $registration->amount,
                 'expiryDuration' => $expiryDuration,
                 'apiKey' => config('easykash.api_key'),
@@ -70,6 +70,11 @@ class EasyKashCashApi
             'provider' => (string) $data['provider'],
             'easykashRef' => (string) $data['easykashRef'],
         ];
+    }
+
+    public function normalizePayerName(string $name): string
+    {
+        return preg_replace('/[^\p{L}]/u', '', $name) ?? '';
     }
 
     private function providerErrorMessage(mixed $responseData): mixed

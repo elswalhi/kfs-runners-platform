@@ -36,6 +36,20 @@ class PublicRegistrationController extends Controller
             'idFile' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
         ]);
 
+        $normalizedPhone = $this->normalizeEgyptianMobile($validated['phone']);
+        if ($normalizedPhone === null) {
+            return response()->json([
+                'message' => 'Enter a valid Egyptian mobile number, such as 01012345678 or +20 1012345678.',
+            ], 422);
+        }
+        $validated['phone'] = $normalizedPhone;
+
+        if ($easyKash->normalizePayerName($validated['firstName'] . $validated['lastName']) === '') {
+            return response()->json([
+                'message' => 'The runner name must include letters so EasyKash can create a cash voucher.',
+            ], 422);
+        }
+
         $race = Race::query()->where('slug', $validated['race'])->where('is_active', true)->firstOrFail();
         $price = RaceKitPrice::query()->where('race_id', $race->id)->where('kit_type', $validated['kit'])->where('is_active', true)->first();
         if (!$price) return response()->json(['message' => 'This race and kit option is currently unavailable.'], 422);
@@ -91,15 +105,15 @@ class PublicRegistrationController extends Controller
                 'data' => ['reference' => $registration->registration_code, 'payment_status' => 'pending'],
             ], 504);
         } catch (RuntimeException $exception) {
-            $payment->update(['status' => 'failed']);
-            $registration->update(['payment_status' => 'failed']);
+            // A rejected, malformed, or intermediary response does not prove that
+            // EasyKash did not create a voucher. Keep the payment reconcilable by callback.
             Log::warning('EasyKash rejected or returned an invalid payment response.', [
                 'registration_reference' => $registration->registration_code,
             ]);
 
             return response()->json([
-                'message' => 'EasyKash could not create a cash voucher. Your registration was saved but no payment was confirmed.',
-                'data' => ['reference' => $registration->registration_code, 'payment_status' => 'failed'],
+                'message' => 'We could not confirm whether EasyKash created a cash voucher. Your registration is saved. Please contact support with your reference before trying again.',
+                'data' => ['reference' => $registration->registration_code, 'payment_status' => 'pending'],
             ], 502);
         }
 
@@ -139,5 +153,28 @@ class PublicRegistrationController extends Controller
         do { $code = 'KFS-' . strtoupper(Str::random(8)); }
         while (Registration::query()->where('registration_code', $code)->exists());
         return $code;
+    }
+
+    private function normalizeEgyptianMobile(string $phone): ?string
+    {
+        $phone = strtr(trim($phone), [
+            '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+            '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+            '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
+            '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+        ]);
+        $digits = preg_replace('/\D+/', '', $phone) ?? '';
+
+        if (str_starts_with($digits, '00')) {
+            $digits = substr($digits, 2);
+        }
+
+        if (preg_match('/\A20(0?1[0125]\d{8})\z/', $digits, $matches)) {
+            $digits = str_starts_with($matches[1], '0') ? $matches[1] : '0' . $matches[1];
+        } elseif (preg_match('/\A1[0125]\d{8}\z/', $digits)) {
+            $digits = '0' . $digits;
+        }
+
+        return preg_match('/\A01[0125]\d{8}\z/', $digits) ? $digits : null;
     }
 }

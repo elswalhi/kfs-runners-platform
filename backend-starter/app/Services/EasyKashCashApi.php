@@ -29,7 +29,7 @@ class EasyKashCashApi
             ->post(config('easykash.cash_api_url'), [
                 'payerEmail' => $registration->email,
                 'payerMobile' => $phone,
-                'payerName' => trim($registration->first_name . ' ' . $registration->last_name),
+                'payerName' => $this->normalizePayerName($registration->first_name . $registration->last_name),
                 'amount' => (float) $registration->amount,
                 'expiryDuration' => $expiryDuration,
                 'apiKey' => config('easykash.api_key'),
@@ -39,12 +39,10 @@ class EasyKashCashApi
 
         $responseData = $response->json();
         if (! $response->successful() || ! is_array($responseData)) {
-            $errorMessage = is_array($responseData)
-                ? ($responseData['message'] ?? $responseData['error'] ?? null)
-                : null;
+            $errorMessage = $this->providerErrorMessage($responseData);
             Log::warning('EasyKash cash API returned an unsuccessful response.', [
                 'http_status' => $response->status(),
-                'response_fields' => is_array($responseData) ? array_keys($responseData) : [],
+                'response_fields' => $this->responseFieldNames($responseData),
                 'provider_message' => $this->safeDiagnosticMessage($errorMessage),
             ]);
             throw new RuntimeException('EasyKash did not create a cash payment reference.');
@@ -56,7 +54,7 @@ class EasyKashCashApi
             static fn (string $field): bool => ! isset($data[$field]) || ! is_scalar($data[$field]) || (string) $data[$field] === '',
         ));
         if ($missing !== []) {
-            $errorMessage = $responseData['message'] ?? $responseData['error'] ?? null;
+            $errorMessage = $this->providerErrorMessage($responseData);
             Log::warning('EasyKash cash API returned an incomplete response.', [
                 'http_status' => $response->status(),
                 'response_fields' => array_keys($data),
@@ -72,6 +70,36 @@ class EasyKashCashApi
             'provider' => (string) $data['provider'],
             'easykashRef' => (string) $data['easykashRef'],
         ];
+    }
+
+    public function normalizePayerName(string $name): string
+    {
+        return preg_replace('/[^\p{L}]/u', '', $name) ?? '';
+    }
+
+    private function providerErrorMessage(mixed $responseData): mixed
+    {
+        if (! is_array($responseData)) {
+            return null;
+        }
+
+        $candidate = array_is_list($responseData) ? ($responseData[0] ?? null) : $responseData;
+        if (is_array($candidate)) {
+            return $candidate['message'] ?? $candidate['error'] ?? $candidate['error_description'] ?? null;
+        }
+
+        return is_string($candidate) ? $candidate : null;
+    }
+
+    private function responseFieldNames(mixed $responseData): array
+    {
+        if (! is_array($responseData)) {
+            return [];
+        }
+
+        $candidate = array_is_list($responseData) ? ($responseData[0] ?? null) : $responseData;
+
+        return is_array($candidate) ? array_keys($candidate) : array_keys($responseData);
     }
 
     public function verifiesCallback(array $payload): bool
