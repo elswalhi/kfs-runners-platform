@@ -32,8 +32,19 @@ export async function submitRegistration(formData) {
   const result = await response.json().catch(() => ({}));
   if (!response.ok) {
     const message = result.message || 'Registration could not be submitted. Please check your details and try again.';
-    throw new Error(message);
+    const error = new Error(message);
+    error.data = result.data;
+    throw error;
   }
 
   return { connected: true, ...result };
+}
+
+export async function getRegistrationPaymentStatus(reference) {
+  const response = await fetch(`${API_BASE}/api/registrations/${encodeURIComponent(reference)}/payment-status`, {
+    headers: { Accept: 'application/json' },
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.message || `Could not check payment status (${response.status}).`);
+  return result.data;
 }

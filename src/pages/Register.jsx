@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, CreditCard, FileUp, LockKeyhole, Medal, ShieldCheck, Shirt, UserRound, Users } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, Copy, CreditCard, FileUp, LockKeyhole, Medal, ShieldCheck, Shirt, UserRound, Users } from 'lucide-react';
 import { races, kitOptions, money } from '../data/races';
-import { getPublicRaces, isApiConfigured, submitRegistration } from '../lib/api';
+import { getPublicRaces, getRegistrationPaymentStatus, isApiConfigured, submitRegistration } from '../lib/api';
+import './payment.css';
 
 const initialValues = {
   firstName: '', lastName: '', email: '', phone: '', birthDate: '', gender: '', idNumber: '',
@@ -18,6 +19,25 @@ export default function Register() {
   const [raceLoadError, setRaceLoadError] = useState('');
   const [status, setStatus] = useState({ type: '', message: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [paymentInfo, setPaymentInfo] = useState(null);
+  const [voucherCopied, setVoucherCopied] = useState(false);
+
+  useEffect(() => {
+    if (!paymentInfo?.reference || paymentInfo.status !== 'pending') return undefined;
+    let active = true;
+    const timer = window.setInterval(async () => {
+      try {
+        const latest = await getRegistrationPaymentStatus(paymentInfo.reference);
+        if (!active) return;
+        setPaymentInfo(previous => ({ ...previous, ...latest }));
+        if (latest.status === 'paid') setStatus({ type: 'success', message: 'Payment confirmed. Your registration is complete.' });
+        if (latest.status === 'failed' || latest.status === 'refunded') setStatus({ type: 'error', message: 'The payment could not be completed. Please contact the race team with your registration reference.' });
+      } catch {
+        // Keep the voucher visible while the next status check retries.
+      }
+    }, 10000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [paymentInfo?.reference, paymentInfo?.status]);
 
   useEffect(() => {
     if (!isApiConfigured()) return undefined;
@@ -77,8 +97,9 @@ export default function Register() {
 
     try {
       const result = await submitRegistration(data);
-      if (result.connected && result.checkout_url) {
-        window.location.assign(result.checkout_url);
+      if (result.connected && result.payment) {
+        setPaymentInfo(result.payment);
+        setStatus({ type: 'info', message: result.message || 'Your cash voucher is ready. Complete payment with the provider shown below.' });
         return;
       }
       setStatus({
@@ -86,6 +107,9 @@ export default function Register() {
         message: result.message || 'Your form is ready. Connect the Laravel API and payment endpoint to enable live registration.',
       });
     } catch (error) {
+      if (error.data?.reference && error.data?.payment_status === 'pending') {
+        setPaymentInfo({ reference: error.data.reference, status: 'pending' });
+      }
       setStatus({ type: 'error', message: error.message || 'We could not submit your registration. Please try again.' });
     } finally {
       setSubmitting(false);
@@ -156,8 +180,21 @@ export default function Register() {
               <label className="team-name-label">Team / running club <small>(optional)</small><input value={values.teamName} onChange={e => update('teamName', e.target.value)} placeholder="e.g. Kafr El-Sheikh Runners" /></label>
               <label className="terms-check"><input type="checkbox" checked={values.terms} onChange={e => update('terms', e.target.checked)} required /><span>I confirm that the details provided are correct and agree to the race terms and conditions. <b>*</b></span></label>
               {status.message && <div className={`form-alert alert-${status.type}`} role="status">{status.message}</div>}
-              <button className="btn btn-red form-submit" type="submit" disabled={!canSubmit || (values.kit === 'full' && !values.shirtSize)}>{submitting ? 'Submitting registration…' : 'Continue to registration review'} <ArrowRight size={18}/></button>
-              <p className="form-fineprint"><LockKeyhole size={13}/> Registration and payment will be connected to the Laravel backend in the next phase.</p>
+              {paymentInfo && <div className={`cash-voucher ${paymentInfo.status === 'paid' ? 'cash-voucher-paid' : ''}`} aria-live="polite">
+                <span className="cash-voucher-kicker">EASYKASH CASH PAYMENT</span>
+                <h3>{paymentInfo.status === 'paid' ? 'Payment confirmed' : 'Your voucher is ready'}</h3>
+                {paymentInfo.status !== 'paid' && <>
+                  {paymentInfo.voucher ? <>
+                    <p>Pay at the {paymentInfo.provider || 'cash payment provider'} before the voucher expires.</p>
+                    <div className="cash-voucher-code"><strong>{paymentInfo.voucher}</strong><button type="button" aria-label="Copy voucher code" onClick={async () => { try { await navigator.clipboard.writeText(String(paymentInfo.voucher)); setVoucherCopied(true); } catch { setVoucherCopied(false); } }}><Copy size={16}/>{voucherCopied ? 'Copied' : 'Copy'}</button></div>
+                    {paymentInfo.expiry_date && <small>Expires: {paymentInfo.expiry_date}</small>}
+                  </> : <p>Voucher details are not available yet. Do not submit another registration; contact the race team with your reference.</p>}
+                </>}
+                <div className="cash-voucher-meta"><span>Registration reference</span><b>{paymentInfo.reference}</b><span>Payment status</span><b>{paymentInfo.status === 'paid' ? 'Paid' : 'Waiting for payment'}</b></div>
+                <small className="cash-voucher-note">This page checks for payment confirmation automatically. Keep your registration reference.</small>
+              </div>}
+              <button className="btn btn-red form-submit" type="submit" disabled={!canSubmit || Boolean(paymentInfo) || (values.kit === 'full' && !values.shirtSize)}>{submitting ? 'Creating cash voucher…' : paymentInfo ? 'Registration submitted' : 'Continue to payment'} <ArrowRight size={18}/></button>
+              <p className="form-fineprint"><LockKeyhole size={13}/> Payment is confirmed by EasyKash’s signed server callback.</p>
             </form>
           </div>
 
@@ -173,7 +210,7 @@ export default function Register() {
               <div className="order-price-line"><span>Entry fee</span><strong>{money(price)}</strong></div>
               <div className="order-price-total"><span>Total preview</span><strong>{money(price)}</strong></div>
               <p className="order-tax-note">Final price, availability, and payment status will be confirmed by the Laravel backend.</p>
-              <div className="order-benefits"><span><ShieldCheck size={15}/> Secure registration</span><span><CreditCard size={15}/> Payment integration next</span></div>
+              <div className="order-benefits"><span><ShieldCheck size={15}/> Secure registration</span><span><CreditCard size={15}/> EasyKash cash voucher</span></div>
             </div>
             <div className="need-help-card"><h4>Need help choosing?</h4><p>Choose the distance that feels right for you. The best race is the one you show up for.</p><Link to="/" className="text-link">Explore the event <ArrowRight size={16}/></Link></div>
           </aside>

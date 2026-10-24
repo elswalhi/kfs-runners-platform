@@ -9,6 +9,6 @@
 7. After the setup finishes, run `.\start-local.ps1` or double-click `start-local.bat`.
 8. Open `http://localhost:5173/admin/login` and sign in with the credentials you chose.
 
-The setup builds a complete Laravel app under `backend/`, uses `backend/database/database.sqlite` for local data, loads race/kit seed prices, and configures React to use the local API at `http://127.0.0.1:8000`. It doesn't connect to or modify WordPress. Payment remains disabled until EasyCash is implemented and verified on the Laravel backend.
+The setup builds a complete Laravel app under `backend/`, uses `backend/database/database.sqlite` for local data, loads race/kit seed prices, and configures React to use the local API at `http://127.0.0.1:8000`. It doesn't connect to or modify WordPress. EasyKash cash vouchers are created by Laravel when `EASYKASH_API_KEY` and `EASYKASH_HMAC_SECRET` are configured in `backend/.env`. For payment confirmation, deploy Laravel to a public HTTPS host and set the EasyKash Integration Settings callback URL to `https://YOUR-API-HOST/api/payments/easykash/callback`.
 
 If setup stops, copy the first actual error from the PowerShell window. Most common causes are an outdated PHP version, missing `pdo_sqlite`, unavailable Composer/npm network access, or a failed Laravel scaffold/install step.

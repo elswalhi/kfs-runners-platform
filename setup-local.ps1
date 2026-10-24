@@ -74,6 +74,7 @@ try {
     Copy-TreeContents (Join-Path $Starter 'database/seeders') (Join-Path $Backend 'database/seeders')
     Copy-Item -LiteralPath (Join-Path $Starter 'routes/api.php') -Destination (Join-Path $Backend 'routes/api.php') -Force
     Copy-Item -LiteralPath (Join-Path $Starter 'config/cors.php') -Destination (Join-Path $Backend 'config/cors.php') -Force
+    Copy-Item -LiteralPath (Join-Path $Starter 'config/easykash.php') -Destination (Join-Path $Backend 'config/easykash.php') -Force
 
     $bootstrapPath = Join-Path $Backend 'bootstrap/app.php'
     $bootstrap = Get-Content -LiteralPath $bootstrapPath -Raw
