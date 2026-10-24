@@ -1,0 +1,9 @@
+Add this import with the other imports in `bootstrap/app.php`:
+
+use App\Http\Middleware\EnsureAdmin;
+
+Then add this inside the existing `->withMiddleware(function (Middleware $middleware): void { ... })` callback:
+
+$middleware->alias([
+    'admin' => EnsureAdmin::class,
+]);

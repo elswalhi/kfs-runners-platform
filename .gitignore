@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+!.env.local.example
+backend/.env
+backend/vendor/
+backend/database/*.sqlite
+backend/database/*.sqlite-*
+backend/storage/
+backend/bootstrap/cache/*.php
+backend/storage/*.key
+.DS_Store
