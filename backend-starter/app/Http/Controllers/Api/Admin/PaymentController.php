@@ -10,14 +10,15 @@ class PaymentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Payment::query()->with('registration')->latest();
+        $query = Payment::query()->with(['registration', 'team'])->latest();
         if ($request->filled('status') && $request->query('status') !== 'all') $query->where('status', $request->query('status'));
         $page = $query->paginate(min(max($request->integer('per_page', 50), 1), 100));
         return response()->json(['data' => $page->getCollection()->map(fn (Payment $p) => [
             'id' => $p->id,
             'reference' => 'PAY-' . $p->id,
-            'registration_reference' => $p->registration?->registration_code,
-            'runner' => trim(($p->registration?->first_name ?? '') . ' ' . ($p->registration?->last_name ?? '')) ?: '—',
+            'registration_reference' => $p->team?->registration_code ?? $p->registration?->registration_code,
+            'runner' => $p->team?->name ? 'Team: ' . $p->team->name : (trim(($p->registration?->first_name ?? '') . ' ' . ($p->registration?->last_name ?? '')) ?: '—'),
+            'team_reference' => $p->team?->registration_code,
             'provider' => $p->provider,
             'amount' => (float) $p->amount,
             'currency' => $p->currency,

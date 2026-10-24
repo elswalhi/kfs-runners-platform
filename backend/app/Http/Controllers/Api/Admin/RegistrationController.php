@@ -37,14 +37,15 @@ class RegistrationController extends Controller
 
     public function show(Registration $registration)
     {
-        $registration->load(['race', 'payments', 'team']);
+        $registration->load(['race', 'payments', 'team.payments']);
         $data = $this->serialize($registration);
         $data['id_number_masked'] = $registration->id_number ? '••••••' . substr((string) $registration->id_number, -4) : null;
         $data['document_available'] = (bool) $registration->document_path;
-        $data['payments'] = $registration->payments->map(fn ($p) => [
+        $data['payments'] = $registration->payments->merge($registration->team?->payments ?? collect())->unique('id')->map(fn ($p) => [
             'id' => $p->id, 'provider' => $p->provider, 'amount' => (float) $p->amount,
             'currency' => $p->currency, 'status' => $p->status,
             'transaction_reference' => $p->transaction_reference,
+            'payment_scope' => $p->team_id ? 'Team checkout' : 'Individual checkout',
             'created_at' => $p->created_at?->toISOString(),
         ]);
         return response()->json(['data' => $data]);
@@ -69,6 +70,7 @@ class RegistrationController extends Controller
             'id' => $r->id, 'reference' => $r->registration_code,
             'first_name' => $r->first_name, 'last_name' => $r->last_name,
             'email' => $r->email, 'phone' => $r->phone,
+            'birth_date' => $r->birth_date?->toDateString(), 'gender' => $r->gender,
             'race' => $r->race ? ['id' => $r->race->id, 'name' => $r->race->name, 'distance_label' => $r->race->distance_label] : null,
             'team' => $r->team ? ['id' => $r->team->id, 'name' => $r->team->name] : null,
             'kit_type' => $r->kit_type, 'shirt_size' => $r->shirt_size,

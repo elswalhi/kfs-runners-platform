@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\Registration;
+use App\Models\Team;
 use App\Services\EasyKashCashApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -82,6 +83,17 @@ class EasyKashCallbackController extends Controller
                     'payment_status' => $paymentStatus,
                     'updated_at' => now(),
                 ]);
+            }
+            if ($lockedPayment->team_id) {
+                $teamRegistrationChanges = [
+                    'payment_status' => $paymentStatus,
+                    'updated_at' => now(),
+                ];
+                if ($paymentStatus === 'paid') $teamRegistrationChanges['status'] = 'confirmed';
+                Registration::query()->where('team_id', $lockedPayment->team_id)->update($teamRegistrationChanges);
+                if ($paymentStatus === 'paid') {
+                    Team::query()->whereKey($lockedPayment->team_id)->update(['status' => 'confirmed', 'updated_at' => now()]);
+                }
             }
         });
 

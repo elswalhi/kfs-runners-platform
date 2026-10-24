@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
-  Activity, ArrowRight, ArrowUpRight, BadgeCheck, Bell, CalendarDays,
-  Check, ChevronDown, CircleDollarSign, CreditCard, Download, Eye,
-  Filter, Gauge, LayoutDashboard, LogOut, Menu, Search,
-  ShieldCheck, Ticket, TrendingUp, Users, X, Zap,
+  Activity, ArrowLeft, ArrowRight, ArrowUpRight, BadgeCheck, Bell, CalendarDays,
+  Check, ChevronDown, CircleDollarSign, CreditCard, Download, Eye, FileSpreadsheet,
+  FileText, Filter, Gauge, LayoutDashboard, LogOut, Menu, Save, Search, ShieldCheck,
+  Ticket, TrendingUp, Users, X, Zap,
 } from 'lucide-react';
-import { adminLogin, adminLogout, getDashboardSummary, getPayments, getRaceKitPrices, getRegistrations, hasAdminSession, isDemoMode, updateRaceKitPrice } from './api';
+import { adminLogin, adminLogout, downloadRegistrationDocument, getDashboardSummary, getPayments, getRaceKitPrices, getRegistrationDetails, getRegistrations, hasAdminSession, isDemoMode, updateRaceKitPrice, updateRegistrationStatus } from './api';
+import { PricingManagementPage, RaceManagementPage, TeamImportPage } from './ManagementPages';
 import './admin.css';
 
 const currency = value => new Intl.NumberFormat('en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 0 }).format(Number(value || 0));
@@ -42,6 +43,8 @@ function AdminShell() {
     { to: '/admin/registrations', label: 'Registrations', icon: Users, badge: 'Runners' },
     { to: '/admin/payments', label: 'Payments', icon: CreditCard },
     { to: '/admin/pricing', label: 'Race & pricing', icon: Ticket },
+    { to: '/admin/races', label: 'Race management', icon: Activity },
+    { to: '/admin/team-import', label: 'Team Excel import', icon: FileSpreadsheet },
   ];
   async function logout() { try { await adminLogout(); } finally { navigate('/admin/login', { replace: true }); } }
   return <div className="admin-app">
@@ -125,13 +128,71 @@ function Dashboard() {
 
 function RegistrationTable({ rows, compact = false }) {
   if (!rows?.length) return <div className="admin-empty-state"><Users size={24}/><b>No registrations found</b><span>New runner registrations will appear here.</span></div>;
-  return <div className="admin-table-scroll"><table className={`admin-table ${compact ? 'compact' : ''}`}><thead><tr><th>Runner</th><th>Race / kit</th><th>Registration</th><th>Payment</th><th>Amount</th><th>Date</th>{!compact && <th/>}</tr></thead><tbody>{rows.map(r => <tr key={r.id}><td><div className="admin-runner-cell"><span className="admin-runner-avatar">{(r.first_name || 'R')[0]}{(r.last_name || 'N')[0]}</span><span><b>{r.runner_name || `${r.first_name || ''} ${r.last_name || ''}`.trim()}</b><small>{r.email}</small></span></div></td><td><div className="admin-race-cell"><b>{r.race?.distance_label || r.race?.name || r.race_name || '—'}</b><small>{titleCase(r.kit_type)} Kit{r.shirt_size ? ` · ${r.shirt_size}` : ''}</small></div></td><td><StatusPill value={r.status}/></td><td><StatusPill value={r.payment_status}/></td><td className="admin-amount-cell">{currency(r.amount)}</td><td className="admin-date-cell">{dateText(r.created_at)}</td>{!compact && <td><button className="admin-table-icon" title="View runner details" onClick={() => window.alert(`Runner: ${r.runner_name || r.first_name}\nReference: ${r.reference || `KFS-${r.id}`}\nEmail: ${r.email}\nPhone: ${r.phone || '—'}`)}><Eye size={16}/></button></td>}</tr>)}</tbody></table></div>;
+  return <div className="admin-table-scroll"><table className={`admin-table ${compact ? 'compact' : ''}`}><thead><tr><th>Runner</th><th>Race / kit</th><th>Registration</th><th>Payment</th><th>Amount</th><th>Date</th>{!compact && <th/>}</tr></thead><tbody>{rows.map(r => <tr key={r.id}><td><div className="admin-runner-cell"><span className="admin-runner-avatar">{(r.first_name || 'R')[0]}{(r.last_name || 'N')[0]}</span><span><b>{r.runner_name || `${r.first_name || ''} ${r.last_name || ''}`.trim()}</b><small>{r.email}</small></span></div></td><td><div className="admin-race-cell"><b>{r.race?.distance_label || r.race?.name || r.race_name || '—'}</b><small>{titleCase(r.kit_type)} Kit{r.shirt_size ? ` · ${r.shirt_size}` : ''}</small></div></td><td><StatusPill value={r.status}/></td><td><StatusPill value={r.payment_status}/></td><td className="admin-amount-cell">{currency(r.amount)}</td><td className="admin-date-cell">{dateText(r.created_at)}</td>{!compact && <td><Link className="admin-table-icon" title="View runner details" aria-label="View runner details" to={`/admin/registrations/${r.id}`}><Eye size={16}/></Link></td>}</tr>)}</tbody></table></div>;
 }
 
 function RegistrationsPage() {
   const [rows, setRows] = useState([]); const [search, setSearch] = useState(''); const [paymentStatus, setPaymentStatus] = useState('all'); const [loading, setLoading] = useState(true); const [error, setError] = useState('');
   useEffect(() => { setLoading(true); getRegistrations({ search, payment_status: paymentStatus }).then(r => setRows((r.data || r).map ? (r.data || r) : [])).catch(e => setError(e.message)).finally(() => setLoading(false)); }, [search, paymentStatus]);
   return <><PageHeading eyebrow="RUNNER DATABASE" title="Registrations" accent="management" description="Search runner records, review race selections and monitor payment status." action={<button className="admin-secondary-button" onClick={() => downloadCsv('kfs-registrations.csv', rows.map(r => ({ reference: r.reference || `KFS-${r.id}`, first_name: r.first_name, last_name: r.last_name, email: r.email, phone: r.phone, race: r.race?.distance_label || r.race?.name || r.race_name, kit: r.kit_type, shirt_size: r.shirt_size, amount_egp: r.amount, registration_status: r.status, payment_status: r.payment_status, created_at: r.created_at })))}><Download size={15}/> Export list</button>}/><section className="admin-panel admin-list-panel"><div className="admin-list-toolbar"><div className="admin-search-box"><Search size={16}/><input placeholder="Search name, email or reference…" value={search} onChange={e => setSearch(e.target.value)}/></div><label className="admin-filter-select"><Filter size={15}/><select value={paymentStatus} onChange={e => setPaymentStatus(e.target.value)}><option value="all">All payments</option><option value="paid">Paid</option><option value="pending">Pending</option><option value="failed">Failed</option></select></label></div>{error && <div className="admin-inline-error">{error}</div>}{loading ? <div className="admin-loading"><span className="admin-spinner"/> Loading registrations…</div> : <RegistrationTable rows={rows.map(r => ({ ...r, runner_name: `${r.first_name || ''} ${r.last_name || ''}`.trim() }))}/>}<div className="admin-table-footer"><span>Showing <b>{rows.length}</b> registration records</span><span>Records are filtered by the connected API when configured.</span></div></section></>;
+}
+
+function RegistrationDetailsPage() {
+  const { registrationId } = useParams();
+  const [registration, setRegistration] = useState(null);
+  const [draftStatus, setDraftStatus] = useState('pending');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  useEffect(() => {
+    let active = true;
+    getRegistrationDetails(registrationId).then(result => {
+      if (!active) return;
+      const data = result.data || result;
+      setRegistration(data); setDraftStatus(data.status || 'pending');
+    }).catch(e => { if (active) setError(e.message); }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [registrationId]);
+  async function saveStatus() {
+    setSaving(true); setError(''); setSuccess('');
+    try {
+      const result = await updateRegistrationStatus(registrationId, draftStatus);
+      setRegistration(previous => ({ ...previous, ...(result.data || {}), status: draftStatus }));
+      setSuccess('Registration status updated.');
+    } catch (e) { setError(e.message); }
+    finally { setSaving(false); }
+  }
+  async function downloadDocument() {
+    setDownloading(true); setError('');
+    try { await downloadRegistrationDocument(registrationId, registration.reference); }
+    catch (e) { setError(e.message); }
+    finally { setDownloading(false); }
+  }
+  if (loading) return <div className="admin-loading"><span className="admin-spinner"/> Loading runner details…</div>;
+  if (!registration) return <><PageHeading eyebrow="RUNNER DATABASE" title="Registration" accent="details" description="The registration details could not be loaded." action={<Link className="admin-secondary-button" to="/admin/registrations"><ArrowLeft size={15}/> Back to registrations</Link>}/>{error && <div className="admin-inline-error">{error}</div>}</>;
+  const fullName = `${registration.first_name || ''} ${registration.last_name || ''}`.trim();
+  return <>
+    <PageHeading eyebrow="RUNNER DATABASE / DETAILS" title={fullName || 'Runner'} accent="profile" description={`Registration reference ${registration.reference || '—'}. Personal identity details are masked in the dashboard.`} action={<Link className="admin-secondary-button" to="/admin/registrations"><ArrowLeft size={15}/> Back to registrations</Link>}/>
+    {error && <div className="admin-inline-error">{error}</div>}{success && <div className="admin-inline-success"><Check size={16}/>{success}</div>}
+    <div className="admin-detail-grid">
+      <section className="admin-panel admin-detail-panel"><div className="admin-panel-heading"><div><h3>Runner information</h3><p>Contact and race-day details</p></div><StatusPill value={registration.payment_status}/></div><div className="admin-detail-fields">
+        <DetailField label="First name" value={registration.first_name}/><DetailField label="Last name" value={registration.last_name}/>
+        <DetailField label="Email address" value={registration.email}/><DetailField label="Mobile number" value={registration.phone}/>
+        <DetailField label="Date of birth" value={registration.birth_date ? dateText(registration.birth_date) : '—'}/><DetailField label="Gender" value={titleCase(registration.gender)}/>
+        <DetailField label="ID number" value={registration.id_number_masked || 'Not provided'}/><DetailField label="Team / club" value={registration.team?.name || 'Individual registration'}/>
+        <DetailField label="Race" value={registration.race?.distance_label ? `${registration.race.distance_label} · ${registration.race.name}` : registration.race?.name}/><DetailField label="Package" value={`${titleCase(registration.kit_type)} Kit${registration.shirt_size ? ` · Shirt ${registration.shirt_size}` : ''}`}/>
+        <DetailField label="Entry fee" value={currency(registration.amount)}/><DetailField label="Submitted" value={dateText(registration.created_at)}/>
+      </div>{registration.document_available && <button className="admin-secondary-button" onClick={downloadDocument} disabled={downloading}><FileText size={15}/>{downloading ? 'Preparing document…' : 'Download submitted document'}</button>}</section>
+      <section className="admin-panel admin-detail-panel"><div className="admin-panel-heading"><div><h3>Registration status</h3><p>Operational status can be updated by an administrator.</p></div><StatusPill value={registration.status}/></div><div className="admin-detail-status-form"><label className="admin-field-label">Registration status<select value={draftStatus} onChange={e => setDraftStatus(e.target.value)}><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="cancelled">Cancelled</option></select></label><button className="admin-primary-button" onClick={saveStatus} disabled={saving || draftStatus === registration.status}>{saving ? 'Saving…' : 'Save status'} <Save size={15}/></button></div><div className="admin-info-callout"><ShieldCheck size={17}/><div><b>Payment status is gateway controlled</b><p>{titleCase(registration.payment_status)} payments can only change after EasyKash’s signed server callback. Updating registration status does not change payment status.</p></div></div></section>
+      <section className="admin-panel admin-detail-panel admin-detail-payments"><div className="admin-panel-heading"><div><h3>Payment history</h3><p>Verified transaction records for this runner</p></div><CreditCard size={18} className="admin-panel-heading-icon"/></div>{registration.payments?.length ? <div className="admin-table-scroll"><table className="admin-table"><thead><tr><th>Provider</th><th>Payment scope</th><th>Transaction reference</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody>{registration.payments.map(payment => <tr key={payment.id}><td>{titleCase(payment.provider)}</td><td>{payment.payment_scope || 'Individual checkout'}</td><td className="admin-mono">{payment.transaction_reference || '—'}</td><td className="admin-amount-cell">{currency(payment.amount)}</td><td><StatusPill value={payment.status}/></td><td className="admin-date-cell">{dateText(payment.created_at)}</td></tr>)}</tbody></table></div> : <div className="admin-empty-state"><CreditCard size={23}/><b>No payment attempts found</b></div>}</section>
+    </div>
+  </>;
+}
+
+function DetailField({ label, value }) {
+  return <div className="admin-detail-field"><span>{label}</span><b>{value || '—'}</b></div>;
 }
 
 function PaymentsPage() {
@@ -157,8 +218,11 @@ export default function AdminPortal() {
     <Route path="/admin" element={<AdminGate/>}>
       <Route index element={<Dashboard/>}/>
       <Route path="registrations" element={<RegistrationsPage/>}/>
+      <Route path="registrations/:registrationId" element={<RegistrationDetailsPage/>}/>
       <Route path="payments" element={<PaymentsPage/>}/>
-      <Route path="pricing" element={<PricingPage/>}/>
+      <Route path="pricing" element={<PricingManagementPage/>}/>
+      <Route path="races" element={<RaceManagementPage/>}/>
+      <Route path="team-import" element={<TeamImportPage/>}/>
       <Route path="*" element={<NotFoundAdmin/>}/>
     </Route>
   </Routes>;

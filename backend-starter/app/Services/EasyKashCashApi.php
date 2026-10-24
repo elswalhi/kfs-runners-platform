@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Registration;
+use App\Models\Team;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -17,26 +18,45 @@ class EasyKashCashApi
 
     public function createPaymentLink(Registration $registration): array
     {
+        $phone = preg_replace('/\D+/', '', $registration->phone);
+        return $this->createCheckoutLink([
+            'amount' => (float) $registration->amount,
+            'currency' => $registration->currency,
+            'name' => trim($registration->first_name . ' ' . $registration->last_name),
+            'email' => $registration->email,
+            'mobile' => $phone,
+            'customerReference' => $registration->registration_code,
+        ]);
+    }
+
+    public function createTeamPaymentLink(Team $team, float $amount, string $currency): array
+    {
+        return $this->createCheckoutLink([
+            'amount' => $amount,
+            'currency' => $currency,
+            'name' => $team->contact_name,
+            'email' => $team->email,
+            'mobile' => preg_replace('/\D+/', '', $team->phone),
+            'customerReference' => $team->registration_code,
+        ]);
+    }
+
+    private function createCheckoutLink(array $payer): array
+    {
         $cashExpiry = (int) config('easykash.cash_expiry', 48);
         if (! in_array($cashExpiry, [3, 6, 12, 48], true)) {
             throw new RuntimeException('EasyKash cash expiry must be 3, 6, 12, or 48 hours.');
         }
 
-        $phone = preg_replace('/\D+/', '', $registration->phone);
         $response = Http::withHeaders(['authorization' => (string) config('easykash.api_key')])
             ->asJson()
             ->acceptJson()
             ->timeout(20)
             ->post(config('easykash.pay_api_url'), [
-                'amount' => (float) $registration->amount,
-                'currency' => $registration->currency,
+                ...$payer,
                 // Omitting paymentOptions asks EasyKash to show every method enabled for this account.
                 'cashExpiry' => $cashExpiry,
-                'name' => trim($registration->first_name . ' ' . $registration->last_name),
-                'email' => $registration->email,
-                'mobile' => $phone,
                 'redirectUrl' => config('easykash.redirect_url'),
-                'customerReference' => $registration->registration_code,
             ]);
 
         $responseData = $response->json();

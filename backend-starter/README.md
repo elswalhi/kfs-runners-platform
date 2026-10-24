@@ -56,8 +56,16 @@ Never deploy with `APP_DEBUG=true`, never reuse the example credentials, and use
 - `GET /api/admin/registrations/{id}/document` — secure authenticated download of the runner document.
 - `PATCH /api/admin/registrations/{id}` — update operational status only.
 - `GET /api/admin/payments` — payment attempts.
+- `GET /api/admin/races` — race categories with kit prices and registration counts.
+- `POST /api/admin/races` — create a race with Full and Basic kit prices.
+- `GET /api/admin/races/{id}` — race details.
+- `PUT /api/admin/races/{id}` — update race details and availability.
+- `DELETE /api/admin/races/{id}` — delete a race with no registrations.
+- `POST /api/admin/team-imports` — validate a 2–200 runner roster and create one team checkout.
 - `GET /api/admin/race-kit-prices` — prices for the dashboard.
+- `POST /api/admin/race-kit-prices` — add a price for a race/kit combination.
 - `PUT /api/admin/race-kit-prices/{id}` — update one price.
+- `DELETE /api/admin/race-kit-prices/{id}` — remove an unused price; active races must keep both kits enabled.
 - `GET /api/races` — public race categories and active prices.
 - `POST /api/registrations` — validate and create a pending registration.
 - `GET /api/registrations/{reference}/payment-status` — return the registration's public payment status and any verified payment details.
@@ -66,3 +74,5 @@ Never deploy with `APP_DEBUG=true`, never reuse the example credentials, and use
 ## Payments status
 
 The registration flow asks Laravel to create an EasyKash hosted checkout link, then sends the runner to EasyKash to choose among the payment methods enabled for the merchant account. Omitting `paymentOptions` lets EasyKash show all enabled methods. Configure `EASYKASH_API_KEY`, `EASYKASH_HMAC_SECRET`, and the public `EASYKASH_REDIRECT_URL` in the server environment; never put credentials in React or a committed file. Set the EasyKash Integration Settings callback URL to `https://YOUR-API-HOST/api/payments/easykash/callback`. The browser returns to the redirect URL after checkout, while the registration is marked paid only after a signed callback passes HMAC-SHA512 verification and amount matching.
+
+The admin team importer reads `.xlsx` files in the browser with ExcelJS and sends the parsed rows as JSON. The original workbook is not uploaded. Each team creates one EasyKash checkout for the sum of member prices; the signed callback updates the team's payment status and every member's payment and registration status. A deterministic request reference prevents a repeated import of the same roster from generating another group checkout. Do not re-import a roster after a payment-link response is uncertain; reconcile it using the returned team reference.
