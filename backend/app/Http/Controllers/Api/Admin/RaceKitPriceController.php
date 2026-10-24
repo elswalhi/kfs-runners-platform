@@ -16,7 +16,7 @@ class RaceKitPriceController extends Controller
     public function update(Request $request, RaceKitPrice $raceKitPrice)
     {
         $validated = $request->validate([
-            'price' => ['required', 'numeric', 'min:0', 'max:1000000'],
+            'price' => ['required', 'numeric', 'gt:1', 'max:1000000'],
             'is_active' => ['sometimes', 'boolean'],
         ]);
         $raceKitPrice->update($validated);

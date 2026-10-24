@@ -53,6 +53,11 @@ class PublicRegistrationController extends Controller
         $race = Race::query()->where('slug', $validated['race'])->where('is_active', true)->firstOrFail();
         $price = RaceKitPrice::query()->where('race_id', $race->id)->where('kit_type', $validated['kit'])->where('is_active', true)->first();
         if (!$price) return response()->json(['message' => 'This race and kit option is currently unavailable.'], 422);
+        if ((float) $price->price <= 1) {
+            return response()->json([
+                'message' => 'This race price must be greater than 1 ' . $price->currency . ' to use EasyKash. Update the race-kit price in the admin panel.',
+            ], 422);
+        }
         if (! $easyKash->configured()) {
             return response()->json(['message' => 'EasyKash payment credentials are not configured on the Laravel server.'], 503);
         }
