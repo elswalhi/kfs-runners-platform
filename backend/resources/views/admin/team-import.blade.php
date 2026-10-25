@@ -2,15 +2,165 @@
 @section('title', 'Team roster import · KFS Runners Admin')
 @section('section', 'Team Excel import')
 @section('content')
-<div class="admin-page-heading"><div><div class="admin-eyebrow">BULK REGISTRATION</div><h1>Team roster <span>import</span></h1><p>Read an Excel roster, validate all runners, then create one EasyKash checkout for the group.</p></div><button id="download-template" type="button" class="admin-secondary-button">↓ Download Excel template</button></div>
-<div class="admin-info-callout"><span>♢</span><div><b>One team, one payment link</b><p>All participants are validated before the database changes. The spreadsheet is parsed in your browser and is not uploaded or stored. Runner ID numbers are encrypted in the database.</p></div></div>
-<div id="team-error" class="admin-inline-error" role="alert" hidden></div>
-<section id="team-result" class="admin-panel admin-team-result" hidden><div class="admin-team-result-icon">✓</div><div class="admin-team-result-copy"><div class="admin-eyebrow" id="result-kicker">TEAM ROSTER SAVED</div><h2 id="result-title">Checkout is ready</h2><p id="result-message"></p><div class="admin-team-result-meta"><span>Team / club<b id="result-team"></b></span><span>Team reference<b id="result-reference"></b></span><span>Participants<b id="result-count"></b></span><span>Group total<b id="result-amount"></b></span><span>Payment status<b id="result-status"></b></span></div><div id="checkout-row" class="admin-checkout-link" hidden><input id="checkout-link" readonly aria-label="EasyKash checkout link"><button type="button" id="copy-checkout" class="admin-secondary-button">Copy link</button><a id="open-checkout" class="admin-secondary-button" target="_blank" rel="noreferrer">Open checkout ↗</a></div></div><button id="new-roster" type="button" class="admin-secondary-button admin-new-roster">Import another team</button></section>
+<div class="stitch-hero">
+    <div class="stitch-hero-copy">
+        <span class="stitch-eyebrow">BULK REGISTRATION</span>
+        <h1>Team Roster Import</h1>
+        <p>Read an Excel roster, validate all runners, then generate a single EasyKash checkout for the entire team.</p>
+    </div>
+    <div class="stitch-hero-actions">
+        <button id="download-template" type="button" class="stitch-btn stitch-btn-secondary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Download Excel Template
+        </button>
+    </div>
+</div>
+
+<div class="stitch-callout" style="margin-bottom: 24px;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    <div>
+        <b>One team, one group payment link</b>
+        <p>All participants are validated client-side before touching the database. The spreadsheet is parsed in your browser and is never stored. Runner ID numbers are securely encrypted in the database.</p>
+    </div>
+</div>
+
+<div id="team-error" class="stitch-callout" style="margin-bottom: 24px; border-left-color: #ef4444; background: #fef2f2; color: #991b1b;" role="alert" hidden></div>
+
+<section id="team-result" class="stitch-table-panel" style="margin-bottom: 28px; padding: 28px;" hidden>
+    <div style="display: flex; gap: 20px; align-items: flex-start;">
+        <div style="width: 48px; height: 48px; border-radius: 50%; background: #ecfdf5; color: #047857; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 22px; font-weight: 800;">
+            ✓
+        </div>
+        <div style="flex: 1;">
+            <div class="stitch-eyebrow" id="result-kicker">TEAM ROSTER SAVED</div>
+            <h2 id="result-title" style="margin: 4px 0 8px; font-size: 20px; font-weight: 800; color: var(--st-text-primary);">Checkout is ready</h2>
+            <p id="result-message" style="margin: 0 0 20px; font-size: 13px; color: var(--st-text-secondary); line-height: 1.5;"></p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; background: var(--st-surface-subtle); padding: 16px; border-radius: var(--st-radius-md); border: 1px solid var(--st-border); margin-bottom: 20px;">
+                <div>
+                    <div style="font-size: 11px; font-weight: 700; color: var(--st-text-muted); text-transform: uppercase;">Team / Club</div>
+                    <b id="result-team" style="font-size: 14px; color: var(--st-text-primary);"></b>
+                </div>
+                <div>
+                    <div style="font-size: 11px; font-weight: 700; color: var(--st-text-muted); text-transform: uppercase;">Reference</div>
+                    <b id="result-reference" style="font-size: 14px; color: var(--st-primary); font-family: monospace;"></b>
+                </div>
+                <div>
+                    <div style="font-size: 11px; font-weight: 700; color: var(--st-text-muted); text-transform: uppercase;">Participants</div>
+                    <b id="result-count" style="font-size: 14px; color: var(--st-text-primary);"></b>
+                </div>
+                <div>
+                    <div style="font-size: 11px; font-weight: 700; color: var(--st-text-muted); text-transform: uppercase;">Total</div>
+                    <b id="result-amount" style="font-size: 14px; color: #047857;"></b>
+                </div>
+                <div>
+                    <div style="font-size: 11px; font-weight: 700; color: var(--st-text-muted); text-transform: uppercase;">Payment</div>
+                    <b id="result-status" style="font-size: 14px; text-transform: uppercase;"></b>
+                </div>
+            </div>
+
+            <div id="checkout-row" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;" hidden>
+                <input id="checkout-link" readonly aria-label="EasyKash checkout link" class="stitch-input" style="flex: 1; min-width: 260px; font-family: monospace; font-size: 12px;">
+                <button type="button" id="copy-checkout" class="stitch-btn stitch-btn-secondary">Copy Link</button>
+                <a id="open-checkout" class="stitch-btn stitch-btn-primary" target="_blank" rel="noreferrer">Open Checkout ↗</a>
+            </div>
+        </div>
+        <div>
+            <button id="new-roster" type="button" class="stitch-btn stitch-btn-secondary">Import Another Team</button>
+        </div>
+    </div>
+</section>
+
 <form id="team-import-form">
-    <section class="admin-panel admin-form-panel admin-team-contact"><div class="admin-panel-heading"><div><h3>Team contact</h3><p>EasyKash creates one group checkout using this contact’s details.</p></div></div><div class="admin-form-grid"><label>Team / club name<input required maxlength="150" name="team_name" placeholder="e.g. Kafr El-Sheikh Runners"></label><label>Contact person<input required maxlength="150" name="contact_name" placeholder="Team captain or organizer"></label><label>Contact email<input required type="email" maxlength="190" name="email"></label><label>Contact mobile<input required type="tel" maxlength="32" name="phone" placeholder="01012345678"></label></div></section>
-    <section class="admin-panel admin-form-panel admin-roster-upload"><div class="admin-panel-heading"><div><h3>Participants spreadsheet</h3><p>Upload the completed Roster sheet from the Excel template.</p></div></div><label class="admin-upload-zone"><input id="roster-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"><span class="admin-upload-icon">↑</span><b id="roster-file-name">Choose an Excel roster</b><small id="roster-file-count">XLSX only · up to 5 MB · 2–200 participants</small></label><p class="admin-form-hint">Required columns: first_name, last_name, email, phone, birth_date, gender, id_number, race_slug, kit_type, shirt_size. Store phone and ID cells as Text to preserve leading zeros. Active races: {{ $races->pluck('slug')->join(', ') ?: 'None configured' }}.</p><div id="roster-preview" class="admin-table-scroll admin-roster-preview" hidden><table class="admin-table"><thead><tr><th>Runner</th><th>Email / phone</th><th>Race / kit</th><th>Date of birth</th></tr></thead><tbody id="roster-preview-rows"></tbody></table><div id="roster-preview-foot" class="admin-table-footer"></div></div></section>
-    <label class="admin-checkbox-field admin-team-terms"><input type="checkbox" id="team-terms" required> I confirm that the listed team members agreed to the submitted details and race terms.</label>
-    <div class="admin-team-submit-row"><span>One payment request covers every listed member. Payment stays pending until EasyKash’s signed callback arrives.</span><button class="admin-primary-button" id="submit-team" type="submit" disabled>Validate roster & create checkout →</button></div>
+    <div class="stitch-table-panel" style="margin-bottom: 24px;">
+        <div class="stitch-panel-header">
+            <div>
+                <h2 class="stitch-panel-title">1. Team Contact Details</h2>
+                <p class="stitch-panel-subtitle">EasyKash creates the single payment order using these organizer details.</p>
+            </div>
+        </div>
+        <div style="padding: 24px;">
+            <div class="stitch-form-grid">
+                <div class="stitch-form-group">
+                    <label>Team / Club Name</label>
+                    <input required maxlength="150" name="team_name" placeholder="e.g. Kafr El-Sheikh Runners" class="stitch-input">
+                </div>
+                <div class="stitch-form-group">
+                    <label>Contact Person</label>
+                    <input required maxlength="150" name="contact_name" placeholder="Team captain or organizer" class="stitch-input">
+                </div>
+                <div class="stitch-form-group">
+                    <label>Contact Email</label>
+                    <input required type="email" maxlength="190" name="email" placeholder="captain@example.com" class="stitch-input">
+                </div>
+                <div class="stitch-form-group">
+                    <label>Contact Mobile</label>
+                    <input required type="tel" maxlength="32" name="phone" placeholder="01012345678" class="stitch-input">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stitch-table-panel" style="margin-bottom: 24px;">
+        <div class="stitch-panel-header">
+            <div>
+                <h2 class="stitch-panel-title">2. Participants Spreadsheet</h2>
+                <p class="stitch-panel-subtitle">Upload the filled Roster sheet from the provided Excel template.</p>
+            </div>
+        </div>
+        <div style="padding: 24px;">
+            <label class="stitch-upload-box">
+                <input id="roster-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                <div class="stitch-upload-icon-circle">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                </div>
+                <b id="roster-file-name" style="font-size: 15px; color: var(--st-text-primary);">Click or drag & drop Excel roster here</b>
+                <span id="roster-file-count" style="font-size: 12px; color: var(--st-text-muted);">XLSX files only · up to 5 MB · 2 to 200 participants</span>
+            </label>
+
+            <p style="font-size: 12px; color: var(--st-text-muted); line-height: 1.5; margin-top: 14px;">
+                <b>Required headers:</b> <code>first_name, last_name, email, phone, birth_date, gender, id_number, race_slug, kit_type, shirt_size</code>.<br>
+                Active race slugs: <b>{{ $races->pluck('slug')->join(', ') ?: 'None configured' }}</b>.
+            </p>
+
+            <div id="roster-preview" style="margin-top: 20px;" hidden>
+                <div class="stitch-table-container">
+                    <table class="stitch-table">
+                        <thead>
+                            <tr>
+                                <th>Runner</th>
+                                <th>Email & Phone</th>
+                                <th>Race & Kit</th>
+                                <th>Birth Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="roster-preview-rows"></tbody>
+                    </table>
+                </div>
+                <div id="roster-preview-foot" style="padding: 12px 16px; font-size: 12px; font-weight: 600; color: var(--st-text-muted); background: var(--st-surface-subtle); border-top: 1px solid var(--st-border);"></div>
+            </div>
+        </div>
+    </div>
+
+    <div style="background: #ffffff; border-radius: var(--st-radius-lg); padding: 20px 24px; box-shadow: var(--st-shadow-card); display: flex; flex-direction: column; gap: 16px;">
+        <label class="stitch-checkbox-label" style="font-size: 13px;">
+            <input type="checkbox" id="team-terms" required>
+            I confirm that the listed team members agreed to the submitted details, waiver, and marathon terms.
+        </label>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--st-border); pt: 14px; padding-top: 14px; flex-wrap: wrap; gap: 14px;">
+            <span style="font-size: 12px; color: var(--st-text-muted); max-width: 480px;">
+                One group checkout will be generated covering all listed participants. Entries remain pending until EasyKash callback confirmation.
+            </span>
+            <button class="stitch-btn stitch-btn-primary" id="submit-team" type="submit" disabled style="height: 44px; padding: 0 24px; font-size: 14px;">
+                Validate Roster & Create Checkout →
+            </button>
+        </div>
+    </div>
 </form>
 @endsection
 
@@ -68,11 +218,11 @@
         return result;
     }
     function showPreview() {
-        document.getElementById('roster-file-name').textContent = selectedFile?.name || 'Choose an Excel roster';
+        document.getElementById('roster-file-name').textContent = selectedFile?.name || 'Click or drag & drop Excel roster here';
         document.getElementById('roster-file-count').textContent = members.length ? `${members.length} participant rows ready` : 'XLSX only · up to 5 MB · 2–200 participants';
         const preview = document.getElementById('roster-preview');
         preview.hidden = !members.length;
-        document.getElementById('roster-preview-rows').innerHTML = members.slice(0, 8).map(member => `<tr><td>${esc(member.first_name)} ${esc(member.last_name)}</td><td>${esc(member.email)}<small class="admin-cell-sub">${esc(member.phone)}</small></td><td>${esc(member.race_slug)} · ${esc(member.kit_type)}${member.shirt_size ? ' · '+esc(member.shirt_size) : ''}</td><td>${esc(member.birth_date)}</td></tr>`).join('');
+        document.getElementById('roster-preview-rows').innerHTML = members.slice(0, 8).map(member => `<tr><td><b style="color:var(--st-text-primary);">${esc(member.first_name)} ${esc(member.last_name)}</b></td><td><div>${esc(member.email)}</div><small style="color:var(--st-text-muted); font-size:11px;">${esc(member.phone)}</small></td><td><span class="stitch-distance-chip">${esc(member.race_slug)}</span> <span class="stitch-badge status-active" style="font-size:10px;">${esc(member.kit_type)}</span>${member.shirt_size ? ' <span class="stitch-distance-chip">'+esc(member.shirt_size)+'</span>' : ''}</td><td>${esc(member.birth_date)}</td></tr>`).join('');
         document.getElementById('roster-preview-foot').textContent = members.length > 8 ? `Showing the first 8 of ${members.length} participants.` : `${members.length} participants ready to validate.`;
         updateSubmit();
     }

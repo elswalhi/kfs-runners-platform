@@ -1175,3 +1175,241 @@ body {
     line-height: 1.5;
     opacity: 0.9;
 }
+
+/* ==========================================================================
+   Stitch Form Layouts, Pricing Cards & Upload Zones
+   ========================================================================== */
+
+.stitch-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.stitch-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.stitch-form-group label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--st-text-muted);
+    letter-spacing: 0.5px;
+}
+
+.stitch-form-group .stitch-input {
+    padding: 0 14px;
+}
+
+.stitch-btn-danger {
+    background: #fff1f2;
+    color: #e11d48;
+    border: 1px solid #fecdd3;
+    box-shadow: var(--st-shadow-xs);
+}
+
+.stitch-btn-danger:hover {
+    background: #ffe4e6;
+    color: #be123c;
+    border-color: #fda4af;
+    transform: translateY(-1px);
+}
+
+.stitch-badge.status-active {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+
+.stitch-badge.status-inactive {
+    background: #f1f5f9;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+}
+
+.stitch-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--st-text-secondary);
+    cursor: pointer;
+    user-select: none;
+}
+
+.stitch-checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--st-primary);
+    cursor: pointer;
+}
+
+/* Pricing Card Component */
+.stitch-pricing-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.stitch-pricing-card {
+    background: #ffffff;
+    border-radius: var(--st-radius-lg);
+    box-shadow: var(--st-shadow-card);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.stitch-pricing-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--st-border);
+}
+
+.stitch-pricing-race-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.stitch-pricing-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--st-primary-subtle);
+    color: var(--st-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.stitch-pricing-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+}
+
+.stitch-price-item {
+    padding: 18px;
+    border-radius: var(--st-radius-md);
+    border: 1px solid var(--st-border);
+    background: var(--st-surface-subtle);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.stitch-price-item-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.stitch-price-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+}
+
+.stitch-price-dot.full {
+    background: var(--st-primary);
+    box-shadow: 0 0 0 3px var(--st-primary-glow);
+}
+
+.stitch-price-dot.basic {
+    background: #0284c7;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2);
+}
+
+.stitch-price-inputs {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.stitch-input-currency-wrap {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--st-border);
+    border-radius: var(--st-radius-md);
+    background: #ffffff;
+    overflow: hidden;
+    height: 40px;
+    flex: 1;
+    min-width: 140px;
+}
+
+.stitch-input-currency-wrap span {
+    padding: 0 12px;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--st-text-muted);
+    background: var(--st-surface-hover);
+    height: 100%;
+    display: flex;
+    align-items: center;
+    border-right: 1px solid var(--st-border);
+}
+
+.stitch-input-currency-wrap input {
+    border: none;
+    outline: none;
+    padding: 0 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--st-text-primary);
+    width: 100%;
+    min-width: 0;
+}
+
+/* Upload Dropzone */
+.stitch-upload-box {
+    border: 2px dashed var(--st-border-strong);
+    border-radius: var(--st-radius-lg);
+    background: var(--st-surface-subtle);
+    padding: 36px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+
+.stitch-upload-box:hover {
+    border-color: var(--st-primary);
+    background: var(--st-primary-subtle);
+}
+
+.stitch-upload-box input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.stitch-upload-icon-circle {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: var(--st-shadow-sm);
+    color: var(--st-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
