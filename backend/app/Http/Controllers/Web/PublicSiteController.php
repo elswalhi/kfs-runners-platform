@@ -46,12 +46,22 @@ class PublicSiteController
         }
 
         $payload = $response->getData(true);
-        if ($response->getStatusCode() === 201 && filled(data_get($payload, 'payment.redirect_url'))) {
-            if ($reference = data_get($payload, 'payment.reference') ?: data_get($payload, 'data.reference')) {
+        if ($response->getStatusCode() === 201) {
+            $reference = data_get($payload, 'payment.reference') ?: data_get($payload, 'data.reference');
+            if ($reference) {
                 $request->session()->put('kfs_last_payment_reference', $reference);
             }
 
-            return redirect()->away(data_get($payload, 'payment.redirect_url'));
+            if (filled(data_get($payload, 'payment.redirect_url'))) {
+                return redirect()->away(data_get($payload, 'payment.redirect_url'));
+            }
+
+            if (data_get($payload, 'data.payment_status') === 'paid') {
+                return redirect()->route('register', [
+                    'customerReference' => $reference,
+                    'status' => 'PAID',
+                ]);
+            }
         }
 
         return redirect()->route('register')

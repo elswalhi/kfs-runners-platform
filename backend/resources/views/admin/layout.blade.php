@@ -50,6 +50,12 @@
                 <span>Race & Pricing</span>
             </a>
 
+            <a class="stitch-nav-item {{ request()->routeIs('admin.promo-codes*') ? 'active' : '' }}" href="{{ route('admin.promo-codes') }}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m20.59 13.41-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                <span>Promo Codes</span>
+                <span class="stitch-nav-badge" style="background:#ecfdf5; color:#047857;">Discounts</span>
+            </a>
+
             <a class="stitch-nav-item {{ request()->routeIs('admin.races') ? 'active' : '' }}" href="{{ route('admin.races') }}">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>
                 <span>Race Categories</span>

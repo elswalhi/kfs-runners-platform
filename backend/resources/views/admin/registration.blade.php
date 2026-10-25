@@ -92,6 +92,11 @@
                 <span class="label">Ticket Price</span>
                 <strong class="val" style="color: var(--st-primary); font-size: 16px;">
                     EGP {{ number_format($registration->amount, 2) }}
+                    @if($registration->promo_code)
+                        <small style="display:block; font-size:11px; color:#047857; font-weight:600; margin-top:3px;">
+                            Promo code: {{ $registration->promo_code }} (-EGP {{ number_format($registration->discount_amount, 2) }})
+                        </small>
+                    @endif
                 </strong>
             </div>
         </div>

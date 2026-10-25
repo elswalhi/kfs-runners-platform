@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Api\Admin\TeamImportController;
 use App\Models\Payment;
+use App\Models\PromoCode;
 use App\Models\Race;
 use App\Models\RaceKitPrice;
 use App\Models\Registration;
@@ -224,6 +225,63 @@ class AdminWebController
         return back()->with('success', 'Race-kit price deleted.');
     }
 
+    public function promoCodes()
+    {
+        $promoCodes = PromoCode::query()->with('race')->withCount('registrations')->latest()->get();
+        $races = Race::query()->where('is_active', true)->orderBy('sort_order')->get();
+
+        $totalCodes = $promoCodes->count();
+        $activeCodes = $promoCodes->filter->isUsable()->count();
+        $totalRedemptions = (int) $promoCodes->sum('times_used');
+        $totalDiscountGiven = (float) Registration::query()->where('payment_status', 'paid')->sum('discount_amount');
+
+        return view('admin.promo-codes', compact('promoCodes', 'races', 'totalCodes', 'activeCodes', 'totalRedemptions', 'totalDiscountGiven'));
+    }
+
+    public function storePromoCode(Request $request)
+    {
+        $data = $request->validate([
+            'code' => ['required', 'string', 'max:64', 'alpha_dash', Rule::unique('promo_codes', 'code')],
+            'discount_type' => ['required', Rule::in(['percentage', 'fixed'])],
+            'discount_value' => ['required', 'numeric', 'gt:0', 'max:100000'],
+            'max_uses' => ['nullable', 'integer', 'min:1', 'max:1000000'],
+            'valid_from' => ['nullable', 'date'],
+            'valid_until' => ['nullable', 'date', 'after_or_equal:valid_from'],
+            'race_id' => ['nullable', 'integer', 'exists:races,id'],
+        ]);
+
+        if ($data['discount_type'] === 'percentage' && (float) $data['discount_value'] > 100) {
+            return back()->withErrors(['discount_value' => 'Percentage discount cannot exceed 100%.'])->withInput();
+        }
+
+        PromoCode::query()->create([
+            'code' => strtoupper(trim($data['code'])),
+            'discount_type' => $data['discount_type'],
+            'discount_value' => $data['discount_value'],
+            'max_uses' => $data['max_uses'] ?: null,
+            'valid_from' => $data['valid_from'] ?: null,
+            'valid_until' => $data['valid_until'] ?: null,
+            'race_id' => $data['race_id'] ?: null,
+            'is_active' => $request->boolean('is_active', true),
+        ]);
+
+        return back()->with('success', 'Promo code created successfully.');
+    }
+
+    public function togglePromoCode(PromoCode $promoCode)
+    {
+        $promoCode->update(['is_active' => ! $promoCode->is_active]);
+
+        return back()->with('success', 'Promo code status updated.');
+    }
+
+    public function deletePromoCode(PromoCode $promoCode)
+    {
+        $promoCode->delete();
+
+        return back()->with('success', 'Promo code deleted.');
+    }
+
     public function teamImport()
     {
         $races = Race::query()->where('is_active', true)->with(['kitPrices' => fn ($query) => $query->where('is_active', true)])->orderBy('sort_order')->get();
@@ -257,7 +315,8 @@ class AdminWebController
                 ->orWhere('first_name', 'like', "%{$search}%")
                 ->orWhere('last_name', 'like', "%{$search}%")
                 ->orWhere('email', 'like', "%{$search}%")
-                ->orWhere('phone', 'like', "%{$search}%"));
+                ->orWhere('phone', 'like', "%{$search}%")
+                ->orWhere('promo_code', 'like', "%{$search}%"));
         }
         if ($request->filled('payment_status') && $request->query('payment_status') !== 'all') {
             $query->where('payment_status', $request->query('payment_status'));

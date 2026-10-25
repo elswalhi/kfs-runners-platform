@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\PublicPromoCodeController;
 use App\Http\Controllers\Web\AdminWebAuthController;
 use App\Http\Controllers\Web\AdminWebController;
 use App\Http\Controllers\Web\PublicSiteController;
@@ -9,6 +10,7 @@ Route::get('/', [PublicSiteController::class, 'home'])->name('home');
 Route::get('/login', fn () => redirect()->route('admin.login'))->name('login');
 Route::get('/register', [PublicSiteController::class, 'register'])->name('register');
 Route::post('/register', [PublicSiteController::class, 'storeRegistration'])->middleware('throttle:10,1')->name('register.store');
+Route::post('/promo-codes/validate', [PublicPromoCodeController::class, 'validateCode'])->middleware('throttle:30,1')->name('promo-codes.validate');
 
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminWebAuthController::class, 'showLogin'])->name('login');
@@ -32,6 +34,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/pricing', [AdminWebController::class, 'storePrice'])->name('pricing.store');
         Route::put('/pricing/{raceKitPrice}', [AdminWebController::class, 'updatePrice'])->name('pricing.update');
         Route::delete('/pricing/{raceKitPrice}', [AdminWebController::class, 'deletePrice'])->name('pricing.destroy');
+        Route::get('/promo-codes', [AdminWebController::class, 'promoCodes'])->name('promo-codes');
+        Route::post('/promo-codes', [AdminWebController::class, 'storePromoCode'])->name('promo-codes.store');
+        Route::patch('/promo-codes/{promoCode}/toggle', [AdminWebController::class, 'togglePromoCode'])->name('promo-codes.toggle');
+        Route::delete('/promo-codes/{promoCode}', [AdminWebController::class, 'deletePromoCode'])->name('promo-codes.destroy');
         Route::get('/team-import', [AdminWebController::class, 'teamImport'])->name('team-import');
         Route::post('/team-import', [AdminWebController::class, 'importTeam'])->middleware('throttle:10,1')->name('team-import.store');
     });

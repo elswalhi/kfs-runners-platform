@@ -63,13 +63,66 @@
                 <div class="form-section-heading section-heading-spaced"><span>⇧</span><span>Runner document</span><small>Optional</small></div>
                 <label class="upload-drop"><input type="file" name="idFile" accept="image/jpeg,image/png,application/pdf"><span class="upload-icon">⇧</span><span><b id="file-name">Upload ID / passport (optional)</b><small>JPG, PNG or PDF · Max 2 MB</small></span></label>
                 <label class="team-name-label">Team / running club <small>(optional)</small><input name="teamName" value="{{ old('teamName') }}" placeholder="e.g. Kafr El-Sheikh Runners"></label>
+
+                <!-- Promo Code Box -->
+                <div class="form-section-heading section-heading-spaced"><span>%</span><span>Promo code or voucher</span><small>Optional</small></div>
+                <div class="promo-code-box" style="background:#f8faf9; border:1px solid #dce5df; border-radius:8px; padding:16px; margin-top:14px;">
+                    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <input type="text" id="promo-code-input" placeholder="e.g. KFS50" maxlength="64" value="{{ old('promoCode') }}" style="flex:1; min-width:160px; height:42px; border:1px solid #c9d8d0; border-radius:6px; padding:0 12px; font-family:monospace; font-weight:700; text-transform:uppercase; font-size:13px; color:#064b3e; background:#fff;">
+                        <button type="button" id="apply-promo-btn" style="height:42px; padding:0 18px; background:#064b3e; color:#ffffff; border:none; border-radius:6px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; cursor:pointer; transition:all 0.2s;">
+                            Apply
+                        </button>
+                        <button type="button" id="remove-promo-btn" style="height:42px; padding:0 14px; background:#fff1f2; color:#be123c; border:1px solid #fecdd3; border-radius:6px; font-size:11px; font-weight:800; cursor:pointer;" hidden>
+                            Remove
+                        </button>
+                    </div>
+                    <div id="promo-feedback" style="margin-top:10px; font-size:11px; font-weight:600; line-height:1.4;" hidden></div>
+                    <input type="hidden" name="promoCode" id="applied-promo-code" value="{{ old('promoCode') }}">
+                </div>
+
                 <label class="terms-check"><input type="checkbox" name="terms" value="1" required><span>I confirm that the details provided are correct and agree to the race terms and conditions. <b>*</b></span></label>
                 <button class="btn btn-red form-submit" type="submit" id="submit-registration" @disabled($races->isEmpty())>Continue to payment <span>→</span></button>
                 <p class="form-fineprint">♙ Payment is confirmed by EasyKash’s signed server callback.</p>
             </form>
         </div>
 
-        <aside class="registration-order-col"><div class="order-card"><div class="order-card-heading"><div><span class="form-step">YOUR ENTRY</span><h3>Registration <span>summary</span></h3></div><span class="order-lock">♙</span></div><div class="order-race-image"><div class="order-race-photo"></div><div class="order-race-overlay"><span>KFS RUNNERS</span><b id="order-distance">{{ $races->first()?->distance_label ?? '—' }}</b><small id="order-race">{{ $races->first()?->name ?? 'Race category' }}</small></div></div><div class="order-detail-row"><span>Race distance</span><b id="order-distance-row">{{ $races->first()?->distance_label ?? '—' }}</b></div><div class="order-detail-row"><span>Race category</span><b id="order-race-row">{{ $races->first()?->name ?? '—' }}</b></div><div class="order-detail-row"><span>Race kit</span><b id="order-kit-row">Full Kit</b></div><div class="order-detail-row" id="order-shirt-row"><span>T-shirt size</span><b id="order-shirt">Not selected</b></div><div class="order-divider"></div><div class="order-price-line"><span>Entry fee</span><strong id="order-price">—</strong></div><div class="order-price-total"><span>Total preview</span><strong id="order-total">—</strong></div><p class="order-tax-note">Final price, availability, and payment status are confirmed by Laravel.</p><div class="order-benefits"><span>♢ Secure registration</span><span>▭ EasyKash checkout</span></div></div><div class="need-help-card"><h4>Need help choosing?</h4><p>Choose the distance that feels right for you. The best race is the one you show up for.</p><a href="{{ route('home') }}#race-categories" class="text-link">Explore the event <span>→</span></a></div></aside>
+        <aside class="registration-order-col">
+            <div class="order-card">
+                <div class="order-card-heading">
+                    <div>
+                        <span class="form-step">YOUR ENTRY</span>
+                        <h3>Registration <span>summary</span></h3>
+                    </div>
+                    <span class="order-lock">♙</span>
+                </div>
+                <div class="order-race-image">
+                    <div class="order-race-photo"></div>
+                    <div class="order-race-overlay">
+                        <span>KFS RUNNERS</span>
+                        <b id="order-distance">{{ $races->first()?->distance_label ?? '—' }}</b>
+                        <small id="order-race">{{ $races->first()?->name ?? 'Race category' }}</small>
+                    </div>
+                </div>
+                <div class="order-detail-row"><span>Race distance</span><b id="order-distance-row">{{ $races->first()?->distance_label ?? '—' }}</b></div>
+                <div class="order-detail-row"><span>Race category</span><b id="order-race-row">{{ $races->first()?->name ?? '—' }}</b></div>
+                <div class="order-detail-row"><span>Race kit</span><b id="order-kit-row">Full Kit</b></div>
+                <div class="order-detail-row" id="order-shirt-row"><span>T-shirt size</span><b id="order-shirt">Not selected</b></div>
+                <div class="order-divider"></div>
+                <div class="order-price-line"><span>Entry fee</span><strong id="order-price">—</strong></div>
+                <div class="order-price-line" id="order-discount-row" style="color:#047857;" hidden>
+                    <span>Promo discount (<b id="order-promo-label"></b>)</span>
+                    <strong id="order-discount" style="color:#047857;">—</strong>
+                </div>
+                <div class="order-price-total"><span>Total preview</span><strong id="order-total">—</strong></div>
+                <p class="order-tax-note">Final price, availability, and payment status are confirmed by Laravel.</p>
+                <div class="order-benefits"><span>♢ Secure registration</span><span>▭ EasyKash checkout</span></div>
+            </div>
+            <div class="need-help-card">
+                <h4>Need help choosing?</h4>
+                <p>Choose the distance that feels right for you. The best race is the one you show up for.</p>
+                <a href="{{ route('home') }}#race-categories" class="text-link">Explore the event <span>→</span></a>
+            </div>
+        </aside>
     </div></section>
 </main>
 @endsection
@@ -82,10 +135,22 @@
     const raceInput = document.getElementById('race-value');
     const kitInput = document.getElementById('kit-value');
     const shirtInput = document.getElementById('shirt-size');
+    const promoInput = document.getElementById('promo-code-input');
+    const appliedPromoHidden = document.getElementById('applied-promo-code');
+    const applyPromoBtn = document.getElementById('apply-promo-btn');
+    const removePromoBtn = document.getElementById('remove-promo-btn');
+    const promoFeedback = document.getElementById('promo-feedback');
+    const orderDiscountRow = document.getElementById('order-discount-row');
+    const orderPromoLabel = document.getElementById('order-promo-label');
+    const orderDiscount = document.getElementById('order-discount');
+
+    let appliedPromo = null;
+
     const price = value => new Intl.NumberFormat('en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 0 }).format(Number(value || 0));
     let selectedRace = races.find(item => item.dataset.race === raceInput.value) || races[0];
     let selectedKit = kits.find(item => item.dataset.kit === kitInput.value) || kits[0];
     const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = value; };
+
     function render() {
         if (!selectedRace || !selectedKit) return;
         races.forEach(item => item.classList.toggle('selected', item === selectedRace));
@@ -93,20 +158,39 @@
         raceInput.value = selectedRace.dataset.race;
         kitInput.value = selectedKit.dataset.kit;
         const kit = selectedKit.dataset.kit;
-        const amount = selectedRace.dataset[kit];
+        const baseAmount = Number(selectedRace.dataset[kit] || 0);
         const kitName = kit === 'full' ? 'Full Kit' : 'Basic Kit';
+
+        let discountAmount = 0;
+        let finalAmount = baseAmount;
+
+        if (appliedPromo) {
+            if (appliedPromo.discount_type === 'percentage') {
+                discountAmount = Math.round((baseAmount * Number(appliedPromo.discount_value)) / 100 * 100) / 100;
+            } else {
+                discountAmount = Math.min(baseAmount, Number(appliedPromo.discount_value));
+            }
+            finalAmount = Math.max(0, baseAmount - discountAmount);
+
+            orderDiscountRow.hidden = false;
+            orderPromoLabel.textContent = appliedPromo.code;
+            orderDiscount.textContent = '- ' + price(discountAmount);
+        } else {
+            orderDiscountRow.hidden = true;
+        }
+
         setText('summary-distance', selectedRace.dataset.distance);
         setText('summary-race', selectedRace.dataset.name);
         setText('summary-kit', kitName);
         setText('summary-kit-subtitle', kit === 'full' ? 'The complete race-day experience' : 'The essentials for your race');
-        setText('summary-price', price(amount));
+        setText('summary-price', finalAmount === 0 ? 'FREE' : price(finalAmount));
         setText('order-distance', selectedRace.dataset.distance);
         setText('order-distance-row', selectedRace.dataset.distance);
         setText('order-race', selectedRace.dataset.name);
         setText('order-race-row', selectedRace.dataset.name);
         setText('order-kit-row', kitName);
-        setText('order-price', price(amount));
-        setText('order-total', price(amount));
+        setText('order-price', price(baseAmount));
+        setText('order-total', finalAmount === 0 ? 'FREE (0 EGP)' : price(finalAmount));
         document.querySelectorAll('[data-price-for="full"]').forEach(el => el.textContent = price(selectedRace.dataset.full));
         document.querySelectorAll('[data-price-for="basic"]').forEach(el => el.textContent = price(selectedRace.dataset.basic));
         const full = kit === 'full';
@@ -114,22 +198,122 @@
         document.getElementById('order-shirt-row').hidden = !full;
         setText('order-shirt', shirtInput.value || 'Not selected');
     }
-    races.forEach(item => item.addEventListener('click', () => { selectedRace = item; render(); }));
-    kits.forEach(item => item.addEventListener('click', () => { selectedKit = item; render(); }));
+
+    async function validatePromo(code) {
+        if (!code || !code.trim()) return;
+        const raceSlug = selectedRace ? selectedRace.dataset.race : raceInput.value;
+        const kitType = selectedKit ? selectedKit.dataset.kit : kitInput.value;
+
+        applyPromoBtn.disabled = true;
+        applyPromoBtn.textContent = 'Checking…';
+        promoFeedback.hidden = false;
+        promoFeedback.style.color = '#0284c7';
+        promoFeedback.textContent = 'Validating code…';
+
+        try {
+            const token = document.querySelector('meta[name="csrf-token"]')?.content;
+            const res = await fetch('{{ route('promo-codes.validate') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': token || ''
+                },
+                body: JSON.stringify({
+                    code: code.trim(),
+                    race: raceSlug,
+                    kit: kitType
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok || !data.valid) {
+                throw new Error(data.message || 'Invalid promo code');
+            }
+
+            appliedPromo = data;
+            appliedPromoHidden.value = data.code;
+            promoInput.value = data.code;
+            promoInput.readOnly = true;
+            applyPromoBtn.hidden = true;
+            removePromoBtn.hidden = false;
+            promoFeedback.style.color = '#047857';
+            promoFeedback.textContent = '✓ ' + data.message;
+            render();
+        } catch (err) {
+            appliedPromo = null;
+            appliedPromoHidden.value = '';
+            promoInput.readOnly = false;
+            applyPromoBtn.hidden = false;
+            applyPromoBtn.disabled = false;
+            applyPromoBtn.textContent = 'Apply';
+            removePromoBtn.hidden = true;
+            promoFeedback.style.color = '#dc2626';
+            promoFeedback.textContent = '✕ ' + err.message;
+            render();
+        } finally {
+            applyPromoBtn.disabled = false;
+            applyPromoBtn.textContent = 'Apply';
+        }
+    }
+
+    function removePromo() {
+        appliedPromo = null;
+        appliedPromoHidden.value = '';
+        promoInput.value = '';
+        promoInput.readOnly = false;
+        promoFeedback.hidden = true;
+        promoFeedback.textContent = '';
+        applyPromoBtn.hidden = false;
+        applyPromoBtn.disabled = false;
+        applyPromoBtn.textContent = 'Apply';
+        removePromoBtn.hidden = true;
+        render();
+    }
+
+    applyPromoBtn?.addEventListener('click', () => validatePromo(promoInput.value));
+    promoInput?.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            validatePromo(promoInput.value);
+        }
+    });
+    removePromoBtn?.addEventListener('click', removePromo);
+
+    races.forEach(item => item.addEventListener('click', () => {
+        selectedRace = item;
+        render();
+        if (appliedPromo) validatePromo(appliedPromo.code);
+    }));
+    kits.forEach(item => item.addEventListener('click', () => {
+        selectedKit = item;
+        render();
+        if (appliedPromo) validatePromo(appliedPromo.code);
+    }));
+
     document.querySelectorAll('.shirt-size-choice').forEach(button => button.addEventListener('click', () => {
         shirtInput.value = button.dataset.size;
         document.querySelectorAll('.shirt-size-choice').forEach(item => item.classList.toggle('size-active', item === button));
         document.getElementById('shirt-size-hint').hidden = true;
         setText('order-shirt', button.dataset.size);
     }));
+
     document.querySelector('.upload-drop input')?.addEventListener('change', event => setText('file-name', event.target.files?.[0]?.name || 'Upload ID / passport (optional)'));
+
     document.getElementById('runner-form')?.addEventListener('submit', event => {
         if (kitInput.value === 'full' && !shirtInput.value) {
-            event.preventDefault(); document.getElementById('shirt-size-hint').hidden = false;
+            event.preventDefault();
+            document.getElementById('shirt-size-hint').hidden = false;
             document.getElementById('shirt-size-panel').scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     });
+
     render();
+
+    // Auto-validate old promo code if submitted with validation error
+    if (appliedPromoHidden.value) {
+        validatePromo(appliedPromoHidden.value);
+    }
 
     const params = new URLSearchParams(window.location.search);
     const reference = params.get('customerReference') || params.get('reference') || @json($returnReference ?? session('payment_reference'));

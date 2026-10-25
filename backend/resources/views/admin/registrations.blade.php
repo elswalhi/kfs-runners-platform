@@ -122,17 +122,28 @@
                             @endif
                         </td>
                         <td>
-                            <span class="stitch-badge status-{{ $item->payment_status }}">
-                                @if($item->payment_status === 'paid')
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                    <span>Paid</span>
-                                @elseif($item->payment_status === 'pending')
-                                    <span style="width: 6px; height: 6px; border-radius: 50%; background: #f59e0b;"></span>
-                                    <span>Pending</span>
-                                @else
-                                    <span>{{ ucfirst($item->payment_status) }}</span>
+                            <div style="display: flex; flex-direction: column; gap: 4px;">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span class="stitch-badge status-{{ $item->payment_status }}">
+                                        @if($item->payment_status === 'paid')
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                            <span>Paid</span>
+                                        @elseif($item->payment_status === 'pending')
+                                            <span style="width: 6px; height: 6px; border-radius: 50%; background: #f59e0b;"></span>
+                                            <span>Pending</span>
+                                        @else
+                                            <span>{{ ucfirst($item->payment_status) }}</span>
+                                        @endif
+                                    </span>
+                                    <b style="font-size: 12px; color: var(--st-text-primary);">{{ $item->currency }} {{ number_format($item->amount, 2) }}</b>
+                                </div>
+                                @if($item->promo_code)
+                                    <div style="font-size: 11px; color: #047857; display: flex; align-items: center; gap: 4px;">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m20.59 13.41-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+                                        <span><b>{{ $item->promo_code }}</b> (-{{ number_format($item->discount_amount, 2) }})</span>
+                                    </div>
                                 @endif
-                            </span>
+                            </div>
                         </td>
                         <td style="color: var(--st-text-muted); font-size: 12px; white-space: nowrap;">
                             {{ $item->created_at?->format('d M Y') }}

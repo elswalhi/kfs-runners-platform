@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
+use App\Models\PromoCode;
 use App\Models\Race;
 use App\Models\RaceKitPrice;
 use App\Models\Registration;
@@ -32,6 +33,7 @@ class PublicRegistrationController extends Controller
             'kit' => ['required', Rule::in(['full', 'basic'])],
             'shirtSize' => ['nullable', Rule::requiredIf($request->input('kit') === 'full'), Rule::in(['S', 'M', 'L', 'XL', 'XXL'])],
             'teamName' => ['nullable', 'string', 'max:150'],
+            'promoCode' => ['nullable', 'string', 'max:64'],
             'terms' => ['accepted'],
             'idFile' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
         ]);
@@ -52,12 +54,105 @@ class PublicRegistrationController extends Controller
 
         $race = Race::query()->where('slug', $validated['race'])->where('is_active', true)->firstOrFail();
         $price = RaceKitPrice::query()->where('race_id', $race->id)->where('kit_type', $validated['kit'])->where('is_active', true)->first();
-        if (!$price) return response()->json(['message' => 'This race and kit option is currently unavailable.'], 422);
-        if ((float) $price->price <= 1) {
+        if (! $price) {
+            return response()->json(['message' => 'This race and kit option is currently unavailable.'], 422);
+        }
+
+        $originalAmount = (float) $price->price;
+        $discountAmount = 0.00;
+        $finalAmount = $originalAmount;
+        $promo = null;
+
+        if (! empty($validated['promoCode'])) {
+            $cleanCode = strtoupper(trim($validated['promoCode']));
+            $promo = PromoCode::query()->where('code', $cleanCode)->first();
+
+            if (! $promo || ! $promo->isUsable() || ! $promo->isValidForRace($race->id)) {
+                return response()->json([
+                    'message' => 'The entered promo code is invalid, expired, or not applicable to this race.',
+                ], 422);
+            }
+
+            $discountAmount = $promo->calculateDiscount($originalAmount);
+            $finalAmount = max(0.00, round($originalAmount - $discountAmount, 2));
+        }
+
+        $documentPath = $request->file('idFile')?->store('runner-documents', 'local');
+
+        // Handle 100% Free Registration (discount reduces price to 0)
+        if ($finalAmount == 0.00) {
+            $registration = DB::transaction(function () use ($validated, $race, $price, $documentPath, $promo, $originalAmount, $discountAmount) {
+                $registration = Registration::query()->create([
+                    'registration_code' => $this->newCode(),
+                    'race_id' => $race->id,
+                    'promo_code_id' => $promo?->id,
+                    'promo_code' => $promo?->code,
+                    'kit_type' => $validated['kit'],
+                    'first_name' => $validated['firstName'],
+                    'last_name' => $validated['lastName'],
+                    'email' => $validated['email'],
+                    'phone' => $validated['phone'],
+                    'birth_date' => $validated['birthDate'],
+                    'gender' => $validated['gender'],
+                    'id_number' => $validated['idNumber'],
+                    'shirt_size' => $validated['kit'] === 'full' ? ($validated['shirtSize'] ?? null) : null,
+                    'team_name' => $validated['teamName'] ?? null,
+                    'document_path' => $documentPath,
+                    'status' => 'confirmed',
+                    'payment_status' => 'paid',
+                    'amount' => 0.00,
+                    'discount_amount' => $discountAmount,
+                    'original_amount' => $originalAmount,
+                    'currency' => $price->currency,
+                ]);
+
+                Payment::query()->create([
+                    'registration_id' => $registration->id,
+                    'provider' => 'promo_code',
+                    'amount' => 0.00,
+                    'currency' => $price->currency,
+                    'status' => 'paid',
+                    'transaction_reference' => $registration->registration_code,
+                    'verified_at' => now(),
+                    'payload' => [
+                        'promo_code' => $promo?->code,
+                        'discount_amount' => $discountAmount,
+                        'free_entry' => true,
+                    ],
+                ]);
+
+                if ($promo) {
+                    $promo->increment('times_used');
+                }
+
+                return $registration;
+            });
+
             return response()->json([
-                'message' => 'This race price must be greater than 1 ' . $price->currency . ' to use EasyKash. Update the race-kit price in the admin panel.',
+                'message' => 'Registration complete! 100% discount applied via promo code.',
+                'data' => [
+                    'id' => $registration->id,
+                    'reference' => $registration->registration_code,
+                    'amount' => 0.00,
+                    'currency' => $registration->currency,
+                    'payment_status' => 'paid',
+                ],
+                'payment' => [
+                    'reference' => $registration->registration_code,
+                    'redirect_url' => null,
+                    'status' => 'paid',
+                ],
+                'payment_integration_ready' => true,
+            ], 201);
+        }
+
+        // For paid registrations, EasyKash requires amount > 1 EGP
+        if ($finalAmount <= 1.00) {
+            return response()->json([
+                'message' => 'After discount, payable amount must be either 0 EGP or at least 1.01 EGP for payment gateway processing.',
             ], 422);
         }
+
         if (! $easyKash->configured()) {
             return response()->json(['message' => 'EasyKash payment credentials are not configured on the Laravel server.'], 503);
         }
@@ -65,11 +160,12 @@ class PublicRegistrationController extends Controller
             return response()->json(['message' => 'EasyKash cash checkout expiry is not configured correctly.'], 503);
         }
 
-        $documentPath = $request->file('idFile')?->store('runner-documents', 'local');
-        $registration = DB::transaction(function () use ($validated, $race, $price, $documentPath) {
+        $registration = DB::transaction(function () use ($validated, $race, $price, $documentPath, $promo, $originalAmount, $discountAmount, $finalAmount) {
             $registration = Registration::query()->create([
                 'registration_code' => $this->newCode(),
                 'race_id' => $race->id,
+                'promo_code_id' => $promo?->id,
+                'promo_code' => $promo?->code,
                 'kit_type' => $validated['kit'],
                 'first_name' => $validated['firstName'],
                 'last_name' => $validated['lastName'],
@@ -83,17 +179,25 @@ class PublicRegistrationController extends Controller
                 'document_path' => $documentPath,
                 'status' => 'pending',
                 'payment_status' => 'pending',
-                'amount' => $price->price,
+                'amount' => $finalAmount,
+                'discount_amount' => $discountAmount,
+                'original_amount' => $originalAmount,
                 'currency' => $price->currency,
             ]);
+
             Payment::query()->create([
                 'registration_id' => $registration->id,
                 'provider' => 'easykash',
-                'amount' => $price->price,
+                'amount' => $finalAmount,
                 'currency' => $price->currency,
                 'status' => 'pending',
                 'transaction_reference' => $registration->registration_code,
             ]);
+
+            if ($promo) {
+                $promo->increment('times_used');
+            }
+
             return $registration;
         });
 
@@ -110,8 +214,6 @@ class PublicRegistrationController extends Controller
                 'data' => ['reference' => $registration->registration_code, 'payment_status' => 'pending'],
             ], 504);
         } catch (RuntimeException $exception) {
-            // A rejected, malformed, or intermediary response does not prove that
-            // EasyKash did not create a payment. Keep it reconcilable by callback.
             Log::warning('EasyKash rejected or returned an invalid payment response.', [
                 'registration_reference' => $registration->registration_code,
             ]);
@@ -130,6 +232,8 @@ class PublicRegistrationController extends Controller
                 'id' => $registration->id,
                 'reference' => $registration->registration_code,
                 'amount' => (float) $registration->amount,
+                'discount_amount' => (float) $registration->discount_amount,
+                'original_amount' => (float) $registration->original_amount,
                 'currency' => $registration->currency,
                 'payment_status' => 'pending',
             ],
@@ -144,8 +248,9 @@ class PublicRegistrationController extends Controller
 
     private function newCode(): string
     {
-        do { $code = 'KFS-' . strtoupper(Str::random(8)); }
-        while (Registration::query()->where('registration_code', $code)->exists());
+        do {
+            $code = 'KFS-' . strtoupper(Str::random(8));
+        } while (Registration::query()->where('registration_code', $code)->exists());
         return $code;
     }
 
