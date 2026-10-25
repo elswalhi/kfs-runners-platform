@@ -22,10 +22,10 @@
         </a>
         <button class="mobile-menu-btn" type="button" aria-label="Open menu" aria-expanded="false" id="mobile-menu-toggle">☰</button>
         <nav class="main-nav" aria-label="Main navigation" id="main-nav">
-            <a href="{{ route('home') }}">Home</a>
             <a href="{{ route('home') }}#the-race">The race</a>
             <a href="{{ route('home') }}#race-categories">Race categories</a>
             <a href="{{ route('home') }}#whats-included">What's included</a>
+            <a href="{{ route('home') }}#faq">FAQ</a>
             <a href="{{ route('register') }}" class="nav-cta">Register now <span aria-hidden="true">↗</span></a>
         </nav>
     </div>

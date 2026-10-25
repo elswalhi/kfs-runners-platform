@@ -2,52 +2,253 @@
 
 @section('title', 'KFS Runners · Your race. Your story.')
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/kfs-home.css') }}">
+@endpush
+
 @section('content')
-<main>
-    <section class="hero-section">
-        <div class="hero-photo" style="background-image:linear-gradient(90deg,rgba(3,35,30,.94),rgba(3,35,30,.72) 43%,rgba(3,35,30,.1)),url('https://events.elatiky.com/wp-content/uploads/2018/03/h1-slider-1-background-img.jpg')"></div><div class="hero-pattern"></div>
-        <div class="wrap hero-content"><div class="hero-text">
-            <span class="eyebrow-pill"><span class="pulse-dot"></span> KAFR EL-SHEIKH MARATHON</span>
-            <h1>MORE THAN<br><span>A RACE.</span></h1><p class="hero-lede">Your next finish line starts here.</p>
-            <p class="hero-copy">Run, challenge yourself, and become part of the KFS Runners family. There is a distance for every goal and every pace.</p>
-            <div class="hero-actions"><a href="{{ route('register') }}" class="btn btn-red">Register for the race <span>↗</span></a><a href="#the-race" class="btn btn-outline-light">Explore the race <span>↓</span></a></div>
-            <div class="hero-meta"><div><span>⌖</span><span><b>Kafr El-Sheikh</b><small>Egypt</small></span></div><div><span>♙</span><span><b>Every runner</b><small>Every pace, every story</small></span></div><div><span>♡</span><span><b>One community</b><small>One finish line</small></span></div></div>
-        </div><div class="hero-stamp" aria-hidden="true"><span>RUN</span><span>YOUR</span><strong>STORY</strong><i>→</i></div></div><a href="#race-categories" class="hero-scroll"><span></span> Scroll to explore</a>
+<main class="home-redesign">
+    <section class="home-hero" id="the-race" aria-labelledby="home-title">
+        <div class="home-hero-photo" aria-hidden="true"></div>
+        <div class="wrap home-hero-layout">
+            <div class="home-hero-copy">
+                <p class="home-eyebrow"><span></span> KFS RUNNERS · KAFR EL-SHEIKH</p>
+                <h1 id="home-title">YOUR RACE.<br><span>YOUR STORY.</span></h1>
+                <p class="home-lede">Choose your distance, pick your kit, and take the first step toward your next finish line.</p>
+                <a href="{{ route('register') }}" class="home-primary-button">Register for the race <span aria-hidden="true">→</span></a>
+                <div class="home-assurances">
+                    <span><i aria-hidden="true">✓</i> Secure registration</span>
+                    <span><i aria-hidden="true">↗</i> Solo or team entry</span>
+                </div>
+            </div>
+
+            <aside class="home-race-card" aria-label="Race overview">
+                @php($featuredPrice = $featuredRace?->kitPrices->firstWhere('kit_type', 'full') ?? $featuredRace?->kitPrices->sortBy('price')->first())
+                @if ($featuredRace)
+                    <p class="home-card-kicker">FEATURED DISTANCE</p>
+                    <h2 id="home-featured-distance">{{ $featuredRace->distance_label }}</h2>
+                    <p class="home-featured-name" id="home-featured-name">{{ $featuredRace->name }}</p>
+                @else
+                    <p class="home-card-kicker">KFS RUNNERS</p>
+                    <h2 id="home-featured-distance">Race day</h2>
+                    <p class="home-featured-name" id="home-featured-name">Race registration is being prepared.</p>
+                @endif
+
+                <div class="home-card-divider"></div>
+                <div class="home-distance-slider-heading">
+                    <p class="home-card-kicker">DISTANCE OPTIONS</p>
+                    <div class="home-slider-controls" aria-label="Slide through race distances">
+                        <button type="button" data-distance-slide="-1" aria-label="Previous distances">←</button>
+                        <button type="button" data-distance-slide="1" aria-label="Next distances">→</button>
+                    </div>
+                </div>
+                <div class="home-distance-options" id="home-distance-slider" role="group" aria-label="Choose a race distance">
+                    @forelse ($races as $race)
+                        @php($racePrice = $race->kitPrices->firstWhere('kit_type', 'full') ?? $race->kitPrices->sortBy('price')->first())
+                        <a href="{{ route('register', ['race' => $race->slug]) }}" data-distance-option data-distance="{{ $race->distance_label }}" data-race-name="{{ $race->name }}" data-price="{{ $racePrice ? number_format((float) $racePrice->price, 0, '.', '') : '' }}" data-currency="{{ $racePrice?->currency ?? 'EGP' }}" data-kit="{{ $racePrice?->kit_type === 'basic' ? 'Basic Kit' : 'Full Kit' }}" aria-label="Register for {{ $race->name }}">{{ $race->distance_label }}</a>
+                    @empty
+                        <span>Coming soon</span>
+                    @endforelse
+                </div>
+
+                <div class="home-card-divider"></div>
+                <div class="home-feature-kit">
+                    <div>
+                        <p class="home-card-kicker">RACE PACKAGE</p>
+                        <strong>Full Kit</strong>
+                        <span>The complete race-day experience</span>
+                    </div>
+                    <span class="home-kit-mark" aria-hidden="true">✳</span>
+                </div>
+                <div class="home-entry-price">
+                    <span id="home-entry-label">{{ ($featuredPrice?->kit_type ?? 'full') === 'basic' ? 'Basic Kit entry' : 'Full Kit entry' }}</span>
+                    @if ($featuredPrice)
+                        <strong id="home-entry-value">{{ $featuredPrice->currency }} {{ number_format((float) $featuredPrice->price, 0) }}</strong>
+                    @else
+                        <strong id="home-entry-value">See race options</strong>
+                    @endif
+                </div>
+            </aside>
+        </div>
+        <a class="home-scroll-link" href="#race-categories"><span aria-hidden="true">↓</span> Find your distance</a>
     </section>
 
-    <section class="intro-strip" id="the-race"><div class="wrap intro-grid">
-        <div class="intro-title"><div class="section-kicker"><span></span> THE KFS EXPERIENCE</div><h2>We run.<br><span>We become.</span></h2></div>
-        <div class="intro-copy"><p class="large-copy">A race is more than the distance between the start and finish. It is every early morning, every step forward, and every person cheering beside you.</p><p>KFS Runners brings people together through movement, sport, and a shared belief that progress starts when you take the first step.</p><a href="{{ route('register') }}" class="text-link">Be part of the story <span>→</span></a></div>
-        <div class="intro-badge"><span aria-hidden="true" style="font-size:36px">♧</span><span>START<br>TOGETHER</span><b>FINISH STRONG</b></div>
-    </div></section>
+    <section class="home-distances" id="race-categories" aria-labelledby="distances-title">
+        <div class="wrap">
+            <div class="home-section-heading">
+                <div>
+                    <p class="home-section-kicker"><span></span> KFS RUNNERS · KAFR EL-SHEIKH</p>
+                    <h2 id="distances-title">FIND YOUR <span>DISTANCE.</span></h2>
+                </div>
+                <p>Whether you are taking your first steps or chasing a new personal best, there is a race for you. Same great atmosphere. A stronger you.</p>
+            </div>
 
-    <section class="races-section section-pad" id="race-categories"><div class="wrap">
-        <div class="section-heading centered"><div class="section-kicker"><span></span> FIND YOUR DISTANCE</div><h2>CHOOSE YOUR <span>CHALLENGE</span></h2><p>Different distances. One community. Find the race that fits you.</p></div>
-        <div class="race-card-grid">
-            @forelse ($races as $index => $race)
-                @php($color = ['red', 'green', 'light', 'sand', 'sage'][$index % 5])
-                <a href="{{ route('register', ['race' => $race->slug]) }}" class="race-card race-{{ $color }}" style="cursor: pointer; text-decoration: none; color: inherit;"><div class="race-card-top"><span class="race-number">{{ sprintf('%02d', $index + 1) }}</span><span>↗</span></div><div class="race-distance">{{ $race->distance_label }}</div><h3>{{ $race->name }}</h3><p>{{ $race->category_type === 'family' ? 'Bring your family and run together.' : ($race->category_type === 'para' ? 'A race built around access and inclusion.' : 'A challenge for every pace and every goal.') }}</p><span class="race-card-link">Choose this race <span>→</span></span></a>
-            @empty
-                <div class="race-card race-light"><h3>Race categories are being prepared</h3><p>Please check back soon.</p></div>
-            @endforelse
-        </div>
-        <div class="race-footnote"><span>♢ Inclusive race options</span><span>⌖ Kafr El-Sheikh, Egypt</span><span>♙ Run solo or with your team</span></div>
-    </div></section>
-
-    <section class="experience-section"><div class="experience-photo" style="background-image:linear-gradient(90deg,rgba(2,39,32,.96),rgba(2,39,32,.83) 50%,rgba(2,39,32,.3)),url('https://events.elatiky.com/wp-content/uploads/2018/03/h1-slider-2-background-img.jpg')"></div>
-        <div class="wrap experience-content"><div class="experience-heading"><div class="section-kicker"><span></span> RACE DAY, YOUR WAY</div><h2>MAKE EVERY<br><span>STEP COUNT.</span></h2><p>Choose the race kit that works for you. Bring your energy; we'll take care of the race experience.</p><a href="{{ route('register') }}" class="btn btn-red">Pick your race kit <span>↗</span></a></div>
-            <div class="kit-info-grid">
-                <a href="{{ route('register', ['kit' => 'full']) }}" class="kit-info-card kit-full" style="cursor: pointer; text-decoration: none; color: inherit;"><span class="kit-tag">THE COMPLETE EXPERIENCE</span><div class="kit-card-heading"><div class="kit-symbol">♧</div><div><h3>Full Kit</h3><p>The complete race-day experience</p></div></div><ul><li>✓ Finisher medal</li><li>✓ Official KFS Runners T-shirt</li><li>✓ Runner bag</li><li>✓ Certificate of participation</li><li>✓ Race support and photographs</li></ul><span class="kit-link">Select Full Kit <span>→</span></span></a>
-                <a href="{{ route('register', ['kit' => 'basic']) }}" class="kit-info-card kit-basic" style="cursor: pointer; text-decoration: none; color: inherit;"><span class="kit-tag">THE ESSENTIALS</span><div class="kit-card-heading"><div class="kit-symbol">◇</div><div><h3>Basic Kit</h3><p>The essentials for your race</p></div></div><ul><li>✓ Finisher medal</li><li>✓ Certificate of participation</li><li>✓ Race support and photographs</li></ul><span class="kit-link">Select Basic Kit <span>→</span></span></a>
+            <div class="home-distance-grid">
+                @forelse ($races as $index => $race)
+                    @php($raceStartingPrice = $race->kitPrices->sortBy('price')->first())
+                    <a href="{{ route('register', ['race' => $race->slug]) }}" class="home-distance-card" style="--card-position: {{ [22, 50, 78][$index % 3] }}%;">
+                        <div class="home-distance-photo" aria-hidden="true">
+                            <span>{{ sprintf('%02d', $index + 1) }}</span>
+                            <span class="home-photo-arrow" aria-hidden="true">↗</span>
+                        </div>
+                        <div class="home-distance-copy">
+                            <p class="home-card-kicker">{{ $race->distance_label }}</p>
+                            <h3>{{ $race->name }}</h3>
+                            <p class="home-distance-description">
+                                @if ($race->category_type === 'family')
+                                    Bring your family and enjoy the race together.
+                                @elseif ($race->category_type === 'para')
+                                    An inclusive race experience made for every runner.
+                                @else
+                                    A challenge for every pace and every goal.
+                                @endif
+                            </p>
+                            <div class="home-distance-card-footer">
+                                <span>
+                                    @if ($raceStartingPrice)
+                                        From {{ $raceStartingPrice->currency }} {{ number_format((float) $raceStartingPrice->price, 0) }}
+                                    @else
+                                        View race details
+                                    @endif
+                                </span>
+                                <b>Choose race <span aria-hidden="true">→</span></b>
+                            </div>
+                        </div>
+                    </a>
+                @empty
+                    <div class="home-empty-races">Race categories are being prepared. Please check back soon.</div>
+                @endforelse
             </div>
         </div>
     </section>
 
-    <section class="included-section section-pad" id="whats-included"><div class="wrap"><div class="section-heading centered"><div class="section-kicker"><span></span> READY FOR RACE DAY</div><h2>WHAT'S <span>INCLUDED?</span></h2><p>More than a bib number — a full experience built around every runner.</p></div><div class="included-grid">
-        <div class="included-item"><span>◇</span><b>Race medal</b><small>Celebrate your finish</small></div><div class="included-item"><span>♧</span><b>Official T-shirt</b><small>Included with Full Kit</small></div><div class="included-item"><span>♢</span><b>Race support</b><small>Support along the way</small></div><div class="included-item"><span>◎</span><b>Race photos</b><small>Keep the memories</small></div><div class="included-item"><span>♿</span><b>Inclusive options</b><small>Family & Para Race</small></div>
-    </div></div></section>
+    <section class="home-kits" aria-labelledby="kits-title">
+        <div class="wrap home-kits-layout">
+            <div class="home-kits-intro">
+                <p class="home-section-kicker"><span></span> RACE DAY, YOUR WAY</p>
+                <h2 id="kits-title">PICK YOUR<br><span>RACE KIT.</span></h2>
+                <p>Bring your energy. Choose the race package that feels right for you.</p>
+                <a href="{{ route('register') }}" class="home-text-link">Explore registration <span aria-hidden="true">→</span></a>
+            </div>
+            <div class="home-kit-grid">
+                <a href="{{ route('register', ['kit' => 'full']) }}" class="home-kit-card home-kit-full">
+                    <span class="home-kit-label">THE COMPLETE EXPERIENCE</span>
+                    <div class="home-kit-card-heading"><span aria-hidden="true">✳</span><div><h3>Full Kit</h3><p>Everything you need for race day</p></div></div>
+                    <ul><li>Finisher medal</li><li>Official KFS Runners T-shirt</li><li>Runner bag</li><li>Certificate of participation</li><li>Race support and photographs</li></ul>
+                    <span class="home-kit-action">Choose Full Kit <span aria-hidden="true">→</span></span>
+                </a>
+                <a href="{{ route('register', ['kit' => 'basic']) }}" class="home-kit-card">
+                    <span class="home-kit-label">THE ESSENTIALS</span>
+                    <div class="home-kit-card-heading"><span aria-hidden="true">◇</span><div><h3>Basic Kit</h3><p>The essentials for your race</p></div></div>
+                    <ul><li>Finisher medal</li><li>Certificate of participation</li><li>Race support and photographs</li></ul>
+                    <span class="home-kit-action">Choose Basic Kit <span aria-hidden="true">→</span></span>
+                </a>
+            </div>
+        </div>
+    </section>
 
-    <section class="community-section"><div class="wrap community-grid"><div><div class="section-kicker"><span></span> ONE COMMUNITY</div><h2>YOUR PEOPLE.<br><span>YOUR PACE.</span></h2></div><div class="community-copy"><p>Whether this is your first 2K or your next 21K, show up for yourself and discover what we can do together.</p><a href="{{ route('register') }}" class="btn btn-dark">Join KFS Runners <span>↗</span></a></div><div class="community-quote"><span>“</span><p>The finish line is a moment. The journey is what makes you a runner.</p><small>KFS RUNNERS · KAFR EL-SHEIKH</small></div></div></section>
-    <section class="cta-band"><div class="wrap cta-band-inner"><div><span>YOUR NEXT FINISH LINE</span><h2>READY TO <b>RUN?</b></h2></div><a href="{{ route('register') }}" class="btn btn-white">Register now <span>↗</span></a></div></section>
+    <section class="home-included" id="whats-included" aria-labelledby="included-title">
+        <div class="wrap">
+            <div class="home-included-heading">
+                <p class="home-section-kicker"><span></span> READY FOR RACE DAY</p>
+                <h2 id="included-title">MORE THAN A <span>BIB NUMBER.</span></h2>
+            </div>
+            <div class="home-included-grid">
+                <div><span aria-hidden="true">◇</span><strong>Finisher medal</strong><small>Celebrate your finish</small></div>
+                <div><span aria-hidden="true">✳</span><strong>Official race T-shirt</strong><small>Included with Full Kit</small></div>
+                <div><span aria-hidden="true">＋</span><strong>Race support</strong><small>Support along the route</small></div>
+                <div><span aria-hidden="true">◎</span><strong>Race photos</strong><small>Keep the memories</small></div>
+                <div><span aria-hidden="true">♿</span><strong>Inclusive options</strong><small>Family and Para Race</small></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="home-faq" id="faq" aria-labelledby="faq-title">
+        <div class="wrap home-faq-layout">
+            <div>
+                <p class="home-section-kicker"><span></span> GOOD TO KNOW</p>
+                <h2 id="faq-title">READY, SET,<br><span>ANY QUESTIONS?</span></h2>
+                <p class="home-faq-intro">A few quick answers before you join the starting line.</p>
+                <a href="mailto:elatikysports@gmail.com" class="home-text-link">Contact the race team <span aria-hidden="true">→</span></a>
+            </div>
+            <div class="home-faq-list">
+                <details><summary>How do I register?</summary><p>Choose a race distance and kit, complete the runner details, then continue to EasyKash to pay.</p></details>
+                <details><summary>Can I register with my team?</summary><p>Yes. Select the team option during registration and enter your team details.</p></details>
+                <details><summary>When is my payment confirmed?</summary><p>Your registration is confirmed after EasyKash sends the signed payment confirmation. Keep your registration reference until the status updates.</p></details>
+            </div>
+        </div>
+    </section>
+
+    <section class="home-final-cta">
+        <div class="wrap home-final-cta-inner">
+            <div><p>YOUR NEXT FINISH LINE STARTS HERE</p><h2>READY TO <span>RUN?</span></h2></div>
+            <a href="{{ route('register') }}" class="home-primary-button home-primary-button-light">Register now <span aria-hidden="true">→</span></a>
+        </div>
+    </section>
 </main>
 @endsection
+
+@push('scripts')
+<script>
+(() => {
+    const slider = document.getElementById('home-distance-slider');
+    if (!slider) return;
+
+    const options = [...slider.querySelectorAll('[data-distance-option]')];
+    const featuredDistance = document.getElementById('home-featured-distance');
+    const featuredName = document.getElementById('home-featured-name');
+    const entryValue = document.getElementById('home-entry-value');
+    const entryLabel = document.getElementById('home-entry-label');
+    const previous = document.querySelector('[data-distance-slide="-1"]');
+    const next = document.querySelector('[data-distance-slide="1"]');
+    const defaultOption = options[0];
+
+    const preview = option => {
+        if (!option) return;
+        options.forEach(item => item.classList.toggle('is-preview', item === option));
+        if (featuredDistance) featuredDistance.textContent = option.dataset.distance;
+        if (featuredName) featuredName.textContent = option.dataset.raceName;
+        if (entryLabel) entryLabel.textContent = `${option.dataset.kit} entry`;
+        if (entryValue) {
+            entryValue.textContent = option.dataset.price
+                ? `${option.dataset.currency} ${new Intl.NumberFormat('en-EG', { maximumFractionDigits: 0 }).format(Number(option.dataset.price))}`
+                : 'See race options';
+        }
+    };
+
+    const updateControls = () => {
+        const canSlide = slider.scrollWidth > slider.clientWidth + 2;
+        if (previous) {
+            previous.hidden = !canSlide;
+            previous.disabled = slider.scrollLeft <= 2;
+        }
+        if (next) {
+            next.hidden = !canSlide;
+            next.disabled = slider.scrollLeft + slider.clientWidth >= slider.scrollWidth - 2;
+        }
+    };
+
+    options.forEach(option => {
+        option.addEventListener('mouseenter', () => preview(option));
+        option.addEventListener('focus', () => preview(option));
+    });
+
+    slider.addEventListener('mouseleave', () => preview(defaultOption));
+    slider.addEventListener('focusout', event => {
+        if (!slider.contains(event.relatedTarget)) preview(defaultOption);
+    });
+    slider.addEventListener('scroll', updateControls, { passive: true });
+    window.addEventListener('resize', updateControls);
+
+    document.querySelectorAll('[data-distance-slide]').forEach(button => {
+        button.addEventListener('click', () => {
+            const direction = Number(button.dataset.distanceSlide);
+            slider.scrollBy({ left: direction * Math.max(150, slider.clientWidth * .75), behavior: 'smooth' });
+        });
+    });
+
+    preview(defaultOption);
+    updateControls();
+})();
+</script>
+@endpush

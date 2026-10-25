@@ -18,7 +18,9 @@ class PublicSiteController
             ->orderBy('sort_order')
             ->get();
 
-        return view('site.home', compact('races'));
+        $featuredRace = $races->first();
+
+        return view('site.home', compact('races', 'featuredRace'));
     }
 
     public function register()

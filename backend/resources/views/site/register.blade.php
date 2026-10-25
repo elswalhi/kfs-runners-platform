@@ -50,7 +50,7 @@
                 @if ($races->isEmpty()) <div class="form-alert alert-error">Registration is temporarily unavailable because no active race categories are configured.</div> @endif
 
                 <div class="form-section-heading section-heading-spaced"><span>♧</span><span>Select your kit</span></div>
-                <input type="hidden" name="kit" id="kit-value" value="{{ old('kit', 'full') }}">
+                <input type="hidden" name="kit" id="kit-value" value="{{ old('kit', request('kit', 'full')) }}">
                 <div class="kit-select-grid" id="kit-options">
                     <button type="button" class="kit-select-card" data-kit="full"><span class="kit-check"><span class="radio-empty"></span></span><span class="kit-chip full">MOST COMPLETE</span><strong>Full Kit</strong><small>The complete race-day experience</small><ul><li>✓ Finisher medal</li><li>✓ Official KFS Runners T-shirt</li><li>✓ Runner bag</li><li>✓ Race support and photos</li></ul><span class="kit-price" data-price-for="full">—</span></button>
                     <button type="button" class="kit-select-card" data-kit="basic"><span class="kit-check"><span class="radio-empty"></span></span><span class="kit-chip basic">RACE ESSENTIALS</span><strong>Basic Kit</strong><small>The essentials for your race</small><ul><li>✓ Finisher medal</li><li>✓ Participation certificate</li><li>✓ Race support and photos</li></ul><span class="kit-price" data-price-for="basic">—</span></button>
