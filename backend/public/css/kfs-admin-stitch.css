@@ -968,3 +968,210 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* ==========================================================================
+   Stitch Forms, Filters & Details Styles
+   ========================================================================== */
+
+.stitch-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 24px;
+    background: #ffffff;
+    border-bottom: 1px solid var(--st-border);
+    flex-wrap: wrap;
+}
+
+.stitch-search-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 240px;
+}
+
+.stitch-search-wrapper svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--st-text-muted);
+    pointer-events: none;
+}
+
+.stitch-input {
+    width: 100%;
+    height: 42px;
+    background: var(--st-surface-hover);
+    border: 1px solid var(--st-border);
+    border-radius: var(--st-radius-md);
+    padding: 0 14px 0 40px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--st-text-primary);
+    box-sizing: border-box;
+    transition: all 0.15s ease;
+}
+
+.stitch-input:focus {
+    outline: none;
+    background: #ffffff;
+    border-color: var(--st-primary);
+    box-shadow: 0 0 0 3px var(--st-primary-glow);
+}
+
+.stitch-select {
+    height: 42px;
+    background: #ffffff;
+    border: 1px solid var(--st-border);
+    border-radius: var(--st-radius-md);
+    padding: 0 14px;
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--st-text-secondary);
+    font-weight: 600;
+    cursor: pointer;
+    box-sizing: border-box;
+    min-width: 160px;
+    transition: all 0.15s ease;
+}
+
+.stitch-select:focus {
+    outline: none;
+    border-color: var(--st-primary);
+    box-shadow: 0 0 0 3px var(--st-primary-glow);
+}
+
+/* Pagination in Stitch Style */
+.stitch-pagination-wrap {
+    padding: 16px 24px;
+    background: #ffffff;
+    border-top: 1px solid var(--st-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.stitch-pagination-wrap nav {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.stitch-pagination-wrap nav > div:first-child {
+    font-size: 13px;
+    color: var(--st-text-muted);
+}
+
+.stitch-pagination-wrap nav > div:last-child {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.stitch-pagination-wrap nav span[aria-current="page"] span,
+.stitch-pagination-wrap nav a span,
+.stitch-pagination-wrap nav a,
+.stitch-pagination-wrap nav span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 8px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.stitch-pagination-wrap nav span[aria-current="page"] span {
+    background: var(--st-primary);
+    color: #ffffff;
+}
+
+.stitch-pagination-wrap nav a {
+    color: var(--st-text-secondary);
+    border: 1px solid var(--st-border);
+    background: #ffffff;
+}
+
+.stitch-pagination-wrap nav a:hover {
+    background: var(--st-surface-hover);
+    color: var(--st-text-primary);
+}
+
+/* Detail Views */
+.stitch-detail-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 24px;
+    margin-bottom: 30px;
+}
+
+.stitch-detail-fields {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px 24px;
+    padding: 20px 0;
+    border-top: 1px solid var(--st-border);
+    border-bottom: 1px solid var(--st-border);
+    margin-bottom: 20px;
+}
+
+.stitch-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stitch-detail-item span.label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--st-text-muted);
+    letter-spacing: 0.5px;
+}
+
+.stitch-detail-item strong.val {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--st-text-primary);
+}
+
+.stitch-callout {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 18px;
+    border-radius: var(--st-radius-md);
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+    margin-top: 20px;
+}
+
+.stitch-callout.success {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #065f46;
+}
+
+.stitch-callout.warning {
+    background: #fffbeb;
+    border-color: #fde68a;
+    color: #92400e;
+}
+
+.stitch-callout h4 {
+    margin: 0 0 4px;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.stitch-callout p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
+    opacity: 0.9;
+}
