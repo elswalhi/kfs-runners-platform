@@ -1,23 +1,23 @@
 @extends('site.layout')
 
-@section('title', 'Register for KFS Runners')
+@section('title', __('Register for KFS Runners'))
 
 @section('content')
 <main class="register-page">
     <section class="register-hero"><div class="register-hero-bg"></div><div class="wrap register-hero-inner">
-        <div class="register-intro"><a href="{{ route('home') }}" class="back-link">← Back to home</a><span class="eyebrow-pill"><span class="pulse-dot"></span> KFS RUNNERS MARATHON</span><h1>YOUR RACE.<br><span>YOUR STORY.</span></h1><p>Choose your distance, pick your kit, and take the first step toward your next finish line.</p><div class="register-points"><span>♢ Secure registration</span><span>♙ Solo or team entry</span></div></div>
-        <div class="register-summary-top"><span>YOUR SELECTED RACE</span><b id="summary-distance">{{ $races->firstWhere('slug', old('race', request('race'))) ? $races->firstWhere('slug', old('race', request('race')))->distance_label : ($races->first()?->distance_label ?? '—') }}</b><small id="summary-race">{{ $races->firstWhere('slug', old('race', request('race'))) ? $races->firstWhere('slug', old('race', request('race')))->name : ($races->first()?->name ?? 'Race category') }}</small><div class="summary-rule"></div><span>PACKAGE</span><b id="summary-kit">Full Kit</b><small id="summary-kit-subtitle">The complete race-day experience</small><div class="summary-price"><small>Ticket price preview</small><strong id="summary-price">—</strong></div></div>
+        <div class="register-intro"><a href="{{ route('home') }}" class="back-link">← {{ __('Back to home') }}</a><span class="eyebrow-pill"><span class="pulse-dot"></span> {{ __('KFS RUNNERS · KAFR EL-SHEIKH') }}</span><h1>{{ __('YOUR RACE.') }}<br><span>{{ __('YOUR STORY.') }}</span></h1><p>{{ __('Choose your distance, pick your kit, and take the first step toward your next finish line.') }}</p><div class="register-points"><span>♢ {{ __('Secure registration') }}</span><span>♙ {{ __('Solo or team entry') }}</span></div></div>
+        <div class="register-summary-top"><span>{{ __('YOUR SELECTED RACE') }}</span><b id="summary-distance">{{ $races->firstWhere('slug', old('race', request('race'))) ? $races->firstWhere('slug', old('race', request('race')))->distance_label : ($races->first()?->distance_label ?? '—') }}</b><small id="summary-race">{{ $races->firstWhere('slug', old('race', request('race'))) ? $races->firstWhere('slug', old('race', request('race')))->name : ($races->first()?->name ?? __('Race category')) }}</small><div class="summary-rule"></div><span>{{ __('PACKAGE') }}</span><b id="summary-kit">{{ __('Full Kit') }}</b><small id="summary-kit-subtitle">{{ __('The complete race-day experience') }}</small><div class="summary-price"><small>{{ __('Ticket price preview') }}</small><strong id="summary-price">—</strong></div></div>
     </div></section>
 
     <section class="registration-workspace"><div class="wrap registration-layout">
         <div class="registration-form-col">
-            <div class="form-title-row"><div><span class="form-step">STEP 01 / 02</span><h2>RUNNER <span>DETAILS</span></h2><p>Tell us a little about the runner.</p></div><div class="secure-label">♙ Your information stays protected</div></div>
+            <div class="form-title-row"><div><span class="form-step">{{ __('STEP 01 / 02') }}</span><h2>{{ __('RUNNER') }} <span>{{ __('DETAILS') }}</span></h2><p>{{ __('Tell us a little about the runner.') }}</p></div><div class="secure-label">♙ {{ __('Your information stays protected') }}</div></div>
 
             @if ($errors->any()) <div class="form-alert alert-error" role="alert">{{ $errors->first() }}</div> @endif
             @if (session('payment_error')) <div class="form-alert alert-error" role="alert">{{ session('payment_error') }}@if(session('payment_reference')) Registration reference: <strong>{{ session('payment_reference') }}</strong>.@endif</div> @endif
             <div id="payment-return-message" class="form-alert alert-info" role="status" hidden></div>
             <div id="cash-voucher-panel" class="cash-voucher cash-voucher-pending" aria-live="polite" hidden>
-                <span class="cash-voucher-kicker">EASYKASH PAYMENT</span><h3 id="payment-title">Checking payment status</h3><p id="payment-description">We are checking the signed EasyKash confirmation. Keep your registration reference.</p>
+                <span class="cash-voucher-kicker">{{ __('EasyKash payment') }}</span><h3 id="payment-title">{{ __('Checking payment status') }}</h3><p id="payment-description">We are checking the signed EasyKash confirmation. Keep your registration reference.</p>
                 <div id="voucher-box" class="cash-voucher-code" hidden><strong id="voucher-value"></strong><button type="button" id="copy-voucher">Copy</button></div>
                 <div class="cash-voucher-meta"><span>Registration reference</span><b id="payment-reference"></b><span>Payment status</span><b id="payment-status">Confirming</b></div>
                 <small class="cash-voucher-note">Payment is confirmed only by EasyKash’s signed server callback. Do not submit another registration while this payment is being checked.</small>
@@ -25,63 +25,63 @@
 
             <form class="runner-form" method="POST" action="{{ route('register.store') }}" enctype="multipart/form-data" id="runner-form">
                 @csrf
-                <div class="form-section-heading"><span>♙</span><span>Personal information</span></div>
+                <div class="form-section-heading"><span>♙</span><span>{{ __('Personal information') }}</span></div>
                 <div class="form-grid two-col">
-                    <label>First name <b>*</b><input required name="firstName" autocomplete="given-name" value="{{ old('firstName') }}" placeholder="Enter first name"></label>
-                    <label>Last name <b>*</b><input required name="lastName" autocomplete="family-name" value="{{ old('lastName') }}" placeholder="Enter last name"></label>
-                    <label>Email address <b>*</b><input required type="email" name="email" autocomplete="email" value="{{ old('email') }}" placeholder="you@example.com"></label>
-                    <label>Phone number <b>*</b><input required type="tel" name="phone" autocomplete="tel" value="{{ old('phone') }}" placeholder="010 1234 5678 or +20 10 1234 5678"><small class="phone-input-hint">Use an Egyptian mobile number. Local and +20 formats are accepted.</small></label>
-                    <label>Date of birth <b>*</b><input required type="date" name="birthDate" max="{{ now()->subDay()->toDateString() }}" value="{{ old('birthDate') }}"></label>
-                    <label>Gender <b>*</b><span class="select-wrap"><select required name="gender"><option value="">Choose gender</option><option value="male" @selected(old('gender') === 'male')>Male</option><option value="female" @selected(old('gender') === 'female')>Female</option><option value="prefer_not_to_say" @selected(old('gender') === 'prefer_not_to_say')>Prefer not to say</option></select><span>⌄</span></span></label>
-                    <label class="full-span">ID / Passport number <b>*</b><input required name="idNumber" value="{{ old('idNumber') }}" placeholder="Enter ID or passport number"></label>
+                    <label>{{ __('First name') }} <b>*</b><input required name="firstName" autocomplete="given-name" value="{{ old('firstName') }}" placeholder="{{ __('First name') }}"></label>
+                    <label>{{ __('Last name') }} <b>*</b><input required name="lastName" autocomplete="family-name" value="{{ old('lastName') }}" placeholder="{{ __('Last name') }}"></label>
+                    <label>{{ __('Email address') }} <b>*</b><input required type="email" name="email" autocomplete="email" value="{{ old('email') }}" placeholder="you@example.com"></label>
+                    <label>{{ __('Phone number') }} <b>*</b><input required type="tel" name="phone" autocomplete="tel" value="{{ old('phone') }}" placeholder="010 1234 5678 or +20 10 1234 5678"><small class="phone-input-hint">{{ __('Use an Egyptian mobile number. Local and +20 formats are accepted.') }}</small></label>
+                    <label>{{ __('Date of birth') }} <b>*</b><input required type="date" name="birthDate" max="{{ now()->subDay()->toDateString() }}" value="{{ old('birthDate') }}"></label>
+                    <label>{{ __('Gender') }} <b>*</b><span class="select-wrap"><select required name="gender"><option value="">{{ __('Choose gender') }}</option><option value="male" @selected(old('gender') === 'male')>{{ __('Male') }}</option><option value="female" @selected(old('gender') === 'female')>{{ __('Female') }}</option><option value="prefer_not_to_say" @selected(old('gender') === 'prefer_not_to_say')>{{ __('Prefer not to say') }}</option></select><span>⌄</span></span></label>
+                    <label class="full-span">{{ __('ID / Passport number') }} <b>*</b><input required name="idNumber" value="{{ old('idNumber') }}" placeholder="{{ __('ID / Passport number') }}"></label>
                 </div>
 
-                <div class="form-section-heading section-heading-spaced"><span>◇</span><span>Choose your race</span></div>
+                <div class="form-section-heading section-heading-spaced"><span>◇</span><span>{{ __('Choose your race') }}</span></div>
                 <input type="hidden" name="race" id="race-value" value="{{ old('race', request('race', $races->first()?->slug)) }}">
                 <div class="race-select-grid" id="race-options">
                     @foreach ($races as $race)
                         @php($full = $race->kitPrices->firstWhere('kit_type', 'full'))
                         @php($basic = $race->kitPrices->firstWhere('kit_type', 'basic'))
                         <button type="button" class="race-select-card" data-race="{{ $race->slug }}" data-name="{{ $race->name }}" data-distance="{{ $race->distance_label }}" data-full="{{ $full?->price ?? '' }}" data-basic="{{ $basic?->price ?? '' }}">
-                            <span class="race-select-check"><span class="radio-empty"></span></span><span class="select-distance">{{ $race->distance_label }}</span><strong>{{ $race->name }}</strong><small>{{ $race->category_type === 'family' ? 'Bring your family and run together.' : ($race->category_type === 'para' ? 'An inclusive race category.' : 'A challenge for every pace.') }}</small>
+                            <span class="race-select-check"><span class="radio-empty"></span></span><span class="select-distance">{{ $race->distance_label }}</span><strong>{{ $race->name }}</strong><small>{{ $race->category_type === 'family' ? __('Bring your family and enjoy the race together.') : ($race->category_type === 'para' ? __('An inclusive race experience made for every runner.') : __('A challenge for every pace and every goal.')) }}</small>
                         </button>
                     @endforeach
                 </div>
-                @if ($races->isEmpty()) <div class="form-alert alert-error">Registration is temporarily unavailable because no active race categories are configured.</div> @endif
+                @if ($races->isEmpty()) <div class="form-alert alert-error">{{ __('Race categories are being prepared. Please check back soon.') }}</div> @endif
 
-                <div class="form-section-heading section-heading-spaced"><span>♧</span><span>Select your kit</span></div>
+                <div class="form-section-heading section-heading-spaced"><span>♧</span><span>{{ __('Select your kit') }}</span></div>
                 <input type="hidden" name="kit" id="kit-value" value="{{ old('kit', request('kit', 'full')) }}">
                 <div class="kit-select-grid" id="kit-options">
-                    <button type="button" class="kit-select-card" data-kit="full"><span class="kit-check"><span class="radio-empty"></span></span><span class="kit-chip full">MOST COMPLETE</span><strong>Full Kit</strong><small>The complete race-day experience</small><ul><li>✓ Finisher medal</li><li>✓ Official KFS Runners T-shirt</li><li>✓ Runner bag</li><li>✓ Race support and photos</li></ul><span class="kit-price" data-price-for="full">—</span></button>
-                    <button type="button" class="kit-select-card" data-kit="basic"><span class="kit-check"><span class="radio-empty"></span></span><span class="kit-chip basic">RACE ESSENTIALS</span><strong>Basic Kit</strong><small>The essentials for your race</small><ul><li>✓ Finisher medal</li><li>✓ Participation certificate</li><li>✓ Race support and photos</li></ul><span class="kit-price" data-price-for="basic">—</span></button>
+                    <button type="button" class="kit-select-card" data-kit="full"><span class="kit-check"><span class="radio-empty"></span></span><span class="kit-chip full">MOST COMPLETE</span><strong>{{ __('Full Kit') }}</strong><small>{{ __('The complete race-day experience') }}</small><ul><li>✓ {{ __('Finisher medal') }}</li><li>✓ {{ __('Official KFS Runners T-shirt') }}</li><li>✓ {{ __('Runner bag') }}</li><li>✓ {{ __('Race support and photographs') }}</li></ul><span class="kit-price" data-price-for="full">—</span></button>
+                    <button type="button" class="kit-select-card" data-kit="basic"><span class="kit-check"><span class="radio-empty"></span></span><span class="kit-chip basic">RACE ESSENTIALS</span><strong>{{ __('Basic Kit') }}</strong><small>{{ __('The essentials for your race') }}</small><ul><li>✓ {{ __('Finisher medal') }}</li><li>✓ {{ __('Certificate of participation') }}</li><li>✓ {{ __('Race support and photographs') }}</li></ul><span class="kit-price" data-price-for="basic">—</span></button>
                 </div>
 
-                <div class="shirt-size-panel" id="shirt-size-panel"><div class="shirt-size-copy"><span>♧</span><div><b>T-shirt size <span>*</span></b><small>Full Kit includes the official race T-shirt. Select your size.</small></div></div><div class="shirt-size-options">
+                <div class="shirt-size-panel" id="shirt-size-panel"><div class="shirt-size-copy"><span>♧</span><div><b>{{ __('T-shirt size') }} <span>*</span></b><small>{{ __('Full Kit includes the official race T-shirt. Select your size.') }}</small></div></div><div class="shirt-size-options">
                     @foreach (['S','M','L','XL','XXL'] as $size)<button type="button" data-size="{{ $size }}" class="shirt-size-choice">{{ $size }}</button>@endforeach
-                </div><input type="hidden" name="shirtSize" id="shirt-size" value="{{ old('shirtSize') }}"><small class="field-hint" id="shirt-size-hint">Please select a size to continue.</small></div>
+                </div><input type="hidden" name="shirtSize" id="shirt-size" value="{{ old('shirtSize') }}"><small class="field-hint" id="shirt-size-hint">{{ __('Please select a size to continue.') }}</small></div>
 
-                <div class="form-section-heading section-heading-spaced"><span>⇧</span><span>Runner document</span><small>Optional</small></div>
-                <label class="upload-drop"><input type="file" name="idFile" accept="image/jpeg,image/png,application/pdf"><span class="upload-icon">⇧</span><span><b id="file-name">Upload ID / passport (optional)</b><small>JPG, PNG or PDF · Max 2 MB</small></span></label>
-                <label class="team-name-label">Team / running club <small>(optional)</small><input name="teamName" value="{{ old('teamName') }}" placeholder="e.g. Kafr El-Sheikh Runners"></label>
+                <div class="form-section-heading section-heading-spaced"><span>⇧</span><span>{{ __('Runner document') }}</span><small>{{ __('Optional') }}</small></div>
+                <label class="upload-drop"><input type="file" name="idFile" accept="image/jpeg,image/png,application/pdf"><span class="upload-icon">⇧</span><span><b id="file-name">{{ __('Upload ID / passport (optional)') }}</b><small>{{ __('JPG, PNG or PDF · Max 2 MB') }}</small></span></label>
+                <label class="team-name-label">{{ __('Team / running club') }} <small>({{ __('Optional') }})</small><input name="teamName" value="{{ old('teamName') }}" placeholder="e.g. Kafr El-Sheikh Runners"></label>
 
                 <!-- Promo Code Box -->
-                <div class="form-section-heading section-heading-spaced"><span>%</span><span>Promo code or voucher</span><small>Optional</small></div>
+                <div class="form-section-heading section-heading-spaced"><span>%</span><span>{{ __('Promo code or voucher') }}</span><small>{{ __('Optional') }}</small></div>
                 <div class="promo-code-box" style="background:#f8faf9; border:1px solid #dce5df; border-radius:8px; padding:16px; margin-top:14px;">
                     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
                         <input type="text" id="promo-code-input" placeholder="e.g. KFS50" maxlength="64" value="{{ old('promoCode') }}" style="flex:1; min-width:160px; height:42px; border:1px solid #c9d8d0; border-radius:6px; padding:0 12px; font-family:monospace; font-weight:700; text-transform:uppercase; font-size:13px; color:#064b3e; background:#fff;">
                         <button type="button" id="apply-promo-btn" style="height:42px; padding:0 18px; background:#064b3e; color:#ffffff; border:none; border-radius:6px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; cursor:pointer; transition:all 0.2s;">
-                            Apply
+                            {{ __('Apply') }}
                         </button>
                         <button type="button" id="remove-promo-btn" style="height:42px; padding:0 14px; background:#fff1f2; color:#be123c; border:1px solid #fecdd3; border-radius:6px; font-size:11px; font-weight:800; cursor:pointer;" hidden>
-                            Remove
+                            {{ __('Remove') }}
                         </button>
                     </div>
                     <div id="promo-feedback" style="margin-top:10px; font-size:11px; font-weight:600; line-height:1.4;" hidden></div>
                     <input type="hidden" name="promoCode" id="applied-promo-code" value="{{ old('promoCode') }}">
                 </div>
 
-                <label class="terms-check"><input type="checkbox" name="terms" value="1" required><span>I confirm that the details provided are correct and agree to the race terms and conditions. <b>*</b></span></label>
-                <button class="btn btn-red form-submit" type="submit" id="submit-registration" @disabled($races->isEmpty())>Continue to payment <span>→</span></button>
+                <label class="terms-check"><input type="checkbox" name="terms" value="1" required><span>{{ __('I confirm that the details provided are correct and agree to the race terms and conditions.') }} <b>*</b></span></label>
+                <button class="btn btn-red form-submit" type="submit" id="submit-registration" @disabled($races->isEmpty())>{{ __('Continue to payment') }} <span>→</span></button>
                 <p class="form-fineprint">♙ Payment is confirmed by EasyKash’s signed server callback.</p>
             </form>
         </div>
@@ -90,8 +90,8 @@
             <div class="order-card">
                 <div class="order-card-heading">
                     <div>
-                        <span class="form-step">YOUR ENTRY</span>
-                        <h3>Registration <span>summary</span></h3>
+                        <span class="form-step">{{ __('YOUR ENTRY') }}</span>
+                        <h3>{{ __('Registration') }} <span>{{ __('summary') }}</span></h3>
                     </div>
                     <span class="order-lock">♙</span>
                 </div>
@@ -100,22 +100,22 @@
                     <div class="order-race-overlay">
                         <span>KFS RUNNERS</span>
                         <b id="order-distance">{{ $races->first()?->distance_label ?? '—' }}</b>
-                        <small id="order-race">{{ $races->first()?->name ?? 'Race category' }}</small>
+                        <small id="order-race">{{ $races->first()?->name ?? __('Race category') }}</small>
                     </div>
                 </div>
-                <div class="order-detail-row"><span>Race distance</span><b id="order-distance-row">{{ $races->first()?->distance_label ?? '—' }}</b></div>
-                <div class="order-detail-row"><span>Race category</span><b id="order-race-row">{{ $races->first()?->name ?? '—' }}</b></div>
-                <div class="order-detail-row"><span>Race kit</span><b id="order-kit-row">Full Kit</b></div>
-                <div class="order-detail-row" id="order-shirt-row"><span>T-shirt size</span><b id="order-shirt">Not selected</b></div>
+                <div class="order-detail-row"><span>{{ __('Race distance') }}</span><b id="order-distance-row">{{ $races->first()?->distance_label ?? '—' }}</b></div>
+                <div class="order-detail-row"><span>{{ __('Race category') }}</span><b id="order-race-row">{{ $races->first()?->name ?? '—' }}</b></div>
+                <div class="order-detail-row"><span>{{ __('Race kit') }}</span><b id="order-kit-row">{{ __('Full Kit') }}</b></div>
+                <div class="order-detail-row" id="order-shirt-row"><span>{{ __('T-shirt size') }}</span><b id="order-shirt">Not selected</b></div>
                 <div class="order-divider"></div>
-                <div class="order-price-line"><span>Entry fee</span><strong id="order-price">—</strong></div>
+                <div class="order-price-line"><span>{{ __('Entry fee') }}</span><strong id="order-price">—</strong></div>
                 <div class="order-price-line" id="order-discount-row" style="color:#047857;" hidden>
-                    <span>Promo discount (<b id="order-promo-label"></b>)</span>
+                    <span>{{ __('Promo discount') }} (<b id="order-promo-label"></b>)</span>
                     <strong id="order-discount" style="color:#047857;">—</strong>
                 </div>
-                <div class="order-price-total"><span>Total preview</span><strong id="order-total">—</strong></div>
-                <p class="order-tax-note">Final price, availability, and payment status are confirmed by Laravel.</p>
-                <div class="order-benefits"><span>♢ Secure registration</span><span>▭ EasyKash checkout</span></div>
+                <div class="order-price-total"><span>{{ __('Total preview') }}</span><strong id="order-total">—</strong></div>
+                <p class="order-tax-note">{{ __('Final price, availability, and payment status are confirmed by Laravel.') }}</p>
+                <div class="order-benefits"><span>♢ {{ __('Secure registration') }}</span><span>▭ EasyKash checkout</span></div>
             </div>
             <div class="need-help-card">
                 <h4>Need help choosing?</h4>
@@ -159,7 +159,7 @@
         kitInput.value = selectedKit.dataset.kit;
         const kit = selectedKit.dataset.kit;
         const baseAmount = Number(selectedRace.dataset[kit] || 0);
-        const kitName = kit === 'full' ? 'Full Kit' : 'Basic Kit';
+        const kitName = kit === 'full' ? '{{ __('Full Kit') }}' : '{{ __('Basic Kit') }}';
 
         let discountAmount = 0;
         let finalAmount = baseAmount;
@@ -182,15 +182,15 @@
         setText('summary-distance', selectedRace.dataset.distance);
         setText('summary-race', selectedRace.dataset.name);
         setText('summary-kit', kitName);
-        setText('summary-kit-subtitle', kit === 'full' ? 'The complete race-day experience' : 'The essentials for your race');
-        setText('summary-price', finalAmount === 0 ? 'FREE' : price(finalAmount));
+        setText('summary-kit-subtitle', kit === 'full' ? '{{ __('The complete race-day experience') }}' : '{{ __('The essentials for your race') }}');
+        setText('summary-price', finalAmount === 0 ? '{{ __('FREE') }}' : price(finalAmount));
         setText('order-distance', selectedRace.dataset.distance);
         setText('order-distance-row', selectedRace.dataset.distance);
         setText('order-race', selectedRace.dataset.name);
         setText('order-race-row', selectedRace.dataset.name);
         setText('order-kit-row', kitName);
         setText('order-price', price(baseAmount));
-        setText('order-total', finalAmount === 0 ? 'FREE (0 EGP)' : price(finalAmount));
+        setText('order-total', finalAmount === 0 ? '{{ __('FREE') }} (0 EGP)' : price(finalAmount));
         document.querySelectorAll('[data-price-for="full"]').forEach(el => el.textContent = price(selectedRace.dataset.full));
         document.querySelectorAll('[data-price-for="basic"]').forEach(el => el.textContent = price(selectedRace.dataset.basic));
         const full = kit === 'full';

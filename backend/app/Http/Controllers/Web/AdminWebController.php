@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Api\Admin\TeamImportController;
+use App\Models\AppSetting;
 use App\Models\Payment;
 use App\Models\PromoCode;
 use App\Models\Race;
@@ -280,6 +281,87 @@ class AdminWebController
         $promoCode->delete();
 
         return back()->with('success', 'Promo code deleted.');
+    }
+
+    public function localization()
+    {
+        $defaultLocale = AppSetting::get('default_locale', config('app.locale', 'en'));
+        $showPublicSwitcher = (bool) AppSetting::get('show_public_switcher', true);
+        $showAdminSwitcher = (bool) AppSetting::get('show_admin_switcher', true);
+        $arabicFont = AppSetting::get('arabic_font', 'Cairo');
+
+        $enPath = base_path('lang/en.json');
+        $arPath = base_path('lang/ar.json');
+
+        $enStrings = file_exists($enPath) ? json_decode(file_get_contents($enPath), true) ?: [] : [];
+        $arStrings = file_exists($arPath) ? json_decode(file_get_contents($arPath), true) ?: [] : [];
+
+        $allKeys = array_unique(array_merge(array_keys($enStrings), array_keys($arStrings)));
+        sort($allKeys);
+
+        $translations = collect($allKeys)->map(function ($key) use ($enStrings, $arStrings) {
+            return [
+                'key' => $key,
+                'en' => $enStrings[$key] ?? $key,
+                'ar' => $arStrings[$key] ?? '',
+            ];
+        });
+
+        $totalStrings = count($allKeys);
+        $translatedCount = count(array_filter($arStrings));
+
+        return view('admin.localization', compact(
+            'defaultLocale',
+            'showPublicSwitcher',
+            'showAdminSwitcher',
+            'arabicFont',
+            'translations',
+            'totalStrings',
+            'translatedCount'
+        ));
+    }
+
+    public function updateLocalization(Request $request)
+    {
+        $data = $request->validate([
+            'default_locale' => ['required', Rule::in(['en', 'ar'])],
+            'arabic_font' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        AppSetting::set('default_locale', $data['default_locale']);
+        AppSetting::set('show_public_switcher', $request->boolean('show_public_switcher'));
+        AppSetting::set('show_admin_switcher', $request->boolean('show_admin_switcher'));
+        AppSetting::set('arabic_font', $data['arabic_font'] ?: 'Cairo');
+
+        return back()->with('success', 'Localization settings saved.');
+    }
+
+    public function updateTranslations(Request $request)
+    {
+        $inputs = $request->input('translations', []);
+        if (! is_array($inputs)) {
+            return back()->withErrors(['translations' => 'Invalid translations format.']);
+        }
+
+        $arPath = base_path('lang/ar.json');
+        $enPath = base_path('lang/en.json');
+
+        $currentAr = file_exists($arPath) ? json_decode(file_get_contents($arPath), true) ?: [] : [];
+        $currentEn = file_exists($enPath) ? json_decode(file_get_contents($enPath), true) ?: [] : [];
+
+        foreach ($inputs as $key => $values) {
+            if (isset($values['ar'])) {
+                $currentAr[$key] = trim($values['ar']);
+            }
+            if (isset($values['en'])) {
+                $currentEn[$key] = trim($values['en']);
+            }
+        }
+
+        file_put_contents($arPath, json_encode($currentAr, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        file_put_contents($enPath, json_encode($currentEn, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+        return back()->with('success', 'Translations dictionary updated successfully.');
     }
 
     public function teamImport()

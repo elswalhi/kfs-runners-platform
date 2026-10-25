@@ -12,6 +12,13 @@ Route::get('/register', [PublicSiteController::class, 'register'])->name('regist
 Route::post('/register', [PublicSiteController::class, 'storeRegistration'])->middleware('throttle:10,1')->name('register.store');
 Route::post('/promo-codes/validate', [PublicPromoCodeController::class, 'validateCode'])->middleware('throttle:30,1')->name('promo-codes.validate');
 
+Route::get('/locale/{locale}', function (string $locale) {
+    if (in_array($locale, ['en', 'ar'], true)) {
+        session(['locale' => $locale]);
+    }
+    return back();
+})->name('locale.switch');
+
 Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminWebAuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AdminWebAuthController::class, 'login'])->middleware('throttle:10,1')->name('login.store');
@@ -38,6 +45,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/promo-codes', [AdminWebController::class, 'storePromoCode'])->name('promo-codes.store');
         Route::patch('/promo-codes/{promoCode}/toggle', [AdminWebController::class, 'togglePromoCode'])->name('promo-codes.toggle');
         Route::delete('/promo-codes/{promoCode}', [AdminWebController::class, 'deletePromoCode'])->name('promo-codes.destroy');
+        Route::get('/localization', [AdminWebController::class, 'localization'])->name('localization');
+        Route::post('/localization', [AdminWebController::class, 'updateLocalization'])->name('localization.update');
+        Route::post('/localization/translations', [AdminWebController::class, 'updateTranslations'])->name('localization.translations');
         Route::get('/team-import', [AdminWebController::class, 'teamImport'])->name('team-import');
         Route::post('/team-import', [AdminWebController::class, 'importTeam'])->middleware('throttle:10,1')->name('team-import.store');
     });

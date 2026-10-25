@@ -1,7 +1,7 @@
 @extends('admin.layout')
 
-@section('title', 'Overview · KFS Runners Race Control')
-@section('section', 'Overview')
+@section('title', __('Overview') . ' · KFS Runners Race Control')
+@section('section', __('Overview'))
 
 @section('content')
 <!-- Hero Header -->
@@ -9,18 +9,18 @@
     <div class="stitch-hero-info">
         <div class="stitch-eyebrow">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            <span>RACE OPERATIONS DASHBOARD</span>
+            <span>{{ __('RACE OPERATIONS DASHBOARD') }}</span>
         </div>
-        <h1 class="stitch-hero-title">Welcome back, <span>{{ auth()->user()->name }}</span></h1>
-        <p class="stitch-hero-desc">Live overview of marathon participants, payments reconciliation, and category performance.</p>
+        <h1 class="stitch-hero-title">{{ __('Welcome back') }}, <span>{{ auth()->user()->name }}</span></h1>
+        <p class="stitch-hero-desc">{{ __('Live overview of marathon participants, payments reconciliation, and category performance.') }}</p>
     </div>
     <div class="stitch-hero-actions">
         <a href="{{ route('admin.export-overview') }}" class="stitch-btn stitch-btn-secondary">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-            <span>Export CSV</span>
+            <span>{{ __('Export CSV') }}</span>
         </a>
         <a href="{{ route('admin.registrations') }}" class="stitch-btn stitch-btn-primary">
-            <span>View Registrations</span>
+            <span>{{ __('View Registrations') }}</span>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
         </a>
     </div>
@@ -31,7 +31,7 @@
     <!-- Card 1: Total Runners -->
     <div class="stitch-kpi-card tone-blue">
         <div class="stitch-kpi-header">
-            <span class="stitch-kpi-title">Total Registrations</span>
+            <span class="stitch-kpi-title">{{ __('Total Registrations') }}</span>
             <div class="stitch-kpi-icon">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
