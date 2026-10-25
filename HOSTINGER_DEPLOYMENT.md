@@ -1,72 +1,47 @@
-# نشر KFS Runners على Hostinger
+# نشر KFS Runners على Hostinger Shared Hosting
 
-المشروع يتكون من واجهة React/Vite وواجهة Laravel API. في باقة Web/Shared على حساب `elatiky.com`، انشر الواجهة على `runners.elatiky.com` والـ API على `api-runners.elatiky.com`. بهذه الطريقة يظل الموقع الأساسي كما هو.
+المشروع أصبح تطبيق Laravel واحدًا بصفحات Blade؛ لا تحتاج إلى موقع React أو خادم Node منفصل. أنشئ موقعًا مستقلًا على نطاق فرعي جديد مثل `runners.elatiky.com` حتى لا تستبدل ملفات `elatiky.com` الحالية.
 
-## قبل النشر
+## 1) جهّز موقع Hostinger
 
-- اربط الدومين بباقة Hostinger وأنشئ قاعدة MySQL.
-- اضبط PHP للموقع على 8.3 أو أحدث؛ `backend/composer.json` يتطلب PHP 8.3.
-- أنشئ `runners.elatiky.com` و`api-runners.elatiky.com` كـ **موقعين مستقلين** من Websites → Create website، وليس كمجلدين داخل WordPress. خطة Business الحالية تعرض 6 مواقع من أصل 100.
-- أسماء النطاقات الفرعية تختارها هذه التعليمات كافتراضي؛ إذا اخترت أسماء أخرى، حدّث رابط API و`APP_URL` و`FRONTEND_URL` وcallback قبل البناء.
-- فعّل SSL لكلا النطاقين الفرعيين.
-- لا ترفع ملف `.env` الموجود على جهاز التطوير، ولا تضع مفاتيح EasyKash في React أو GitHub.
+1. من **Websites → Add website / Create website** أنشئ موقعًا مستقلًا للنطاق الفرعي الذي اخترته، مثل `runners.elatiky.com`.
+2. أنشئ قاعدة MySQL من hPanel وسجّل اسم القاعدة والمستخدم وكلمة المرور.
+3. اختر PHP 8.3 أو أحدث، ثم فعّل SSL للنطاق الفرعي.
+4. لا ترفع أي شيء إلى `public_html` الخاص بالموقع الأساسي.
 
-## بناء واجهة React
+## 2) أنشئ ملف الرفع
 
-من PowerShell في مجلد المشروع:
+من PowerShell داخل جذر المشروع:
 
 ```powershell
-.\scripts\build-hostinger-frontend.ps1 -ApiBaseUrl "https://api-runners.elatiky.com"
+.\scripts\package-hostinger-laravel.ps1
 ```
 
-السكربت يستخدم إصدارات `package-lock.json`، ويبني React على `dist/` مع عنوان API، ويضيف إعداد إعادة توجيه مسارات React إلى `index.html`. إذا لم تكن مكتبات الواجهة مثبتة، قد تحتاج لإيقاف خادم Vite المحلي قبل تثبيتها.
-
-ارفع محتويات ملف `kfs-runners-hostinger-frontend.zip` إلى `public_html` للنطاق `runners.elatiky.com`. لا ترفع مجلد المشروع كاملًا إلى `public_html`. عند استخدام تطبيق Node.js في خطة Hostinger تدعمه، يمكن ربط GitHub واستخدام:
-
-- Build command: `npm run build`
-- Output directory: `dist`
-- Build-time variable: `VITE_API_BASE_URL=https://api-runners.elatiky.com`
-
-في أي طريقة بناء، قيمة `VITE_API_BASE_URL` هي أصل API فقط، من دون `/api` في نهايتها.
-
-## نشر Laravel API بأمان
-
-استخدم مسارين منفصلين للنطاق الفرعي `api-runners.elatiky.com`:
+ينشئ السكربت `kfs-runners-hostinger-laravel.zip` ببنية آمنة:
 
 ```text
-domains/api-runners.elatiky.com/kfs-api/          Laravel app, .env, vendor, storage
-domains/api-runners.elatiky.com/public_html/      Laravel public files and index.php
+kfs-app/       ملفات Laravel ومجلدات storage، من دون .env أو vendor
+public_html/   الملفات العامة وindex.php المعدل ليشغّل ../kfs-app
 ```
 
-ارفع محتويات مجلد `backend/` إلى `kfs-api/` من خلال **Access all files** أو SSH. لا ترفع `.env` المحلي. ثبّت الاعتماديات على Hostinger من SSH:
+ارفع الملف إلى مجلد النطاق الفرعي، ثم فك الضغط. تأكد أن `kfs-app` و`public_html` بجوار بعضهما، وأن `public_html` هو جذر الموقع للنطاق الفرعي.
+
+## 3) ثبّت Laravel على الخادم
+
+من SSH في Hostinger:
 
 ```bash
-cd ~/domains/api-runners.elatiky.com/kfs-api
+cd ~/domains/runners.elatiky.com/kfs-app
 composer2 install --no-dev --optimize-autoloader
 ```
 
-قبل تشغيل Artisan, أنشئ مجلدات التخزين المؤقت والسجلات إذا لم تكن موجودة بعد الرفع:
-
-```bash
-mkdir -p storage/app/private storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
-chmod -R 775 storage bootstrap/cache
-```
-
-ملف `kfs-runners-hostinger-api.zip` يحتوي مجلدي `kfs-api/` و`public_html/`. ارفعه إلى مجلد النطاق `api-runners.elatiky.com` وفكّه هناك. يحتوي `public_html/index.php` على مسار Laravel المعدل لقراءة التطبيق من `../kfs-api`.
-
-تأكد أن مجلد التطبيق اسمه `kfs-api`. بهذه البنية تبقى ملفات `.env` و`vendor` و`storage` خارج `public_html`.
-
-## إعداد Laravel على الخادم
-
-أنشئ `kfs-api/.env` على Hostinger، واضبط على الأقل:
+أنشئ الملف `kfs-app/.env` على الخادم. ابدأ من `kfs-app/.env.example`، ثم اضبط القيم التالية:
 
 ```env
-APP_NAME="KFS Runners API"
+APP_NAME="KFS Runners"
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://api-runners.elatiky.com
-FRONTEND_URL=https://runners.elatiky.com
-CORS_ALLOWED_ORIGINS=https://runners.elatiky.com
+APP_URL=https://runners.elatiky.com
 LOG_LEVEL=warning
 
 DB_CONNECTION=mysql
@@ -87,39 +62,40 @@ EASYKASH_HMAC_SECRET=ROTATED_EASYKASH_HMAC_SECRET
 EASYKASH_CASH_EXPIRY=48
 ```
 
-ولّد `APP_KEY` على الخادم، ثم نفّذ إعداد قاعدة البيانات لأول مرة فقط:
+استخدم بيانات MySQL التي أنشأتها في hPanel. لا تضع `.env` في `public_html` ولا ترفع مفاتيح EasyKash إلى GitHub. مفاتيح EasyKash التي أُرسلت سابقًا في المحادثة يجب تدويرها قبل النشر.
+
+أنشئ مجلدات الكتابة وشغّل إعداد Laravel لأول مرة:
 
 ```bash
-cd ~/domains/api-runners.elatiky.com/kfs-api
+mkdir -p storage/app/private storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+chmod -R 775 storage bootstrap/cache
 php artisan key:generate
 php artisan migrate --seed --force
 php artisan config:cache
 ```
 
-تحقق من نسخة PHP في SSH أيضًا؛ يجب أن تكون 8.3 أو أحدث. لا تضع التطبيق كاملًا داخل `public_html` حتى لا تصبح ملفات Laravel أو `.env` قابلة للوصول عبر الويب.
+`--seed` ينشئ المستخدم الإداري وسباقات البداية. لا تعِد تشغيل seed على قاعدة الإنتاج إلا إذا كنت تريد تطبيق بيانات البداية مرة أخرى. تأكد أن `storage/` و`bootstrap/cache/` قابلان للكتابة من PHP.
 
-`--seed` ينشئ حساب المدير وسباقات البداية. لا تعِد تشغيل seeder على قاعدة بيانات حية إذا كنت لا تريد إعادة أسعار السباقات الافتراضية. أعطِ PHP صلاحية الكتابة إلى `storage/` و`bootstrap/cache/`.
+## 4) إعداد EasyKash والتحقق
 
-في إعدادات EasyKash، اضبط callback على:
+في إعدادات EasyKash، اضبط Callback URL على:
 
 ```text
-https://api-runners.elatiky.com/api/payments/easykash/callback
+https://runners.elatiky.com/api/payments/easykash/callback
 ```
 
-الواجهة ترجع بعد الدفع إلى `https://runners.elatiky.com/register`. لا تعتبر إعادة التوجيه تأكيد دفع؛ التأكيد يحصل عبر callback موقّع فقط.
+يعود المتسابق إلى صفحة `/register` بعد الدفع. لا تعتبر إعادة التوجيه نجاحًا للدفع؛ Laravel يغيّر حالة الدفع فقط بعد التحقق من callback الموقّع.
 
-## فحص النشر
+تحقق بعد النشر من:
 
-- افتح `https://api-runners.elatiky.com/up`؛ Laravel يجب أن يرجع استجابة الصحة.
-- افتح `https://api-runners.elatiky.com/api/races`؛ يجب أن تظهر فئات السباق والأسعار النشطة.
-- افتح `https://runners.elatiky.com/register` و`/admin/login` مباشرة للتأكد من عمل إعادة توجيه SPA.
-- سجّل الدخول إلى لوحة الإدارة بحساب المدير الذي ضبطته في `.env`.
-- استخدم EasyKash في الإنتاج فقط بعد مراجعة مفاتيح الحساب ورابط callback وHTTPS.
+- `https://runners.elatiky.com/` — الموقع العام.
+- `https://runners.elatiky.com/register` — نموذج التسجيل.
+- `https://runners.elatiky.com/admin/login` — لوحة الإدارة.
+- `https://runners.elatiky.com/up` — فحص Laravel.
+- `https://runners.elatiky.com/api/races` — السباقات والأسعار النشطة.
 
-## ملاحظات Hostinger
+## ملاحظات
 
-- بناء React محليًا يعني أن الخادم لا يحتاج Node.js لتشغيل الواجهة الثابتة.
-- بعض باقات Hostinger توفر نشر Node.js من GitHub. هذا خيار آخر لبناء React، لكنه لا يغني عن نشر Laravel API وقاعدة MySQL.
-- إذا لم يعمل Composer بسبب اختلاف نسخة PHP في SSH، استخدم `composer2` وراجع نسخة PHP الخاصة بسطر الأوامر. إعداد PHP للموقع في hPanel قد يختلف عن نسخة PHP في SSH.
-- في بعض خطط Web/Cloud لا يمكن تغيير جذر الموقع عن `public_html`؛ لذلك نبقي تطبيق Laravel خارجه ونضع ملفات `public/` فقط داخل جذر نطاق API.
-- بيانات EasyKash التي أُرسلت في المحادثة السابقة يجب تدويرها قبل النشر الحي، ثم تحفظ المفاتيح الجديدة في `.env` على الخادم فقط.
+- لا يحتاج الموقع الحي إلى Node.js؛ ملفات CSS وExcelJS موجودة ضمن ملفات Laravel العامة.
+- بعض خطط Hostinger تثبّت جذر الموقع على `public_html`. هذا الإعداد يضع كود Laravel خارج مجلد الويب ويعرض فقط محتويات `public/`.
+- نسخة PHP في SSH قد تختلف عن نسخة PHP المحددة للموقع. تأكد من استخدام PHP 8.3+ للطرفية وhPanel.

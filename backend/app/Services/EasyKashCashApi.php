@@ -41,6 +41,34 @@ class EasyKashCashApi
         ]);
     }
 
+    public function inquire(string $customerReference): ?array
+    {
+        if (! $this->configured()) {
+            return null;
+        }
+
+        try {
+            $response = Http::withHeaders(['authorization' => (string) config('easykash.api_key')])
+                ->asJson()
+                ->acceptJson()
+                ->timeout(10)
+                ->post('https://back.easykash.net/api/cash-api/inquire', [
+                    'customerReference' => $customerReference,
+                ]);
+
+            if ($response->successful() && is_array($response->json())) {
+                return $response->json();
+            }
+        } catch (\Throwable $e) {
+            Log::warning('EasyKash inquire call failed.', [
+                'reference' => $customerReference,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return null;
+    }
+
     private function createCheckoutLink(array $payer): array
     {
         $cashExpiry = (int) config('easykash.cash_expiry', 48);

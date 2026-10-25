@@ -1,63 +1,28 @@
-# Laravel API starter overlay (Laravel 13)
+# KFS Runners
 
-This folder contains the KFS Runners application layer, **not the Laravel framework/vendor directory**. It targets Laravel 13 / PHP 8.3+, then copy the contents of this folder into a clean Laravel project.
+KFS Runners is a Laravel application with Blade-rendered public pages and an admin dashboard. It does not use React or a separate frontend server. Laravel serves the home page, runner registration, EasyKash return/status page, admin login, dashboard, race/pricing management, and Excel team imports.
 
-## Install
+## Application
 
-```bash
-composer create-project laravel/laravel kfs-backend
-cd kfs-backend
-php artisan install:api
+The Laravel app lives in [`backend/`](backend/). It requires PHP 8.3+, Composer, and MySQL in production. Local setup uses SQLite.
+
+```powershell
+.\setup-local.ps1
+.\start-local.ps1
 ```
 
-Copy all files from `backend-starter/` into the new `kfs-backend/` project, merging folders and replacing `routes/api.php` and `database/seeders/DatabaseSeeder.php` when prompted. Do not copy a `vendor` folder from anywhere. In `bootstrap/app.php`, add `use App\Http\Middleware\EnsureAdmin;` with the other imports and add `$middleware->alias(['admin' => EnsureAdmin::class]);` inside the existing `withMiddleware()` callback.
+Open:
 
-Configure `.env` with MySQL and set a strong admin password:
+- Website: `http://127.0.0.1:8000`
+- Registration: `http://127.0.0.1:8000/register`
+- Admin: `http://127.0.0.1:8000/admin/login`
 
-```env
-APP_NAME="KFS Runners API"
-APP_ENV=local
-APP_DEBUG=true
-APP_URL=http://127.0.0.1:8000
-FRONTEND_URL=http://localhost:5173
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=kfs_runners
-DB_USERNAME=root
-DB_PASSWORD=
-KFS_ADMIN_NAME="KFS Administrator"
-KFS_ADMIN_EMAIL=admin@example.com
-KFS_ADMIN_PASSWORD="replace-with-a-long-random-password"
-```
+The setup script creates a local administrator and seeds the race categories and prices. Keep administrator credentials and EasyKash credentials in the Laravel `.env` file. Never commit secrets.
 
-Then run:
+## Payment flow
 
-```bash
-php artisan migrate --seed
-php artisan serve
-```
+Laravel creates an EasyKash hosted checkout link and redirects the runner to it. EasyKash returns the browser to `/register`; payment is confirmed only after Laravel verifies the provider's signed callback at `/api/payments/easykash/callback`.
 
-Never deploy with `APP_DEBUG=true`, never reuse the example credentials, and use HTTPS in production. Store uploaded runner documents on Laravel's private local disk and provide access only through authenticated controller endpoints. Keep gateway secrets in server-side environment variables.
+## Hostinger
 
-## API routes
-
-- `POST /api/admin/login` — returns a Sanctum personal access token for an admin.
-- `POST /api/admin/logout` — revoke current token.
-- `GET /api/admin/me` — current admin.
-- `GET /api/admin/dashboard` — registration/payment metrics and latest records.
-- `GET /api/admin/registrations` — filter/search/paginate registrations.
-- `GET /api/admin/registrations/{id}` — authorized runner details, with ID masked.
-- `GET /api/admin/registrations/{id}/document` — secure authenticated download of the runner document.
-- `PATCH /api/admin/registrations/{id}` — update operational status only.
-- `GET /api/admin/payments` — payment attempts.
-- `GET /api/admin/race-kit-prices` — prices for the dashboard.
-- `PUT /api/admin/race-kit-prices/{id}` — update one price.
-- `GET /api/races` — public race categories and active prices.
-- `POST /api/registrations` — validate and create a pending registration.
-- `GET /api/registrations/{reference}/payment-status` — return the registration's public payment status and any verified payment details.
-- `POST /api/payments/easykash/callback` — verify EasyKash HMAC-SHA512 callbacks and update payment status.
-
-## Payments status
-
-The registration flow asks Laravel to create an EasyKash hosted checkout link, then sends the runner to EasyKash to choose among the payment methods enabled for the merchant account. Omitting `paymentOptions` lets EasyKash show all enabled methods. Configure `EASYKASH_API_KEY`, `EASYKASH_HMAC_SECRET`, and the public `EASYKASH_REDIRECT_URL` in the server environment; never put credentials in React or a committed file. Set the EasyKash Integration Settings callback URL to `https://YOUR-API-HOST/api/payments/easykash/callback`. The browser returns to the redirect URL after checkout, while the registration is marked paid only after a signed callback passes HMAC-SHA512 verification and amount matching.
+See [`HOSTINGER_DEPLOYMENT.md`](HOSTINGER_DEPLOYMENT.md) for the single-site Shared Hosting deployment steps and package command.

@@ -12,7 +12,11 @@ class EnsureAdmin
     {
         $user = $request->user();
         if (!$user || $user->role !== 'admin') {
-            return response()->json(['message' => 'Administrator access required.'], 403);
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Administrator access required.'], 403);
+            }
+
+            return redirect()->route('admin.login');
         }
         return $next($request);
     }

@@ -1,0 +1,17 @@
+@extends('admin.layout')
+@section('title', 'Overview · KFS Runners Admin')
+@section('section', 'Overview')
+@section('content')
+<div class="admin-page-heading"><div><div class="admin-eyebrow">EVENT OPERATIONS</div><h1>Good day, <span>{{ auth()->user()->name }}</span></h1><p>Your race operations at a glance. Payment totals include only gateway-confirmed registrations.</p></div><div class="admin-heading-action"><a href="{{ route('admin.export-overview') }}" class="admin-secondary-button">↓ Export overview</a> <a href="{{ route('admin.registrations') }}" class="admin-primary-button">View registrations →</a></div></div>
+<div class="admin-metrics-grid">
+    @foreach ([['Total registrations',$total,'All runners','admin-metric-icon'],['Paid registrations',$paid,'EasyKash confirmed','admin-metric-icon'],['Pending payments',$pending,'Awaiting callback','admin-metric-icon'],['Total revenue','EGP '.number_format($revenue, 2),'Confirmed payments only','admin-metric-icon']] as [$label,$value,$note,$icon])
+        <article class="admin-metric-card"><div class="admin-metric-top"><span>{{ $label }}</span><span class="admin-metric-icon">♢</span></div><div class="admin-metric-value">{{ $value }}</div><div class="admin-metric-foot">{{ $note }}</div></article>
+    @endforeach
+</div>
+<div class="admin-dashboard-grid"><section class="admin-panel admin-revenue-panel"><div class="admin-panel-heading"><div><h3>Payment trend</h3><p>Paid registration value · last 7 days</p></div><span class="admin-chart-total">EGP {{ number_format($trend->sum('value'), 2) }}</span></div><div class="admin-bar-chart">
+@php($maxTrend = max(1, $trend->max('value')))
+@foreach($trend as $day)<div class="admin-chart-column"><div class="admin-chart-bar-wrap"><div class="admin-chart-bar" style="height:{{ max(5, (int) round($day['value'] / $maxTrend * 100)) }}%" title="EGP {{ number_format($day['value'], 2) }}"></div></div><span>{{ $day['label'] }}</span></div>@endforeach
+</div></section>
+<section class="admin-panel admin-race-panel"><div class="admin-panel-heading"><div><h3>Race categories</h3><p>Registrations by race</p></div><a class="admin-panel-link" href="{{ route('admin.races') }}">Manage →</a></div>@forelse($raceBreakdown as $race)<div class="admin-race-row"><span>{{ $race->name }}</span><b>{{ $race->registrations_count }}</b></div>@empty<p class="admin-empty-state">No race categories created yet.</p>@endforelse</section></div>
+<section class="admin-panel admin-recent-panel"><div class="admin-panel-heading"><div><h3>Recent registrations</h3><p>Latest runner entries</p></div><a class="admin-panel-link" href="{{ route('admin.registrations') }}">View all →</a></div><div class="admin-table-scroll"><table class="admin-table"><thead><tr><th>Reference</th><th>Runner</th><th>Race</th><th>Amount</th><th>Payment</th><th>Date</th></tr></thead><tbody>@forelse($recent as $registration)<tr><td><a href="{{ route('admin.registrations.show', $registration) }}"><b>{{ $registration->registration_code }}</b></a></td><td>{{ $registration->first_name }} {{ $registration->last_name }}</td><td>{{ $registration->race?->distance_label ?? '—' }}</td><td>EGP {{ number_format($registration->amount, 2) }}</td><td><span class="admin-status status-{{ $registration->payment_status }}">{{ ucfirst($registration->payment_status) }}</span></td><td>{{ $registration->created_at?->format('d M Y') }}</td></tr>@empty<tr><td colspan="6" class="admin-empty-state">No registrations yet.</td></tr>@endforelse</tbody></table></div></section>
+@endsection

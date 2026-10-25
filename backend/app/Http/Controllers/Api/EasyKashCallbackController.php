@@ -43,7 +43,12 @@ class EasyKashCallbackController extends Controller
             return response()->json(['message' => 'Payment reference was not found.'], 404);
         }
 
-        if (number_format((float) $payment->amount, 2, '.', '') !== $amount) {
+        if ((float) $amount < (float) $payment->amount) {
+            Log::warning('EasyKash callback amount is less than expected.', [
+                'expected' => (float) $payment->amount,
+                'received' => (float) $amount,
+                'reference' => $customerReference,
+            ]);
             return response()->json(['message' => 'Callback amount does not match the registration.'], 422);
         }
 

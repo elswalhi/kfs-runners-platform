@@ -1,17 +1,10 @@
 $ErrorActionPreference = 'Stop'
 $base = 'http://127.0.0.1:8000'
-Write-Host 'Checking Laravel health endpoint...' -ForegroundColor Cyan
-$health = Invoke-WebRequest -Uri "$base/up" -Method Get
-if ($health.StatusCode -ne 200) { throw "Health check failed: HTTP $($health.StatusCode)" }
-Write-Host 'Health: OK' -ForegroundColor Green
-Write-Host 'Checking public race/pricing endpoint...'
+foreach ($path in @('/', '/register', '/admin/login', '/up')) {
+    Write-Host "Checking $path ..." -ForegroundColor Cyan
+    $response = Invoke-WebRequest -Uri "$base$path" -Method Get
+    if ($response.StatusCode -ne 200) { throw "$path returned HTTP $($response.StatusCode)." }
+}
 $races = Invoke-RestMethod -Uri "$base/api/races" -Method Get
-if (-not ($races.data -is [System.Array]) -or $races.data.Count -lt 1) {
-    throw 'The races endpoint returned no race data. Run php artisan migrate --seed from the backend folder.'
-}
-Write-Host "Races returned: $($races.data.Count)" -ForegroundColor Green
-foreach ($race in $races.data) {
-    $kits = ($race.prices | ForEach-Object { "$($_.kit_type): EGP $($_.price)" }) -join ', '
-    Write-Host " - $($race.distance_label) $($race.name): $kits"
-}
-Write-Host 'Local API smoke check passed.' -ForegroundColor Green
+if (-not ($races.data -is [System.Array]) -or $races.data.Count -lt 1) { throw 'No active race records were returned. Run php artisan migrate --seed from backend/.' }
+Write-Host 'Website, registration, admin login, health endpoint, and race data are reachable.' -ForegroundColor Green

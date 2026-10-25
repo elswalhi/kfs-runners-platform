@@ -1,0 +1,62 @@
+<?php
+
+namespace App\Http\Controllers\Web;
+
+use App\Http\Controllers\Api\PublicRegistrationController;
+use App\Models\Race;
+use App\Services\EasyKashCashApi;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\JsonResponse;
+
+class PublicSiteController
+{
+    public function home()
+    {
+        $races = Race::query()
+            ->where('is_active', true)
+            ->with(['kitPrices' => fn ($query) => $query->where('is_active', true)])
+            ->orderBy('sort_order')
+            ->get();
+
+        return view('site.home', compact('races'));
+    }
+
+    public function register()
+    {
+        $races = Race::query()
+            ->where('is_active', true)
+            ->with(['kitPrices' => fn ($query) => $query->where('is_active', true)])
+            ->orderBy('sort_order')
+            ->get();
+
+        $sessionReference = session()->pull('kfs_last_payment_reference');
+        $returnReference = request()->query('customerReference')
+            ?: request()->query('reference')
+            ?: $sessionReference;
+
+        return view('site.register', compact('races', 'returnReference'));
+    }
+
+    public function storeRegistration(Request $request, PublicRegistrationController $registrations, EasyKashCashApi $easyKash)
+    {
+        $response = $registrations->store($request, $easyKash);
+
+        if (! $response instanceof JsonResponse) {
+            return back()->withInput()->with('payment_error', 'We could not start the registration. Please try again.');
+        }
+
+        $payload = $response->getData(true);
+        if ($response->getStatusCode() === 201 && filled(data_get($payload, 'payment.redirect_url'))) {
+            if ($reference = data_get($payload, 'payment.reference') ?: data_get($payload, 'data.reference')) {
+                $request->session()->put('kfs_last_payment_reference', $reference);
+            }
+
+            return redirect()->away(data_get($payload, 'payment.redirect_url'));
+        }
+
+        return redirect()->route('register')
+            ->withInput($request->except(['idFile', 'terms']))
+            ->with('payment_error', data_get($payload, 'message', 'We could not start payment. Please contact the race team.'))
+            ->with('payment_reference', data_get($payload, 'data.reference'));
+    }
+}
