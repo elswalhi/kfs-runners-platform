@@ -11,4 +11,5 @@ backend/database/*.sqlite-*
 backend/storage/
 backend/bootstrap/cache/*.php
 backend/storage/*.key
+*.zip
 .DS_Store
