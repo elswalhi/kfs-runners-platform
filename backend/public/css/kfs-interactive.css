@@ -176,7 +176,7 @@
     align-items: center;
     justify-content: center;
     gap: 10px;
-    background: #ed1b2f;
+    background: #b81420;
     border: none;
     color: #ffffff;
     padding: 14px 28px;
@@ -508,7 +508,7 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        background: #ed1b2f;
+        background: #b81420;
         color: #ffffff;
         border: none;
         padding: 12px 20px;
@@ -585,7 +585,7 @@
     font-family: 'Barlow Condensed', sans-serif;
     font-size: 22px;
     font-weight: 900;
-    color: #ed1b2f;
+    color: #b81420;
     line-height: 1;
 }
 
