@@ -130,8 +130,61 @@
         </form>
     </div>
 
-    <!-- Right Column: Payments Ledger -->
-    <div class="stitch-panel">
+    <!-- Right Column: QR Code & Payments -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Official Runner QR & Digital Bib Pass Card -->
+        <div class="stitch-panel" style="text-align: center;">
+            <div class="stitch-panel-header" style="justify-content: center; border-bottom: 1px dashed var(--st-border);">
+                <div style="text-align: center;">
+                    <span class="stitch-code-badge" style="font-size: 13px; font-weight: 800; padding: 4px 10px; background: #fee2e2; color: #991b1b;">
+                        BIB # {{ $registration->registration_code }}
+                    </span>
+                    <h3 style="margin-top: 6px;">{{ __('Runner QR & Kit Pickup Code') }}</h3>
+                    <p style="font-size: 12px; color: var(--st-text-muted);">{{ __('Scannable at race expo & kit collection booth') }}</p>
+                </div>
+            </div>
+
+            <div style="padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <div style="background: #ffffff; padding: 12px; border-radius: 12px; border: 2px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06); display: inline-block;">
+                    <img src="{{ $qrDataUri }}" alt="Runner QR Code" width="220" height="220" style="display: block; border-radius: 6px;">
+                </div>
+
+                <!-- Summary Chips -->
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 14px;">
+                    <span style="font-size: 11px; font-weight: 800; background: #ecfdf5; color: #047857; padding: 4px 10px; border-radius: 100px;">
+                        🏁 {{ $registration->race?->distance_label }}
+                    </span>
+                    <span style="font-size: 11px; font-weight: 800; background: #eff6ff; color: #1e40af; padding: 4px 10px; border-radius: 100px;">
+                        📦 {{ ucfirst($registration->kit_type) }}
+                    </span>
+                    @if(str_contains(strtolower($registration->kit_type), 'full') && $registration->shirt_size)
+                    <span style="font-size: 11px; font-weight: 800; background: #fef2f2; color: #991b1b; padding: 4px 10px; border-radius: 100px;">
+                        👕 T-Shirt: {{ strtoupper($registration->shirt_size) }}
+                    </span>
+                    @endif
+                </div>
+
+                <div style="margin-top: 18px; width: 100%; display: flex; gap: 8px;">
+                    <a href="{{ $qrDataUri }}" download="runner-qr-{{ $registration->registration_code }}.png" class="stitch-btn stitch-btn-secondary" style="flex: 1; font-size: 12px; justify-content: center; gap: 6px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                        <span>{{ __('Download QR') }}</span>
+                    </a>
+                    <button type="button" onclick="window.print()" class="stitch-btn stitch-btn-primary" style="flex: 1; font-size: 12px; justify-content: center; gap: 6px; background: #b81420; border-color: #8e0e17;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+                        <span>{{ __('Print Badge') }}</span>
+                    </button>
+                </div>
+
+                <!-- Decoded QR Text preview -->
+                <div style="margin-top: 14px; width: 100%; text-align: left; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;">
+                    <span style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">{{ __('QR Scanned Content Preview:') }}</span>
+                    <pre style="font-family: monospace; font-size: 11px; color: #1e293b; margin: 0; white-space: pre-wrap; line-height: 1.4;">{{ $qrPayload }}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payments Ledger -->
+        <div class="stitch-panel">
         <div class="stitch-panel-header">
             <div class="stitch-panel-title-wrap">
                 <h3>Payment Activity</h3>
@@ -174,5 +227,6 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 @endsection

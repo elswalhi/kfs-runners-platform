@@ -10,6 +10,7 @@ use App\Models\Race;
 use App\Models\RaceKitPrice;
 use App\Models\Registration;
 use App\Services\EasyKashCashApi;
+use App\Services\QrCodeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -89,8 +90,10 @@ class AdminWebController
         $payments = $registration->payments->merge($registration->team?->payments ?? collect())->unique('id')->sortByDesc('created_at');
         $idNumber = $registration->id_number;
         $maskedId = $idNumber ? '••••••' . substr((string) $idNumber, -4) : '—';
+        $qrDataUri = QrCodeService::generateRunnerQr($registration, 260);
+        $qrPayload = QrCodeService::buildRunnerPayload($registration);
 
-        return view('admin.registration', compact('registration', 'payments', 'maskedId'));
+        return view('admin.registration', compact('registration', 'payments', 'maskedId', 'qrDataUri', 'qrPayload'));
     }
 
     public function updateRegistration(Request $request, Registration $registration)
