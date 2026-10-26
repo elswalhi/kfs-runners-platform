@@ -17,55 +17,11 @@ jobs:
           port: ${{ secrets.SSH_PORT || 65002 }}
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASSWORD }}
-          script_stop: true
           script: |
+            set -e
             echo "🚀 Starting automated deployment on Hostinger..."
-
-            # 1. Clone or pull repository
-            if [ ! -d "$HOME/kfs-repo" ]; then
-              echo "Cloning repository..."
-              git clone https://github.com/elswalhi/kfs-runners-platform.git $HOME/kfs-repo
-            else
-              echo "Pulling latest changes..."
-              cd $HOME/kfs-repo
-              git pull origin main
-            fi
-
-            # 2. Sync backend files into kfs-app
-            APP_DIR="$HOME/domains/kfsmarathon.elatiky.com/kfs-app"
-            WEB_DIR="$HOME/domains/kfsmarathon.elatiky.com/public_html"
-
-            echo "Syncing Laravel core into $APP_DIR..."
-            mkdir -p $APP_DIR
-            cp -r $HOME/kfs-repo/backend/app $APP_DIR/
-            cp -r $HOME/kfs-repo/backend/config $APP_DIR/
-            cp -r $HOME/kfs-repo/backend/database $APP_DIR/
-            cp -r $HOME/kfs-repo/backend/lang $APP_DIR/
-            cp -r $HOME/kfs-repo/backend/resources $APP_DIR/
-            cp -r $HOME/kfs-repo/backend/routes $APP_DIR/
-            cp $HOME/kfs-repo/backend/artisan $APP_DIR/
-            cp $HOME/kfs-repo/backend/composer.json $APP_DIR/
-
-            # 3. Sync public assets into public_html
-            echo "Syncing public assets into $WEB_DIR..."
-            mkdir -p $WEB_DIR
-            cp -r $HOME/kfs-repo/backend/public/css $WEB_DIR/
-            cp -r $HOME/kfs-repo/backend/public/js $WEB_DIR/
-            if [ -d "$HOME/kfs-repo/backend/public/images" ]; then
-              cp -r $HOME/kfs-repo/backend/public/images $WEB_DIR/
-            fi
-            cp $HOME/kfs-repo/deploy/hostinger/laravel-index.php $WEB_DIR/index.php
-
-            # 4. Clear and refresh caches
-            echo "Clearing and optimizing Laravel caches..."
-            cd $APP_DIR
-            /opt/alt/php83/usr/bin/php artisan view:clear
-            /opt/alt/php83/usr/bin/php artisan config:clear
-            /opt/alt/php83/usr/bin/php artisan route:clear
-            /opt/alt/php83/usr/bin/php artisan cache:clear
-            /opt/alt/php83/usr/bin/php artisan view:cache
-
-            # 5. Purge LiteSpeed web server cache
-            touch $WEB_DIR/.htaccess
-
-            echo "✅ Deployment finished successfully!"
+            test -d "$HOME/kfs-repo" || git clone https://github.com/elswalhi/kfs-runners-platform.git "$HOME/kfs-repo"
+            cd "$HOME/kfs-repo"
+            git fetch origin main
+            git reset --hard origin/main
+            bash deploy/hostinger/deploy.sh
