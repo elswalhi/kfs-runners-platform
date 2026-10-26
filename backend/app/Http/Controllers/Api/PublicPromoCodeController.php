@@ -16,18 +16,28 @@ class PublicPromoCodeController extends Controller
     {
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:64'],
-            'race' => ['required', 'string', 'exists:races,slug'],
-            'kit' => ['required', Rule::in(['full', 'basic'])],
+            'race' => ['nullable', 'string', 'exists:races,slug'],
+            'kit' => ['nullable', Rule::in(['full', 'basic'])],
+            'total' => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        $race = Race::query()->where('slug', $validated['race'])->where('is_active', true)->first();
-        if (! $race) {
-            return response()->json(['valid' => false, 'message' => 'Selected race is not active.'], 422);
-        }
+        $currency = 'EGP';
+        $originalAmount = 0.00;
 
-        $price = RaceKitPrice::query()->where('race_id', $race->id)->where('kit_type', $validated['kit'])->where('is_active', true)->first();
-        if (! $price) {
-            return response()->json(['valid' => false, 'message' => 'Price for selected kit is not available.'], 422);
+        if ($request->filled('total') && (float) $request->input('total') > 0) {
+            $originalAmount = (float) $request->input('total');
+        } elseif ($request->filled('race') && $request->filled('kit')) {
+            $race = Race::query()->where('slug', $validated['race'])->where('is_active', true)->first();
+            if (! $race) {
+                return response()->json(['valid' => false, 'message' => 'Selected race is not active.'], 422);
+            }
+
+            $price = RaceKitPrice::query()->where('race_id', $race->id)->where('kit_type', $validated['kit'])->where('is_active', true)->first();
+            if (! $price) {
+                return response()->json(['valid' => false, 'message' => 'Price for selected kit is not available.'], 422);
+            }
+            $originalAmount = (float) $price->price;
+            $currency = $price->currency;
         }
 
         $cleanCode = strtoupper(trim($validated['code']));
@@ -41,7 +51,7 @@ class PublicPromoCodeController extends Controller
             return response()->json(['valid' => false, 'message' => 'This promo code is currently inactive.'], 422);
         }
 
-        if (! $promo->isValidForRace($race->id)) {
+        if (isset($race) && ! $promo->isValidForRace($race->id)) {
             return response()->json(['valid' => false, 'message' => 'This promo code is not valid for ' . $race->name . '.'], 422);
         }
 
@@ -57,13 +67,12 @@ class PublicPromoCodeController extends Controller
             return response()->json(['valid' => false, 'message' => 'This promo code has reached its maximum usage limit.'], 422);
         }
 
-        $originalAmount = (float) $price->price;
         $discountAmount = $promo->calculateDiscount($originalAmount);
         $finalAmount = max(0.00, round($originalAmount - $discountAmount, 2));
 
         $discountText = $promo->discount_type === 'percentage'
             ? ((float) $promo->discount_value . '% off')
-            : (number_format($discountAmount, 2) . ' ' . $price->currency . ' off');
+            : (number_format($discountAmount, 2) . ' ' . $currency . ' off');
 
         return response()->json([
             'valid' => true,
@@ -73,7 +82,7 @@ class PublicPromoCodeController extends Controller
             'discount_amount' => $discountAmount,
             'original_amount' => $originalAmount,
             'final_amount' => $finalAmount,
-            'currency' => $price->currency,
+            'currency' => $currency,
             'message' => "Promo code applied ({$discountText})!",
         ]);
     }

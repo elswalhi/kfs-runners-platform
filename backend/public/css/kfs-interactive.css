@@ -646,3 +646,142 @@
     background: #059669 !important;
     color: #ffffff !important;
 }
+
+/* ==========================================================================
+   10. Multi-Ticket & Multi-Runner Group Checkout Styles
+   ========================================================================== */
+.kfs-ticket-card {
+    background: #ffffff;
+    border: 1px solid #dbe6e0;
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    position: relative;
+    box-shadow: 0 4px 14px rgba(6, 75, 62, 0.03);
+    transition: all 0.2s ease;
+}
+
+.kfs-ticket-card:hover {
+    border-color: #064b3e;
+}
+
+.kfs-ticket-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #e2ebe6;
+}
+
+.kfs-ticket-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-weight: 800;
+    color: #064b3e;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.kfs-ticket-remove-btn {
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    color: #be123c;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.kfs-ticket-remove-btn:hover {
+    background: #be123c;
+    color: #ffffff;
+}
+
+.kfs-add-ticket-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 15px;
+    background: #f7faf8;
+    border: 2px dashed #b8d2c4;
+    border-radius: 10px;
+    color: #064b3e;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    margin: 18px 0 24px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kfs-add-ticket-btn:hover {
+    background: #eef7f2;
+    border-color: #064b3e;
+    transform: translateY(-2px);
+}
+
+.kfs-copy-main-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #eef8f2;
+    border: 1px solid #cce8d7;
+    color: #065f46;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.kfs-copy-main-btn:hover {
+    background: #064b3e;
+    color: #ffffff;
+    border-color: #064b3e;
+}
+
+.kfs-attendee-section {
+    background: #ffffff;
+    border: 1px solid #dce8e1;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.kfs-attendee-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #edf3ef;
+}
+
+.kfs-order-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 14px 0;
+}
+
+.kfs-order-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 12px;
+    background: #f8faf9;
+    border-radius: 6px;
+    border: 1px solid #e7eeea;
+    font-size: 11px;
+}
+
+.kfs-order-item-row b {
+    color: #064b3e;
+}

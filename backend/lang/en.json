@@ -144,5 +144,15 @@
     "Copied to clipboard!": "Copied to clipboard!",
     "Selected": "Selected",
     "Step progress": "Step progress",
-    "Total to pay": "Total to pay"
+    "Total to pay": "Total to pay",
+    "Add another runner": "Add another runner (extra ticket)",
+    "Remove ticket": "Remove ticket",
+    "Tickets in order": "Tickets in this order",
+    "Runner": "Runner",
+    "Main contact & buyer": "Primary Contact & Buyer",
+    "Copy from main contact": "Copy from main contact",
+    "Primary contact details": "Primary contact details",
+    "Order summary": "Order summary",
+    "Total tickets": "Total tickets",
+    "Proceed to pay for all runners": "Proceed to pay for all runners"
 }

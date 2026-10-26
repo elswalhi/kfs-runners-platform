@@ -187,5 +187,15 @@
     "Copied to clipboard!": "تم النسخ للحافظة بنجاح!",
     "Selected": "تم الاختيار",
     "Step progress": "نسبة إتمام الخطوات",
-    "Total to pay": "الإجمالي للدفع"
+    "Total to pay": "الإجمالي للدفع",
+    "Add another runner": "إضافة متسابق آخر (تذكرة جديدة)",
+    "Remove ticket": "إزالة التذكرة",
+    "Tickets in order": "التذاكر في هذا الطلب",
+    "Runner": "المتسابق",
+    "Main contact & buyer": "بيانات المشتري والتواصل الأساسية",
+    "Copy from main contact": "نسخ بيانات المشتري الأساسي",
+    "Primary contact details": "بيانات التواصل الأساسية",
+    "Order summary": "ملخص الطلب",
+    "Total tickets": "إجمالي التذاكر",
+    "Proceed to pay for all runners": "المتابعة لدفع جميع التذاكر"
 }
