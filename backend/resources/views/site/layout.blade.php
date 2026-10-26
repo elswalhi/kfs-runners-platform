@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="{{ asset('css/kfs-public.css') }}">
     <link rel="stylesheet" href="{{ asset('css/kfs-payment.css') }}">
     <link rel="stylesheet" href="{{ asset('css/kfs-blade.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/kfs-interactive.css') }}">
     <style>
         [dir="rtl"] body {
             font-family: 'Cairo', 'Inter', sans-serif;
@@ -84,6 +85,7 @@
     </div>
     <div class="footer-bottom"><div class="wrap footer-bottom-inner"><span>© {{ now()->year }} KFS Runners · El-Atiky Sports Services</span><span>Run · Challenge · Connect</span></div></div>
 </footer>
+<div id="kfs-toast-container"></div>
 <script>
     const menuButton = document.getElementById('mobile-menu-toggle');
     const menu = document.getElementById('main-nav');
@@ -93,6 +95,7 @@
         menuButton.textContent = open ? '×' : '☰';
     });
 </script>
+<script src="{{ asset('js/kfs-interactive.js') }}"></script>
 @stack('scripts')
 </body>
 </html>

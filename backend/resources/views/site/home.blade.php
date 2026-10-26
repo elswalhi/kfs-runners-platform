@@ -15,7 +15,36 @@
                 <p class="home-eyebrow"><span></span> {{ __('KFS RUNNERS · KAFR EL-SHEIKH') }}</p>
                 <h1 id="home-title">{{ __('YOUR RACE.') }}<br><span>{{ __('YOUR STORY.') }}</span></h1>
                 <p class="home-lede">{{ __('Choose your distance, pick your kit, and take the first step toward your next finish line.') }}</p>
-                <a href="{{ route('register') }}" class="home-primary-button">{{ __('Register for the race') }} <span aria-hidden="true">→</span></a>
+                <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap; margin-bottom:20px;">
+                    <a href="{{ route('register') }}" class="home-primary-button">{{ __('Register for the race') }} <span aria-hidden="true">→</span></a>
+                    <div class="kfs-countdown-card" id="kfs-race-countdown" data-target="2026-11-20T07:00:00+02:00">
+                        <div class="kfs-countdown-header">
+                            <span class="pulse-dot"></span>
+                            <span>{{ __('Race Countdown') }}</span>
+                        </div>
+                        <div class="kfs-countdown-grid">
+                            <div class="kfs-countdown-unit">
+                                <span class="kfs-countdown-number" id="countdown-days">--</span>
+                                <span class="kfs-countdown-label">{{ __('Days') }}</span>
+                            </div>
+                            <span class="kfs-countdown-sep">:</span>
+                            <div class="kfs-countdown-unit">
+                                <span class="kfs-countdown-number" id="countdown-hours">--</span>
+                                <span class="kfs-countdown-label">{{ __('Hours') }}</span>
+                            </div>
+                            <span class="kfs-countdown-sep">:</span>
+                            <div class="kfs-countdown-unit">
+                                <span class="kfs-countdown-number" id="countdown-mins">--</span>
+                                <span class="kfs-countdown-label">{{ __('Minutes') }}</span>
+                            </div>
+                            <span class="kfs-countdown-sep">:</span>
+                            <div class="kfs-countdown-unit">
+                                <span class="kfs-countdown-number" id="countdown-secs">--</span>
+                                <span class="kfs-countdown-label">{{ __('Seconds') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div class="home-assurances">
                     <span><i aria-hidden="true">✓</i> {{ __('Secure registration') }}</span>
                     <span><i aria-hidden="true">↗</i> {{ __('Solo or team entry') }}</span>
@@ -81,6 +110,14 @@
                     <h2 id="distances-title">{{ __('FIND YOUR') }} <span>{{ __('DISTANCE.') }}</span></h2>
                 </div>
                 <p>{{ __('Whether you are taking your first steps or chasing a new personal best, there is a race for you. Same great atmosphere. A stronger you.') }}</p>
+            </div>
+
+            <div class="kfs-filter-pills" role="tablist" aria-label="Race distance filters">
+                <button type="button" class="kfs-filter-pill active" data-filter="all">{{ __('All distances') }}</button>
+                <button type="button" class="kfs-filter-pill" data-filter="21k">21K</button>
+                <button type="button" class="kfs-filter-pill" data-filter="10k">10K</button>
+                <button type="button" class="kfs-filter-pill" data-filter="5k">5K</button>
+                <button type="button" class="kfs-filter-pill" data-filter="family">{{ __('Family and Para Race') }}</button>
             </div>
 
             <div class="home-distance-grid">
