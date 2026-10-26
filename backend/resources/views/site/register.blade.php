@@ -135,18 +135,24 @@
                             <small class="kfs-field-hint" id="phone-validation-hint" data-default="{{ __('Use an Egyptian mobile number. Local and +20 formats are accepted.') }}">{{ __('Use an Egyptian mobile number. Local and +20 formats are accepted.') }}</small>
                         </label>
                         <label>{{ __('Date of birth') }} <b>*</b>
-                            <input required type="date" name="birthDate" id="input-birthDate" max="{{ now()->subDay()->toDateString() }}" value="{{ old('birthDate') }}">
+                            <div class="kfs-field-wrap">
+                                <input required type="date" name="birthDate" id="input-birthDate" max="{{ now()->subDay()->toDateString() }}" value="{{ old('birthDate') }}">
+                                <span class="kfs-validation-badge">✓</span>
+                            </div>
                         </label>
                         <label>{{ __('Gender') }} <b>*</b>
-                            <span class="select-wrap">
-                                <select required name="gender" id="input-gender">
-                                    <option value="">{{ __('Choose gender') }}</option>
-                                    <option value="male" @selected(old('gender') === 'male')>{{ __('Male') }}</option>
-                                    <option value="female" @selected(old('gender') === 'female')>{{ __('Female') }}</option>
-                                    <option value="prefer_not_to_say" @selected(old('gender') === 'prefer_not_to_say')>{{ __('Prefer not to say') }}</option>
-                                </select>
-                                <span>⌄</span>
-                            </span>
+                            <div class="kfs-field-wrap">
+                                <span class="select-wrap">
+                                    <select required name="gender" id="input-gender">
+                                        <option value="">{{ __('Choose gender') }}</option>
+                                        <option value="male" @selected(old('gender') === 'male')>{{ __('Male') }}</option>
+                                        <option value="female" @selected(old('gender') === 'female')>{{ __('Female') }}</option>
+                                        <option value="prefer_not_to_say" @selected(old('gender') === 'prefer_not_to_say')>{{ __('Prefer not to say') }}</option>
+                                    </select>
+                                    <span>⌄</span>
+                                </span>
+                                <span class="kfs-validation-badge">✓</span>
+                            </div>
                         </label>
                         <label class="full-span">{{ __('ID / Passport number') }} <b>*</b>
                             <div class="kfs-field-wrap">
@@ -387,35 +393,33 @@
     }
 
     function validateStep2() {
-        const requiredIds = ['input-firstName', 'input-lastName', 'input-email', 'input-phone', 'input-birthDate', 'input-gender', 'input-idNumber'];
+        const fields = [
+            { id: 'input-firstName', valid: el => el && el.value.trim().length >= 2 },
+            { id: 'input-lastName', valid: el => el && el.value.trim().length >= 2 },
+            { id: 'input-email', valid: el => el && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim()) },
+            { id: 'input-phone', valid: el => {
+                if (!el) return false;
+                const raw = el.value.replace(/\s+/g, '');
+                return /^(010|011|012|015)\d{8}$/.test(raw) || /^\+20(10|11|12|15)\d{8}$/.test(raw);
+            }},
+            { id: 'input-birthDate', valid: el => {
+                if (!el || !el.value) return false;
+                const d = new Date(el.value);
+                return !isNaN(d.getTime()) && d < new Date();
+            }},
+            { id: 'input-gender', valid: el => el && !!el.value },
+            { id: 'input-idNumber', valid: el => el && el.value.trim().length >= 4 }
+        ];
+
         let firstInvalid = null;
-
-        for (const id of requiredIds) {
-            const input = document.getElementById(id);
-            if (!input || !input.value.trim()) {
-                input?.classList.add('is-invalid');
-                if (!firstInvalid) firstInvalid = input;
-            } else {
-                input.classList.remove('is-invalid');
+        for (const item of fields) {
+            const input = document.getElementById(item.id);
+            if (!input) continue;
+            const ok = item.valid(input);
+            window.kfsSetFieldState?.(input, ok, true);
+            if (!ok && !firstInvalid) {
+                firstInvalid = input;
             }
-        }
-
-        // Phone check
-        const phone = document.getElementById('input-phone');
-        if (phone) {
-            const raw = phone.value.replace(/\s+/g, '');
-            const isPhoneValid = /^(010|011|012|015)\d{8}$/.test(raw) || /^\+20(10|11|12|15)\d{8}$/.test(raw);
-            if (!isPhoneValid) {
-                phone.classList.add('is-invalid');
-                if (!firstInvalid) firstInvalid = phone;
-            }
-        }
-
-        // Email check
-        const email = document.getElementById('input-email');
-        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
-            email.classList.add('is-invalid');
-            if (!firstInvalid) firstInvalid = email;
         }
 
         if (firstInvalid) {

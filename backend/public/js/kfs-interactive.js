@@ -62,22 +62,82 @@
         }
     };
 
-    // 3. Live Egyptian Phone & Form Validation
-    const initFormValidation = () => {
-        const phoneInput = document.querySelector('input[name="phone"]');
-        const emailInput = document.querySelector('input[name="email"]');
+    // 3. Helper to Set Field State (valid / invalid / neutral)
+    window.kfsSetFieldState = (input, isValid, isDirty = true) => {
+        if (!input) return;
+        const wrap = input.closest('.kfs-field-wrap');
 
-        if (phoneInput) {
+        if (!isDirty && !input.value.trim()) {
+            input.classList.remove('is-valid', 'is-invalid');
+            if (wrap) wrap.classList.remove('is-valid', 'is-invalid');
+            return;
+        }
+
+        if (isValid) {
+            input.classList.remove('is-invalid');
+            input.classList.add('is-valid');
+            if (wrap) {
+                wrap.classList.remove('is-invalid');
+                wrap.classList.add('is-valid');
+            }
+        } else {
+            input.classList.remove('is-valid');
+            input.classList.add('is-invalid');
+            if (wrap) {
+                wrap.classList.remove('is-valid');
+                wrap.classList.add('is-invalid');
+            }
+        }
+    };
+
+    // 4. Live Egyptian Phone & All Fields Interactive Validation
+    const initFormValidation = () => {
+        const firstName = document.getElementById('input-firstName');
+        const lastName = document.getElementById('input-lastName');
+        const email = document.getElementById('input-email');
+        const phone = document.getElementById('input-phone');
+        const birthDate = document.getElementById('input-birthDate');
+        const gender = document.getElementById('input-gender');
+        const idNumber = document.getElementById('input-idNumber');
+
+        // First Name
+        if (firstName) {
+            const check = () => window.kfsSetFieldState(firstName, firstName.value.trim().length >= 2, firstName.value.length > 0);
+            firstName.addEventListener('input', check);
+            firstName.addEventListener('blur', check);
+            if (firstName.value.trim().length >= 2) check();
+        }
+
+        // Last Name
+        if (lastName) {
+            const check = () => window.kfsSetFieldState(lastName, lastName.value.trim().length >= 2, lastName.value.length > 0);
+            lastName.addEventListener('input', check);
+            lastName.addEventListener('blur', check);
+            if (lastName.value.trim().length >= 2) check();
+        }
+
+        // Email
+        if (email) {
+            const check = () => {
+                const val = email.value.trim();
+                const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+                window.kfsSetFieldState(email, isValid, val.length > 0);
+            };
+            email.addEventListener('input', check);
+            email.addEventListener('blur', check);
+            if (email.value.trim().length > 0) check();
+        }
+
+        // Phone with Egyptian number formatting
+        if (phone) {
             const formatEgyptianPhone = (val) => {
                 let clean = val.replace(/[^\d+]/g, '');
                 if (clean.startsWith('+20')) {
-                    // +20 10 1234 5678
                     const rest = clean.slice(3);
                     if (rest.length <= 2) return `+20 ${rest}`;
                     if (rest.length <= 6) return `+20 ${rest.slice(0, 2)} ${rest.slice(2)}`;
                     return `+20 ${rest.slice(0, 2)} ${rest.slice(2, 6)} ${rest.slice(6, 10)}`;
                 } else {
-                    // 010 1234 5678
                     clean = clean.replace(/[^\d]/g, '');
                     if (clean.length <= 3) return clean;
                     if (clean.length <= 7) return `${clean.slice(0, 3)} ${clean.slice(3)}`;
@@ -85,85 +145,75 @@
                 }
             };
 
-            const validatePhone = () => {
-                const raw = phoneInput.value.replace(/\s+/g, '');
+            const check = () => {
+                const raw = phone.value.replace(/\s+/g, '');
                 const isValid = /^(010|011|012|015)\d{8}$/.test(raw) || /^\+20(10|11|12|15)\d{8}$/.test(raw);
-                const wrap = phoneInput.closest('.kfs-field-wrap');
                 const hint = document.getElementById('phone-validation-hint');
 
-                if (raw.length === 0) {
-                    phoneInput.classList.remove('is-valid', 'is-invalid');
-                    if (wrap) wrap.classList.remove('is-valid', 'is-invalid');
-                    if (hint) { hint.className = 'kfs-field-hint'; hint.textContent = hint.dataset.default || ''; }
-                    return false;
-                }
+                window.kfsSetFieldState(phone, isValid, phone.value.length > 0);
 
-                if (isValid) {
-                    phoneInput.classList.remove('is-invalid');
-                    phoneInput.classList.add('is-valid');
-                    if (wrap) { wrap.classList.remove('is-invalid'); wrap.classList.add('is-valid'); }
-                    if (hint) {
+                if (hint) {
+                    if (phone.value.length === 0) {
+                        hint.className = 'kfs-field-hint';
+                        hint.textContent = hint.dataset.default || '';
+                    } else if (isValid) {
                         hint.className = 'kfs-field-hint is-valid';
                         hint.textContent = '✓ ' + (document.documentElement.lang === 'ar' ? 'رقم هاتف مصري معتمد' : 'Valid Egyptian mobile number');
-                    }
-                    return true;
-                } else {
-                    phoneInput.classList.remove('is-valid');
-                    phoneInput.classList.add('is-invalid');
-                    if (wrap) { wrap.classList.remove('is-valid'); wrap.classList.add('is-invalid'); }
-                    if (hint) {
+                    } else {
                         hint.className = 'kfs-field-hint is-invalid';
                         hint.textContent = '✕ ' + (document.documentElement.lang === 'ar' ? 'يجب أن يتكون من 11 رقماً ويبدأ بـ 010، 011، 012، أو 015' : 'Must be 11 digits starting with 010, 011, 012, or 015');
                     }
-                    return false;
                 }
             };
 
-            phoneInput.addEventListener('input', (e) => {
-                const curPos = phoneInput.selectionStart;
-                phoneInput.value = formatEgyptianPhone(phoneInput.value);
-                validatePhone();
+            phone.addEventListener('input', () => {
+                phone.value = formatEgyptianPhone(phone.value);
+                check();
             });
-
-            phoneInput.addEventListener('blur', validatePhone);
+            phone.addEventListener('blur', check);
+            if (phone.value.length > 0) check();
         }
 
-        if (emailInput) {
-            const validateEmail = () => {
-                const val = emailInput.value.trim();
-                const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
-                const wrap = emailInput.closest('.kfs-field-wrap');
-
-                if (val.length === 0) {
-                    emailInput.classList.remove('is-valid', 'is-invalid');
-                    if (wrap) wrap.classList.remove('is-valid', 'is-invalid');
-                    return false;
+        // Date of birth
+        if (birthDate) {
+            const check = () => {
+                if (!birthDate.value) {
+                    window.kfsSetFieldState(birthDate, false, false);
+                    return;
                 }
-
-                if (isValid) {
-                    emailInput.classList.remove('is-invalid');
-                    emailInput.classList.add('is-valid');
-                    if (wrap) { wrap.classList.remove('is-invalid'); wrap.classList.add('is-valid'); }
-                    return true;
-                } else {
-                    emailInput.classList.remove('is-valid');
-                    emailInput.classList.add('is-invalid');
-                    if (wrap) { wrap.classList.remove('is-valid'); wrap.classList.add('is-invalid'); }
-                    return false;
-                }
+                const d = new Date(birthDate.value);
+                const now = new Date();
+                const isValid = !isNaN(d.getTime()) && d < now;
+                window.kfsSetFieldState(birthDate, isValid, true);
             };
+            birthDate.addEventListener('change', check);
+            birthDate.addEventListener('input', check);
+            birthDate.addEventListener('blur', check);
+            if (birthDate.value) check();
+        }
 
-            emailInput.addEventListener('input', validateEmail);
-            emailInput.addEventListener('blur', validateEmail);
+        // Gender
+        if (gender) {
+            const check = () => window.kfsSetFieldState(gender, !!gender.value, !!gender.value);
+            gender.addEventListener('change', check);
+            gender.addEventListener('blur', check);
+            if (gender.value) check();
+        }
+
+        // ID / Passport Number
+        if (idNumber) {
+            const check = () => window.kfsSetFieldState(idNumber, idNumber.value.trim().length >= 4, idNumber.value.length > 0);
+            idNumber.addEventListener('input', check);
+            idNumber.addEventListener('blur', check);
+            if (idNumber.value.trim().length >= 4) check();
         }
     };
 
-    // 4. Interactive Countdown Timer (Homepage)
+    // 5. Interactive Countdown Timer (Homepage)
     const initCountdown = () => {
         const countdownEl = document.getElementById('kfs-race-countdown');
         if (!countdownEl) return;
 
-        // Target Date: Either data-target or Nov 20, 2026
         const targetStr = countdownEl.dataset.target || '2026-11-20T07:00:00+02:00';
         const targetTime = new Date(targetStr).getTime();
 
@@ -191,7 +241,7 @@
         setInterval(updateTimer, 1000);
     };
 
-    // 5. Homepage Category Filter Pills
+    // 6. Homepage Category Filter Pills
     const initCategoryFilters = () => {
         const filterBtns = document.querySelectorAll('.kfs-filter-pill');
         const cards = document.querySelectorAll('.home-distance-card');
