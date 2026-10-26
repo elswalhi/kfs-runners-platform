@@ -285,6 +285,20 @@ class PublicRegistrationController extends Controller
 
     public function storeGroup(Request $request, EasyKashCashApi $easyKash)
     {
+        // Fallback buyer info from runner #1 / root inputs
+        if (! $request->filled('buyerFirstName')) {
+            $request->merge(['buyerFirstName' => $request->input('firstName', $request->input('runners.0.firstName'))]);
+        }
+        if (! $request->filled('buyerLastName')) {
+            $request->merge(['buyerLastName' => $request->input('lastName', $request->input('runners.0.lastName'))]);
+        }
+        if (! $request->filled('buyerEmail')) {
+            $request->merge(['buyerEmail' => $request->input('email', $request->input('runners.0.email'))]);
+        }
+        if (! $request->filled('buyerPhone')) {
+            $request->merge(['buyerPhone' => $request->input('phone', $request->input('runners.0.phone'))]);
+        }
+
         $validated = $request->validate([
             'buyerFirstName' => ['required', 'string', 'max:100'],
             'buyerLastName' => ['required', 'string', 'max:100'],

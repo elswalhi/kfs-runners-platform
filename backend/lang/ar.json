@@ -197,5 +197,6 @@
     "Primary contact details": "بيانات التواصل الأساسية",
     "Order summary": "ملخص الطلب",
     "Total tickets": "إجمالي التذاكر",
-    "Proceed to pay for all runners": "المتابعة لدفع جميع التذاكر"
+    "Proceed to pay for all runners": "المتابعة لدفع جميع التذاكر",
+    "Enter runner details. Runner #1 is the primary contact who receives tickets and completes payment.": "أدخل بيانات المتسابقين. المتسابق الأول هو جهة التواصل والمشتري الأساسي الذي يستلم التذاكر وإيصال السداد."
 }

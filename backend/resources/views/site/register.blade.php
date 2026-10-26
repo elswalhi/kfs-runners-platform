@@ -116,74 +116,50 @@
                     </div>
                 </div>
 
-                <!-- ================= STEP 2: RUNNER DETAILS (MAIN BUYER + ATTENDEES) ================= -->
+                <!-- ================= STEP 2: RUNNER DETAILS ================= -->
                 <div class="kfs-step-view" data-step-view="2">
                     <div class="form-title-row">
                         <div>
                             <span class="form-step">{{ __('STEP 02 / 03') }}</span>
                             <h2>{{ __('RUNNER') }} <span>{{ __('DETAILS') }}</span></h2>
-                            <p>{{ __('Enter primary contact for order receipts, plus attendee details for each runner.') }}</p>
+                            <p>{{ __('Enter runner details. Runner #1 is the primary contact who receives tickets and completes payment.') }}</p>
                         </div>
                         <div class="secure-label">♙ {{ __('Your information stays protected') }}</div>
                     </div>
 
-                    <!-- Primary Contact / Buyer Section -->
-                    <div style="background:#f0f8f4; border:1px solid #cce5d7; border-radius:10px; padding:20px; margin-bottom:24px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                            <span style="font-size:11px; font-weight:900; color:#064b3e; text-transform:uppercase; letter-spacing:0.8px;">♙ {{ __('Main contact & buyer') }}</span>
-                            <small style="color:#57796c; font-size:10px;">{{ __('Receives payment confirmation & e-tickets') }}</small>
-                        </div>
-                        <div class="form-grid two-col">
-                            <label>{{ __('First name') }} <b>*</b>
-                                <div class="kfs-field-wrap">
-                                    <input required name="buyerFirstName" id="buyer-firstName" autocomplete="given-name" value="{{ old('buyerFirstName', old('firstName')) }}" placeholder="{{ __('First name') }}">
-                                    <span class="kfs-validation-badge">✓</span>
-                                </div>
-                            </label>
-                            <label>{{ __('Last name') }} <b>*</b>
-                                <div class="kfs-field-wrap">
-                                    <input required name="buyerLastName" id="buyer-lastName" autocomplete="family-name" value="{{ old('buyerLastName', old('lastName')) }}" placeholder="{{ __('Last name') }}">
-                                    <span class="kfs-validation-badge">✓</span>
-                                </div>
-                            </label>
-                            <label>{{ __('Email address') }} <b>*</b>
-                                <div class="kfs-field-wrap">
-                                    <input required type="email" name="buyerEmail" id="buyer-email" autocomplete="email" value="{{ old('buyerEmail', old('email')) }}" placeholder="you@example.com">
-                                    <span class="kfs-validation-badge">✓</span>
-                                </div>
-                            </label>
-                            <label>{{ __('Phone number') }} <b>*</b>
-                                <div class="kfs-field-wrap">
-                                    <input required type="tel" name="buyerPhone" id="buyer-phone" autocomplete="tel" value="{{ old('buyerPhone', old('phone')) }}" placeholder="010 1234 5678">
-                                    <span class="kfs-validation-badge">✓</span>
-                                </div>
-                                <small class="kfs-field-hint" id="phone-validation-hint" data-default="{{ __('Use an Egyptian mobile number. Local and +20 formats are accepted.') }}">{{ __('Use an Egyptian mobile number. Local and +20 formats are accepted.') }}</small>
-                            </label>
-                        </div>
-                    </div>
-
                     <!-- Attendees / Runners Details Container -->
                     <div id="attendees-container">
-                        <!-- Runner 1 Attendee Card -->
+                        <!-- Runner 1 Attendee Card (Main Contact & Buyer) -->
                         <div class="kfs-attendee-section" id="attendee-card-1">
                             <div class="kfs-attendee-header">
-                                <b style="font-size:12px; color:#064b3e;">{{ __('Runner') }} #1 (<span id="attendee-race-label-1">—</span>)</b>
-                                <button type="button" class="kfs-copy-main-btn" id="copy-from-buyer-btn-1">
-                                    <span>📋</span> <span>{{ __('Copy from main contact') }}</span>
-                                </button>
+                                <b style="font-size:12px; color:#064b3e;">{{ __('Runner') }} #1 ({{ __('Main contact & buyer') }} · <span id="attendee-race-label-1">—</span>)</b>
+                                <small style="color:#137333; font-weight:700; background:#e6f4ea; padding:3px 8px; border-radius:4px;">{{ __('Receives payment confirmation & e-tickets') }}</small>
                             </div>
                             <div class="form-grid two-col">
                                 <label>{{ __('First name') }} <b>*</b>
                                     <div class="kfs-field-wrap">
-                                        <input required name="firstName" id="input-firstName" autocomplete="given-name" value="{{ old('firstName') }}" placeholder="{{ __('First name') }}">
+                                        <input required name="firstName" id="input-firstName" autocomplete="given-name" value="{{ old('firstName', old('buyerFirstName')) }}" placeholder="{{ __('First name') }}">
                                         <span class="kfs-validation-badge">✓</span>
                                     </div>
                                 </label>
                                 <label>{{ __('Last name') }} <b>*</b>
                                     <div class="kfs-field-wrap">
-                                        <input required name="lastName" id="input-lastName" autocomplete="family-name" value="{{ old('lastName') }}" placeholder="{{ __('Last name') }}">
+                                        <input required name="lastName" id="input-lastName" autocomplete="family-name" value="{{ old('lastName', old('buyerLastName')) }}" placeholder="{{ __('Last name') }}">
                                         <span class="kfs-validation-badge">✓</span>
                                     </div>
+                                </label>
+                                <label>{{ __('Email address') }} <b>*</b>
+                                    <div class="kfs-field-wrap">
+                                        <input required type="email" name="email" id="input-email" autocomplete="email" value="{{ old('email', old('buyerEmail')) }}" placeholder="you@example.com">
+                                        <span class="kfs-validation-badge">✓</span>
+                                    </div>
+                                </label>
+                                <label>{{ __('Phone number') }} <b>*</b>
+                                    <div class="kfs-field-wrap">
+                                        <input required type="tel" name="phone" id="input-phone" autocomplete="tel" value="{{ old('phone', old('buyerPhone')) }}" placeholder="010 1234 5678">
+                                        <span class="kfs-validation-badge">✓</span>
+                                    </div>
+                                    <small class="kfs-field-hint" id="phone-validation-hint" data-default="{{ __('Use an Egyptian mobile number. Local and +20 formats are accepted.') }}">{{ __('Use an Egyptian mobile number. Local and +20 formats are accepted.') }}</small>
                                 </label>
                                 <label>{{ __('Date of birth') }} <b>*</b>
                                     <div class="kfs-field-wrap">
@@ -671,19 +647,6 @@
         window.kfsToast?.('{{ __('Add another runner') }} ✓', 'success');
     });
 
-    // Copy buyer contact details to Runner 1
-    document.getElementById('copy-from-buyer-btn-1')?.addEventListener('click', () => {
-        const bFirst = document.getElementById('buyer-firstName')?.value || '';
-        const bLast = document.getElementById('buyer-lastName')?.value || '';
-        const inFirst = document.getElementById('input-firstName');
-        const inLast = document.getElementById('input-lastName');
-
-        if (inFirst) { inFirst.value = bFirst; window.kfsSetFieldState?.(inFirst, bFirst.trim().length >= 2, bFirst.length > 0); }
-        if (inLast) { inLast.value = bLast; window.kfsSetFieldState?.(inLast, bLast.trim().length >= 2, bLast.length > 0); }
-
-        window.kfsToast?.('{{ __('Copied to clipboard!') }}', 'success');
-    });
-
     // Stepper validations
     function validateStep1() {
         for (let i = 0; i < tickets.length; i++) {
@@ -704,40 +667,37 @@
     }
 
     function validateStep2() {
-        const buyerFields = [
-            { id: 'buyer-firstName', valid: el => el && el.value.trim().length >= 2 },
-            { id: 'buyer-lastName', valid: el => el && el.value.trim().length >= 2 },
-            { id: 'buyer-email', valid: el => el && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim()) },
-            { id: 'buyer-phone', valid: el => {
-                if (!el) return false;
-                const raw = el.value.replace(/\s+/g, '');
-                return /^(010|011|012|015)\d{8}$/.test(raw) || /^\+20(10|11|12|15)\d{8}$/.test(raw);
-            }}
-        ];
-
         let firstInvalid = null;
-        for (const item of buyerFields) {
-            const el = document.getElementById(item.id);
-            if (!el) continue;
-            const ok = item.valid(el);
-            window.kfsSetFieldState?.(el, ok, true);
-            if (!ok && !firstInvalid) firstInvalid = el;
-        }
 
-        // Validate each runner's details
+        // Validate each runner's details (Runner #1 is primary buyer & contact)
         for (let i = 0; i < tickets.length; i++) {
             const pfx = i === 0 ? '' : `-${i + 1}`;
             const runnerFields = [
                 { id: `input-firstName${pfx}`, valid: el => el && el.value.trim().length >= 2 },
                 { id: `input-lastName${pfx}`, valid: el => el && el.value.trim().length >= 2 },
+            ];
+
+            // Runner #1 also has email and phone
+            if (i === 0) {
+                runnerFields.push(
+                    { id: 'input-email', valid: el => el && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim()) },
+                    { id: 'input-phone', valid: el => {
+                        if (!el) return false;
+                        const raw = el.value.replace(/\s+/g, '');
+                        return /^(010|011|012|015)\d{8}$/.test(raw) || /^\+20(10|11|12|15)\d{8}$/.test(raw);
+                    }}
+                );
+            }
+
+            runnerFields.push(
                 { id: `input-birthDate${pfx}`, valid: el => {
                     if (!el || !el.value) return false;
                     const d = new Date(el.value);
                     return !isNaN(d.getTime()) && d < new Date();
                 }},
                 { id: `input-gender${pfx}`, valid: el => el && !!el.value },
-                { id: `input-idNumber${pfx}`, valid: el => el && el.value.trim().length >= 4 },
-            ];
+                { id: `input-idNumber${pfx}`, valid: el => el && el.value.trim().length >= 4 }
+            );
 
             for (const item of runnerFields) {
                 const el = document.getElementById(item.id);
@@ -755,10 +715,10 @@
             return false;
         }
 
-        // Update Review preview
-        setText('review-buyer-name', `${document.getElementById('buyer-firstName')?.value} ${document.getElementById('buyer-lastName')?.value}`);
-        setText('review-buyer-email', document.getElementById('buyer-email')?.value);
-        setText('review-buyer-phone', document.getElementById('buyer-phone')?.value);
+        // Update Review preview from Runner #1
+        setText('review-buyer-name', `${document.getElementById('input-firstName')?.value || ''} ${document.getElementById('input-lastName')?.value || ''}`);
+        setText('review-buyer-email', document.getElementById('input-email')?.value || '');
+        setText('review-buyer-phone', document.getElementById('input-phone')?.value || '');
 
         tickets.forEach((t, i) => {
             const pfx = i === 0 ? '' : `-${i + 1}`;
@@ -950,7 +910,7 @@
             return;
         }
 
-        // If multiple tickets, ensure runner[0] inputs are populated
+        // If multiple tickets, ensure runner[0] & buyer inputs are populated
         if (tickets.length > 1) {
             let hiddenContainer = document.getElementById('hidden-runner-0-inputs');
             if (!hiddenContainer) {
@@ -961,26 +921,18 @@
             hiddenContainer.innerHTML = `
                 <input type="hidden" name="runners[0][firstName]" value="${document.getElementById('input-firstName')?.value || ''}">
                 <input type="hidden" name="runners[0][lastName]" value="${document.getElementById('input-lastName')?.value || ''}">
-                <input type="hidden" name="runners[0][email]" value="${document.getElementById('buyer-email')?.value || ''}">
-                <input type="hidden" name="runners[0][phone]" value="${document.getElementById('buyer-phone')?.value || ''}">
+                <input type="hidden" name="runners[0][email]" value="${document.getElementById('input-email')?.value || ''}">
+                <input type="hidden" name="runners[0][phone]" value="${document.getElementById('input-phone')?.value || ''}">
                 <input type="hidden" name="runners[0][birthDate]" value="${document.getElementById('input-birthDate')?.value || ''}">
                 <input type="hidden" name="runners[0][gender]" value="${document.getElementById('input-gender')?.value || ''}">
                 <input type="hidden" name="runners[0][idNumber]" value="${document.getElementById('input-idNumber')?.value || ''}">
                 <input type="hidden" name="runners[0][race]" value="${tickets[0].race}">
                 <input type="hidden" name="runners[0][kit]" value="${tickets[0].kit}">
                 <input type="hidden" name="runners[0][shirtSize]" value="${tickets[0].shirtSize || ''}">
-            `;
-        } else {
-            // Solo ticket: ensure email and phone are mirrored from buyer
-            let hiddenSolo = document.getElementById('hidden-solo-inputs');
-            if (!hiddenSolo) {
-                hiddenSolo = document.createElement('div');
-                hiddenSolo.id = 'hidden-solo-inputs';
-                document.getElementById('runner-form').appendChild(hiddenSolo);
-            }
-            hiddenSolo.innerHTML = `
-                <input type="hidden" name="email" value="${document.getElementById('buyer-email')?.value || ''}">
-                <input type="hidden" name="phone" value="${document.getElementById('buyer-phone')?.value || ''}">
+                <input type="hidden" name="buyerFirstName" value="${document.getElementById('input-firstName')?.value || ''}">
+                <input type="hidden" name="buyerLastName" value="${document.getElementById('input-lastName')?.value || ''}">
+                <input type="hidden" name="buyerEmail" value="${document.getElementById('input-email')?.value || ''}">
+                <input type="hidden" name="buyerPhone" value="${document.getElementById('input-phone')?.value || ''}">
             `;
         }
     });
