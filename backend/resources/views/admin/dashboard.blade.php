@@ -26,6 +26,50 @@
     </div>
 </div>
 
+@if(session('success'))
+<div style="background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; padding:14px 18px; border-radius:10px; margin-bottom:20px; display:flex; align-items:center; gap:10px; font-weight:600;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    <span>{{ session('success') }}</span>
+</div>
+@endif
+
+<!-- Race Day Countdown Quick Control Banner -->
+<div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 14px; padding: 18px 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; border: 1px solid #334155; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
+    <div style="display: flex; align-items: center; gap: 16px;">
+        <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(184, 20, 32, 0.15); border: 1px solid rgba(184, 20, 32, 0.3); display: flex; align-items: center; justify-content: center; color: #ef4444; font-size: 20px;">
+            ⏱️
+        </div>
+        <div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #ef4444;">{{ __('RACE DAY & COUNTDOWN') }}</span>
+                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: {{ ($countdownEnabled ?? true) ? '#10b981' : '#64748b' }};"></span>
+                <span style="font-size: 11px; color: {{ ($countdownEnabled ?? true) ? '#10b981' : '#94a3b8' }}; font-weight: 600;">{{ ($countdownEnabled ?? true) ? __('Active on Website') : __('Hidden') }}</span>
+            </div>
+            <h3 style="margin: 2px 0 0 0; font-size: 16px; font-weight: 800; color: #f8fafc;">
+                {{ \Carbon\Carbon::parse($raceDate ?? '2026-11-20')->translatedFormat('l, d F Y') }} · {{ $raceTime ?? '07:00' }}
+            </h3>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ route('admin.event-settings.update') }}" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0;">
+        @csrf
+        <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.06); padding: 4px 8px; border-radius: 8px; border: 1px solid #475569;">
+            <input type="date" required name="race_date" value="{{ $raceDate ?? '2026-11-20' }}" style="background: transparent; border: none; color: #fff; font-size: 13px; font-weight: 600; outline: none; padding: 4px 6px; cursor: pointer;">
+            <input type="time" required name="race_time" value="{{ $raceTime ?? '07:00' }}" style="background: transparent; border: none; color: #fff; font-size: 13px; font-weight: 600; outline: none; padding: 4px 6px; cursor: pointer; border-left: 1px solid #475569;">
+        </div>
+
+        <input type="hidden" name="countdown_enabled" value="{{ ($countdownEnabled ?? true) ? '1' : '0' }}">
+
+        <button type="submit" class="stitch-btn stitch-btn-primary" style="padding: 7px 16px; font-size: 13px; font-weight: 700; background: #b81420; border-color: #8e0e17; height: auto;">
+            <span>{{ __('Update Race Date') }}</span>
+        </button>
+
+        <a href="{{ route('admin.event-settings') }}" style="color: #94a3b8; font-size: 12px; text-decoration: underline; margin-left: 4px;">
+            {{ __('Full Settings') }} →
+        </a>
+    </form>
+</div>
+
 <!-- 4 Modern Stitch KPI Cards -->
 <div class="stitch-kpi-grid">
     <!-- Card 1: Total Runners -->

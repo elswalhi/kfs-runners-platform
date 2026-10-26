@@ -17,7 +17,8 @@
                 <p class="home-lede">{{ __('Choose your distance, pick your kit, and take the first step toward your next finish line.') }}</p>
                 <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap; margin-bottom:20px;">
                     <a href="{{ route('register') }}" class="home-primary-button">{{ __('Register for the race') }} <span aria-hidden="true">→</span></a>
-                    <div class="kfs-countdown-card" id="kfs-race-countdown" data-target="2026-11-20T07:00:00+02:00">
+                    @if($countdownEnabled ?? true)
+                    <div class="kfs-countdown-card" id="kfs-race-countdown" data-target="{{ $raceTargetIso ?? '2026-11-20T07:00:00+02:00' }}">
                         <div class="kfs-countdown-header">
                             <span class="pulse-dot"></span>
                             <span>{{ __('Race Countdown') }}</span>
@@ -44,6 +45,7 @@
                             </div>
                         </div>
                     </div>
+                    @endif
                 </div>
                 <div class="home-assurances">
                     <span><i aria-hidden="true">✓</i> {{ __('Secure registration') }}</span>

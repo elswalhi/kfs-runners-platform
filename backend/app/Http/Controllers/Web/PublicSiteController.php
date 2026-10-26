@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Api\PublicRegistrationController;
+use App\Models\AppSetting;
 use App\Models\Race;
 use App\Services\EasyKashCashApi;
 use Illuminate\Http\Request;
@@ -20,7 +21,12 @@ class PublicSiteController
 
         $featuredRace = $races->first();
 
-        return view('site.home', compact('races', 'featuredRace'));
+        $raceDate = AppSetting::get('race_date', '2026-11-20');
+        $raceTime = AppSetting::get('race_time', '07:00');
+        $countdownEnabled = (bool) AppSetting::get('countdown_enabled', true);
+        $raceTargetIso = "{$raceDate}T{$raceTime}:00+02:00";
+
+        return view('site.home', compact('races', 'featuredRace', 'raceDate', 'raceTime', 'countdownEnabled', 'raceTargetIso'));
     }
 
     public function register()

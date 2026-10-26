@@ -48,6 +48,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/localization', [AdminWebController::class, 'localization'])->name('localization');
         Route::post('/localization', [AdminWebController::class, 'updateLocalization'])->name('localization.update');
         Route::post('/localization/translations', [AdminWebController::class, 'updateTranslations'])->name('localization.translations');
+        Route::get('/event-settings', [AdminWebController::class, 'eventSettings'])->name('event-settings');
+        Route::post('/event-settings', [AdminWebController::class, 'updateEventSettings'])->name('event-settings.update');
         Route::get('/team-import', [AdminWebController::class, 'teamImport'])->name('team-import');
         Route::post('/team-import', [AdminWebController::class, 'importTeam'])->middleware('throttle:10,1')->name('team-import.store');
     });

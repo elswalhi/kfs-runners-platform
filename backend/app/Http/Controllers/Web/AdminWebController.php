@@ -33,7 +33,11 @@ class AdminWebController
             return ['label' => $day->format('D'), 'value' => (float) Registration::query()->where('payment_status', 'paid')->whereDate('created_at', $day)->sum('amount')];
         });
 
-        return view('admin.dashboard', compact('total', 'paid', 'pending', 'failed', 'revenue', 'recent', 'raceBreakdown', 'trend'));
+        $raceDate = AppSetting::get('race_date', '2026-11-20');
+        $raceTime = AppSetting::get('race_time', '07:00');
+        $countdownEnabled = (bool) AppSetting::get('countdown_enabled', true);
+
+        return view('admin.dashboard', compact('total', 'paid', 'pending', 'failed', 'revenue', 'recent', 'raceBreakdown', 'trend', 'raceDate', 'raceTime', 'countdownEnabled'));
     }
 
     public function registrations(Request $request)
@@ -362,6 +366,30 @@ class AdminWebController
         file_put_contents($enPath, json_encode($currentEn, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
         return back()->with('success', 'Translations dictionary updated successfully.');
+    }
+
+    public function eventSettings()
+    {
+        $raceDate = AppSetting::get('race_date', '2026-11-20');
+        $raceTime = AppSetting::get('race_time', '07:00');
+        $countdownEnabled = (bool) AppSetting::get('countdown_enabled', true);
+
+        return view('admin.event-settings', compact('raceDate', 'raceTime', 'countdownEnabled'));
+    }
+
+    public function updateEventSettings(Request $request)
+    {
+        $data = $request->validate([
+            'race_date' => ['required', 'date_format:Y-m-d'],
+            'race_time' => ['required', 'string', 'max:10'],
+            'countdown_enabled' => ['nullable'],
+        ]);
+
+        AppSetting::set('race_date', $data['race_date']);
+        AppSetting::set('race_time', $data['race_time']);
+        AppSetting::set('countdown_enabled', $request->boolean('countdown_enabled'));
+
+        return back()->with('success', __('Race date and countdown updated successfully!'));
     }
 
     public function teamImport()
