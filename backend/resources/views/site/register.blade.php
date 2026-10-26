@@ -174,7 +174,6 @@
                                                 <option value="">{{ __('Choose gender') }}</option>
                                                 <option value="male" @selected(old('gender') === 'male')>{{ __('Male') }}</option>
                                                 <option value="female" @selected(old('gender') === 'female')>{{ __('Female') }}</option>
-                                                <option value="prefer_not_to_say" @selected(old('gender') === 'prefer_not_to_say')>{{ __('Prefer not to say') }}</option>
                                             </select>
                                             <span>⌄</span>
                                         </span>
@@ -196,7 +195,27 @@
 
                     <div class="form-section-heading section-heading-spaced"><span>⇧</span><span>{{ __('Runner document') }}</span><small>{{ __('Optional') }}</small></div>
                     <label class="upload-drop"><input type="file" name="idFile" accept="image/jpeg,image/png,application/pdf"><span class="upload-icon">⇧</span><span><b id="file-name">{{ __('Upload ID / passport (optional)') }}</b><small>{{ __('JPG, PNG or PDF · Max 2 MB') }}</small></span></label>
-                    <label class="team-name-label">{{ __('Team / running club') }} <small>({{ __('Optional') }})</small><input name="teamName" value="{{ old('teamName') }}" placeholder="e.g. Kafr El-Sheikh Runners"></label>
+
+                    <div class="team-select-group" style="margin-top:20px;">
+                        <label class="team-name-label" style="display:block; font-weight:700; font-size:12px; color:#064b3e; margin-bottom:8px;">
+                            <span>🏃 {{ __('Your Team - الفريق') }}</span>
+                            <small style="color:#778b82; font-weight:normal;">({{ __('Optional') }})</small>
+                            <div class="kfs-field-wrap" style="margin-top:6px;">
+                                <span class="select-wrap" style="width:100%;">
+                                    <select name="teamName" id="team-name-select" style="width:100%; height:46px; border:1px solid #c9d8d0; border-radius:8px; padding:0 14px; font-size:13px; color:#113a30; background:#ffffff;">
+                                        <option value="">{{ __('Individual / No team') }} ({{ __('Optional') }})</option>
+                                        @foreach (config('teams.list') as $teamOption)
+                                            <option value="{{ $teamOption }}" @selected(old('teamName') === $teamOption)>{{ $teamOption }}</option>
+                                        @endforeach
+                                    </select>
+                                    <span>⌄</span>
+                                </span>
+                            </div>
+                        </label>
+                        <div id="other-team-wrap" style="margin-top:8px; display:none;">
+                            <input type="text" id="other-team-input" placeholder="{{ __('Type your team / running club name') }}" style="width:100%; height:44px; border:1px solid #c9d8d0; border-radius:8px; padding:0 14px; font-size:13px; color:#113a30; background:#ffffff;">
+                        </div>
+                    </div>
 
                     <div class="kfs-step-nav-bar">
                         <button type="button" class="kfs-btn-back" id="step-2-back-btn">
@@ -462,7 +481,6 @@
                                         <option value="">{{ __('Choose gender') }}</option>
                                         <option value="male">{{ __('Male') }}</option>
                                         <option value="female">{{ __('Female') }}</option>
-                                        <option value="prefer_not_to_say">{{ __('Prefer not to say') }}</option>
                                     </select>
                                     <span>⌄</span>
                                 </span>
@@ -897,6 +915,24 @@
     });
     removePromoBtn?.addEventListener('click', removePromo);
 
+    // Team select handling
+    const teamSelect = document.getElementById('team-name-select');
+    const otherTeamWrap = document.getElementById('other-team-wrap');
+    const otherTeamInput = document.getElementById('other-team-input');
+
+    teamSelect?.addEventListener('change', () => {
+        if (teamSelect.value === 'Other') {
+            if (otherTeamWrap) otherTeamWrap.style.display = 'block';
+            otherTeamInput?.focus();
+        } else {
+            if (otherTeamWrap) otherTeamWrap.style.display = 'none';
+        }
+    });
+
+    if (teamSelect?.value === 'Other' && otherTeamWrap) {
+        otherTeamWrap.style.display = 'block';
+    }
+
     // Form submit check
     document.getElementById('runner-form')?.addEventListener('submit', event => {
         if (!validateStep1()) {
@@ -908,6 +944,20 @@
             event.preventDefault();
             setStep(2);
             return;
+        }
+
+        // Custom team override if Other selected
+        if (teamSelect?.value === 'Other' && otherTeamInput?.value.trim()) {
+            let customTeamHidden = document.getElementById('hidden-custom-team-input');
+            if (!customTeamHidden) {
+                customTeamHidden = document.createElement('input');
+                customTeamHidden.type = 'hidden';
+                customTeamHidden.id = 'hidden-custom-team-input';
+                customTeamHidden.name = 'teamName';
+                document.getElementById('runner-form').appendChild(customTeamHidden);
+            }
+            customTeamHidden.value = otherTeamInput.value.trim();
+            teamSelect.disabled = true;
         }
 
         // If multiple tickets, ensure runner[0] & buyer inputs are populated
