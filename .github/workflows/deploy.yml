@@ -32,8 +32,8 @@ jobs:
             fi
 
             # 2. Sync backend files into kfs-app
-            APP_DIR="$HOME/domains/runners.elatiky.com/kfs-app"
-            WEB_DIR="$HOME/domains/runners.elatiky.com/public_html"
+            APP_DIR="$HOME/domains/kfsmarathon.elatiky.com/kfs-app"
+            WEB_DIR="$HOME/domains/kfsmarathon.elatiky.com/public_html"
 
             echo "Syncing Laravel core into $APP_DIR..."
             mkdir -p $APP_DIR
