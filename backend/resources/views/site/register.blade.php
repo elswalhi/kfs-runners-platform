@@ -78,8 +78,10 @@
                             <input type="hidden" name="race" id="race-value" value="{{ old('race', request('race', $races->first()?->slug)) }}">
                             <div class="race-select-grid" id="race-options">
                                 @foreach ($races as $race)
-                                    @php($full = $race->kitPrices->firstWhere('kit_type', 'full'))
-                                    @php($basic = $race->kitPrices->firstWhere('kit_type', 'basic'))
+                                    @php
+                                        $full = $race->kitPrices->firstWhere('kit_type', 'full');
+                                        $basic = $race->kitPrices->firstWhere('kit_type', 'basic');
+                                    @endphp
                                     <button type="button" class="race-select-card" data-race="{{ $race->slug }}" data-name="{{ $race->name }}" data-distance="{{ $race->distance_label }}" data-full="{{ $full?->price ?? '' }}" data-basic="{{ $basic?->price ?? '' }}">
                                         <span class="race-select-check"><span class="radio-empty"></span></span><span class="select-distance">{{ $race->distance_label }}</span><strong>{{ $race->name }}</strong><small>{{ $race->category_type === 'family' ? __('Bring your family and enjoy the race together.') : ($race->category_type === 'para' ? __('An inclusive race experience made for every runner.') : __('A challenge for every pace and every goal.')) }}</small>
                                     </button>
@@ -342,17 +344,22 @@
 @endsection
 
 @push('scripts')
+@php
+    $racesPayload = $races->map(function ($r) {
+        return [
+            'id' => $r->id,
+            'slug' => $r->slug,
+            'name' => $r->name,
+            'distance' => $r->distance_label,
+            'category_type' => $r->category_type,
+            'full_price' => (float) ($r->kitPrices->firstWhere('kit_type', 'full')?->price ?? 0),
+            'basic_price' => (float) ($r->kitPrices->firstWhere('kit_type', 'basic')?->price ?? 0),
+        ];
+    })->values();
+@endphp
 <script>
 (() => {
-    const allRaces = @json($races->map(fn($r) => [
-        'id' => $r->id,
-        'slug' => $r->slug,
-        'name' => $r->name,
-        'distance' => $r->distance_label,
-        'category_type' => $r->category_type,
-        'full_price' => (float)($r->kitPrices->firstWhere('kit_type', 'full')?->price ?? 0),
-        'basic_price' => (float)($r->kitPrices->firstWhere('kit_type', 'basic')?->price ?? 0),
-    ]));
+    const allRaces = @json($racesPayload);
 
     // Multi-ticket Cart State (EasyKash model)
     let tickets = [
