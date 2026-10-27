@@ -23,6 +23,7 @@ class HistoricalEventsSeeder extends Seeder
                 'description_ar' => 'مثّلت النسخة الأولى من نصف ماراثون كفر الشيخ محطة مهمة للرياضة في المدينة. اجتمع العدّاؤون والمشجعون في الشوارع، وتحول الحلم المشترك إلى سباق مجتمعي قائم على العمل والإصرار.',
                 'source_url' => 'https://elatiky.com/half-marathon-2021/',
                 'sort_order' => 1,
+                'is_published' => true,
                 'photos' => [
                     ['path' => 'images/events/half-marathon-2021-cover.jpg', 'alt' => 'Runners setting off at the Kafr El-Sheikh Half Marathon 2021', 'is_cover' => true],
                     ['path' => 'images/events/half-marathon-archive-photo-1.jpg', 'alt' => 'Runners and event crew at the 2021 marathon'],
@@ -43,6 +44,7 @@ class HistoricalEventsSeeder extends Seeder
                 'description_ar' => 'بعد نجاح النسخة الأولى، استقبل نصف ماراثون كفر الشيخ الثاني أفكارًا جديدة وجيلًا أكبر من محبي الرياضة. جمع الحدث أهل المدينة مرة أخرى واحتفى بحماس العدّائين.',
                 'source_url' => 'https://elatiky.com/half-marathon-2022/',
                 'sort_order' => 2,
+                'is_published' => true,
                 'photos' => [
                     ['path' => 'images/events/half-marathon-2022-cover.jpg', 'alt' => 'Warm-up activities at the Kafr El-Sheikh Half Marathon 2022', 'is_cover' => true],
                     ['path' => 'images/events/half-marathon-2022-photo-1.jpg', 'alt' => 'Runners gathering before the 2022 race'],
@@ -63,6 +65,7 @@ class HistoricalEventsSeeder extends Seeder
                 'description_ar' => 'جمعت النسخة الثالثة من نصف ماراثون كفر الشيخ مشاركين وجنسيات جديدة. اجتمع العدّاؤون للاستمتاع بيوم السباق والتعارف وتوسيع مجتمع الرياضة.',
                 'source_url' => 'https://elatiky.com/half-marathon-2023/',
                 'sort_order' => 3,
+                'is_published' => true,
                 'photos' => [
                     ['path' => 'images/events/half-marathon-2023-cover.jpg', 'alt' => 'The Kafr El-Sheikh Half Marathon 2023 race start', 'is_cover' => true],
                     ['path' => 'images/events/half-marathon-archive-photo-1.jpg', 'alt' => 'Runners and event crew at the 2023 marathon'],
