@@ -1,5 +1,9 @@
 /* KFS Runners - Interactive UI Experience (Powered by ui-skills standards) */
 
+body {
+    min-width: 0;
+}
+
 /* ==========================================================================
    1. Animated Progress Stepper
    ========================================================================== */
@@ -115,6 +119,83 @@
 .kfs-step-title strong {
     font-size: 12px;
     font-weight: 800;
+}
+
+@media (max-width: 760px) {
+    .register-intro h1 {
+        font-size: clamp(42px, 13vw, 72px);
+    }
+
+    .registration-layout,
+    .registration-layout > * {
+        min-width: 0;
+    }
+
+    .kfs-stepper-container,
+    .kfs-stepper-list {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .kfs-stepper-container {
+        padding: 14px 10px;
+    }
+
+    .kfs-stepper-list {
+        gap: 3px;
+    }
+
+    .kfs-step-item {
+        flex: 1 1 0;
+        min-width: 0;
+        align-items: flex-start;
+        gap: 5px;
+        padding: 6px 3px;
+    }
+
+    .kfs-step-title {
+        min-width: 0;
+    }
+
+    .kfs-step-title small {
+        font-size: 8px;
+        letter-spacing: 0.3px;
+    }
+
+    .kfs-step-title strong {
+        font-size: 10px;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+    }
+}
+
+@media (max-width: 420px) {
+    .kfs-stepper-container {
+        padding-inline: 8px;
+    }
+
+    .kfs-step-item {
+        gap: 4px;
+        padding-inline: 2px;
+    }
+
+    .kfs-step-badge {
+        width: 23px;
+        height: 23px;
+        font-size: 10px;
+    }
+
+    .kfs-step-title small {
+        font-size: 7px;
+    }
+
+    .kfs-step-title strong {
+        font-size: 9px;
+    }
+
+    .register-intro h1 {
+        font-size: clamp(38px, 11vw, 48px);
+    }
 }
 
 /* ==========================================================================

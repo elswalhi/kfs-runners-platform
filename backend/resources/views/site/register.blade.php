@@ -788,9 +788,9 @@
 
         const dockText = document.getElementById('dock-action-text');
         if (dockText) {
-            if (step === 1) dockText.textContent = '{{ __('Next: Runner details') }}';
-            else if (step === 2) dockText.textContent = '{{ __('Next: Review & pay') }}';
-            else dockText.textContent = '{{ __('Proceed to pay for all runners') }}';
+            if (step === 1) dockText.textContent = @js(__('Next: Runner details'));
+            else if (step === 2) dockText.textContent = @js(__('Next: Review & pay'));
+            else dockText.textContent = @js(__('Proceed to pay for all runners'));
         }
 
         const formEl = document.getElementById('runner-form');

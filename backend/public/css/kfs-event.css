@@ -90,3 +90,12 @@
     .kfs-event-kit-grid { grid-template-columns:1fr; }
     .kfs-event-cta-inner { align-items:flex-start; flex-direction:column; }
 }
+
+@media (max-width:420px) {
+    .kfs-event-page .wrap { width:calc(100% - 24px); }
+    .kfs-event-hero h1 { font-size:clamp(38px,12vw,52px); }
+    .kfs-event-countdown { display:block; width:100%; max-width:100%; padding:11px 9px; }
+    .kfs-event-countdown .kfs-countdown-grid { justify-content:space-between; gap:3px; }
+    .kfs-event-countdown .kfs-countdown-unit { min-width:0; flex:1 1 0; padding:5px 3px; }
+    .kfs-event-countdown .kfs-countdown-sep { font-size:14px; }
+}
