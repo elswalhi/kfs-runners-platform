@@ -9,7 +9,7 @@
 @section('content')
 <main class="team-home">
     <section class="team-home-hero" aria-labelledby="team-home-title">
-        <div class="team-home-hero-image" aria-hidden="true"></div>
+        <div class="team-home-hero-image" style="--team-home-hero-image: url('{{ \App\Support\SiteMedia::url('home', 'hero', asset('images/kfs-runners-hero.png')) }}')" aria-hidden="true"></div>
         <div class="wrap team-home-hero-content">
             <p class="team-home-eyebrow"><span></span>{{ __('KAFR EL-SHEIKH · PEOPLE · MOVEMENT') }}</p>
             <h1 id="team-home-title">{{ __('A TEAM.') }}<br>{{ __('A COMMUNITY.') }}<br><span>{{ __('A STRONGER YOU.') }}</span></h1>
@@ -30,7 +30,7 @@
                 <p>{{ __('KFS Runners is a community running team in Kafr El-Sheikh, working under El-Atiky Sports Services. We bring people together through sports, training, and a shared love of movement.') }}</p>
                 <a class="team-home-text-link" href="#our-groups">{{ __('Find your group') }} <span aria-hidden="true">→</span></a>
             </div>
-            <div class="team-home-about-photo" role="img" aria-label="{{ __('KFS Runners team training together') }}"></div>
+            <div class="team-home-about-photo" style="--team-home-about-image: url('{{ \App\Support\SiteMedia::url('home', 'about', asset('images/kfs-runners-hero.png')) }}')" role="img" aria-label="{{ __('KFS Runners team training together') }}"></div>
         </div>
     </section>
 
@@ -46,7 +46,7 @@
 
             <div class="team-home-sport-grid">
                 <article class="team-home-sport-card">
-                    <a class="team-home-sport-photo team-home-sport-running" href="#contact" aria-label="{{ __('Ask us about running and fitness training') }}"></a>
+                    <a class="team-home-sport-photo team-home-sport-running" style="--team-home-sport-image: url('{{ \App\Support\SiteMedia::url('home', 'running', asset('images/kfs-runners-hero.png')) }}')" href="#contact" aria-label="{{ __('Ask us about running and fitness training') }}"></a>
                     <div class="team-home-sport-copy">
                         <div><p class="team-home-card-label">{{ __('TRAIN TOGETHER') }}</p><h3>{{ __('Running') }}</h3></div>
                         <p>{{ __('Running and fitness training for every level, with a supportive team beside you.') }}</p>
@@ -55,7 +55,7 @@
                 </article>
 
                 <article class="team-home-sport-card">
-                    <a class="team-home-sport-photo team-home-sport-skating" href="#contact" aria-label="{{ __('Ask us about skating') }}"></a>
+                    <a class="team-home-sport-photo team-home-sport-skating" style="--team-home-sport-image: url('{{ \App\Support\SiteMedia::url('home', 'skating', asset('images/kfs-skating-group.png')) }}')" href="#contact" aria-label="{{ __('Ask us about skating') }}"></a>
                     <div class="team-home-sport-copy">
                         <div><p class="team-home-card-label">{{ __('LEARN & ROLL') }}</p><h3>{{ __('Skating') }}</h3></div>
                         <p>{{ __('Build confidence and skating skills with guidance from a welcoming community.') }}</p>
@@ -64,7 +64,7 @@
                 </article>
 
                 <article class="team-home-sport-card">
-                    <a class="team-home-sport-photo team-home-sport-cycling" href="#contact" aria-label="{{ __('Ask us about cycling') }}"></a>
+                    <a class="team-home-sport-photo team-home-sport-cycling" style="--team-home-sport-image: url('{{ \App\Support\SiteMedia::url('home', 'cycling', asset('images/kfs-cycling-group.png')) }}')" href="#contact" aria-label="{{ __('Ask us about cycling') }}"></a>
                     <div class="team-home-sport-copy">
                         <div><p class="team-home-card-label">{{ __('RIDE AS A TEAM') }}</p><h3>{{ __('Cycling') }}</h3></div>
                         <p>{{ __('Discover new routes and enjoy active time on two wheels with other riders.') }}</p>
@@ -99,10 +99,10 @@
 
     <section class="team-home-next" aria-label="{{ __('Explore the event and register') }}">
         <div class="wrap team-home-next-grid">
-            <article class="team-home-next-card team-home-event-card">
+            <article class="team-home-next-card team-home-event-card" style="--team-home-card-image: url('{{ \App\Support\SiteMedia::url('home', 'event-promo', asset('images/kfs-runners-hero.png')) }}')">
                 <div><p class="team-home-card-label">{{ __('UPCOMING EVENT') }}</p><h2>{{ __('KFS Runners Event') }}</h2><p>{{ __('Explore race details, distances, and what to expect on event day.') }}</p><a class="team-home-next-link" href="{{ route('event') }}">{{ __('Explore the event') }} <span aria-hidden="true">→</span></a></div>
             </article>
-            <article class="team-home-next-card team-home-register-card">
+            <article class="team-home-next-card team-home-register-card" style="--team-home-card-image: url('{{ \App\Support\SiteMedia::url('home', 'register-promo', asset('images/kfs-runners-hero.png')) }}')">
                 <div><p class="team-home-card-label">{{ __('MARATHON REGISTRATION') }}</p><h2>{{ __('Ready for your next challenge?') }}</h2><p>{{ __('Choose your distance and register for the KFS Runners marathon.') }}</p><a class="team-home-next-link" href="{{ route('register') }}">{{ __('Register now') }} <span aria-hidden="true">→</span></a></div>
             </article>
         </div>

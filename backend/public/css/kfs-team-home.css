@@ -35,7 +35,7 @@
     position: absolute;
     z-index: -1;
     inset: 0;
-    background-image: linear-gradient(90deg, rgba(2,39,32,.96) 0%, rgba(2,39,32,.88) 32%, rgba(2,39,32,.40) 61%, rgba(2,39,32,.08) 100%), url('../images/kfs-runners-hero.png');
+    background-image: linear-gradient(90deg, rgba(2,39,32,.96) 0%, rgba(2,39,32,.88) 32%, rgba(2,39,32,.40) 61%, rgba(2,39,32,.08) 100%), var(--team-home-hero-image, url('../images/kfs-runners-hero.png'));
     background-position: center 48%;
     background-size: cover;
 }
@@ -112,7 +112,7 @@
 .team-home-about-copy > p:not(.team-home-kicker) { max-width: 520px; margin: 17px 0 18px; color: var(--team-muted); font-size: 12px; line-height: 1.85; }
 .team-home-text-link { display: inline-flex; align-items: center; gap: 9px; color: var(--team-red); font-size: 10px; font-weight: 900; text-transform: uppercase; }
 .team-home-text-link:hover { color: var(--team-green); }
-.team-home-about-photo { min-height: 270px; border-radius: 11px; background: linear-gradient(90deg, rgba(2,39,32,.05), rgba(2,39,32,.1)), url('../images/kfs-runners-hero.png') center 55% / cover; }
+.team-home-about-photo { min-height: 270px; border-radius: 11px; background: linear-gradient(90deg, rgba(2,39,32,.05), rgba(2,39,32,.1)), var(--team-home-about-image, url('../images/kfs-runners-hero.png')) center 55% / cover; }
 
 .team-home-sports { padding: 68px 0 43px; background: #eef3ee; }
 .team-home-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 35px; margin-bottom: 25px; }
@@ -122,9 +122,9 @@
 .team-home-sport-card { overflow: hidden; border: 1px solid #e0e8e2; border-radius: 10px; background: #fff; box-shadow: 0 6px 19px rgba(3,47,41,.045); transition: transform .22s ease, box-shadow .22s ease; }
 .team-home-sport-card:hover { transform: translateY(-4px); box-shadow: 0 15px 30px rgba(3,47,41,.11); }
 .team-home-sport-photo { display: block; height: 205px; background-position: center; background-size: cover; }
-.team-home-sport-running { background-image: url('../images/kfs-runners-hero.png'); background-position: center 51%; }
-.team-home-sport-skating { background-image: url('../images/kfs-skating-group.png'); background-position: center 48%; }
-.team-home-sport-cycling { background-image: url('../images/kfs-cycling-group.png'); background-position: center 47%; }
+.team-home-sport-running { background-image: var(--team-home-sport-image, url('../images/kfs-runners-hero.png')); background-position: center 51%; }
+.team-home-sport-skating { background-image: var(--team-home-sport-image, url('../images/kfs-skating-group.png')); background-position: center 48%; }
+.team-home-sport-cycling { background-image: var(--team-home-sport-image, url('../images/kfs-cycling-group.png')); background-position: center 47%; }
 .team-home-sport-copy { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 9px 14px; padding: 17px 18px 18px; }
 .team-home-sport-copy > div { grid-column: 1 / -1; }
 .team-home-card-label { margin: 0 0 4px; font-size: 8px; letter-spacing: 1.3px; }
@@ -155,8 +155,8 @@
 .team-home-next-card::before { position: absolute; z-index: -2; inset: 0; background-position: center; background-size: cover; content: ''; transition: transform .35s ease; }
 .team-home-next-card:hover::before { transform: scale(1.035); }
 .team-home-next-card::after { position: absolute; z-index: -1; inset: 0; background: linear-gradient(90deg, rgba(255,255,255,.98) 0%, rgba(255,255,255,.96) 53%, rgba(255,255,255,.35) 100%); content: ''; }
-.team-home-event-card::before { background-image: url('../images/kfs-runners-hero.png'); background-position: center 52%; }
-.team-home-register-card::before { background-image: url('../images/kfs-runners-hero.png'); background-position: right center; }
+.team-home-event-card::before { background-image: var(--team-home-card-image, url('../images/kfs-runners-hero.png')); background-position: center 52%; }
+.team-home-register-card::before { background-image: var(--team-home-card-image, url('../images/kfs-runners-hero.png')); background-position: right center; }
 .team-home-next-card > div { max-width: 350px; }
 .team-home-next-card .team-home-card-label { margin-bottom: 6px; }
 .team-home-next-card h2 { max-width: 340px; margin: 0 0 6px; color: var(--team-ink); font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 800; line-height: .98; }
@@ -184,7 +184,7 @@
 @media (max-width: 760px) {
     .team-home .wrap { width: min(100% - 32px, 600px); }
     .team-home-hero { min-height: 590px; align-items: flex-end; }
-    .team-home-hero-image { background-image: linear-gradient(90deg, rgba(2,39,32,.94), rgba(2,39,32,.58)), url('../images/kfs-runners-hero.png'); background-position: 58% center; }
+    .team-home-hero-image { background-image: linear-gradient(90deg, rgba(2,39,32,.94), rgba(2,39,32,.58)), var(--team-home-hero-image, url('../images/kfs-runners-hero.png')); background-position: 58% center; }
     .team-home-hero-content { padding-top: 75px; padding-bottom: 54px; }
     .team-home-hero h1 { font-size: clamp(54px, 13vw, 77px); }
     .team-home-hero-copy { max-width: 400px; font-size: 13px; }

@@ -11,6 +11,7 @@ use App\Models\RaceKitPrice;
 use App\Models\Registration;
 use App\Services\EasyKashCashApi;
 use App\Services\QrCodeService;
+use App\Support\SiteMedia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -393,6 +394,70 @@ class AdminWebController
         AppSetting::set('countdown_enabled', $request->boolean('countdown_enabled'));
 
         return back()->with('success', __('Race date and countdown updated successfully!'));
+    }
+
+    public function siteMedia()
+    {
+        $pages = SiteMedia::pages(Race::query()->orderBy('sort_order')->get());
+
+        foreach ($pages as $pageKey => &$page) {
+            foreach ($page['slots'] as $slotKey => &$slot) {
+                $path = SiteMedia::path($pageKey, $slotKey);
+                $slot['is_custom'] = $path && Storage::disk('public')->exists($path);
+                $slot['image_url'] = SiteMedia::url($pageKey, $slotKey, asset($slot['fallback']));
+            }
+            unset($slot);
+        }
+        unset($page);
+
+        return view('admin.site-media', compact('pages'));
+    }
+
+    public function updateSiteMedia(Request $request, string $page, string $slot)
+    {
+        abort_unless(SiteMedia::slot($page, $slot), 404);
+
+        $data = $request->validate([
+            'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:max_width=5000,max_height=5000'],
+        ]);
+
+        $disk = Storage::disk('public');
+        $newPath = $data['image']->store('site-media/' . $page, 'public');
+        if (! $newPath) {
+            return back()->withErrors(['image' => __('The image could not be saved. Please check the storage permissions and try again.')]);
+        }
+
+        $media = AppSetting::get('site_media', []);
+        $media = is_array($media) ? $media : [];
+        $oldPath = SiteMedia::path($page, $slot);
+        $media[$page][$slot] = $newPath;
+        AppSetting::set('site_media', $media);
+
+        if ($oldPath && $oldPath !== $newPath) {
+            $disk->delete($oldPath);
+        }
+
+        return back()->with('success', __('Image updated for :page.', ['page' => SiteMedia::pages()[$page]['label'] ?? $page]));
+    }
+
+    public function deleteSiteMedia(string $page, string $slot)
+    {
+        abort_unless(SiteMedia::slot($page, $slot), 404);
+
+        $media = AppSetting::get('site_media', []);
+        $media = is_array($media) ? $media : [];
+        $oldPath = SiteMedia::path($page, $slot);
+        unset($media[$page][$slot]);
+        if (empty($media[$page])) {
+            unset($media[$page]);
+        }
+
+        AppSetting::set('site_media', $media);
+        if ($oldPath) {
+            Storage::disk('public')->delete($oldPath);
+        }
+
+        return back()->with('success', __('Default image restored.'));
     }
 
     public function teamImport()

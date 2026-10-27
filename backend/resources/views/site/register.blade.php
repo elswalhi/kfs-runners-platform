@@ -4,7 +4,7 @@
 
 @section('content')
 <main class="register-page">
-    <section class="register-hero"><div class="register-hero-bg"></div><div class="wrap register-hero-inner">
+    <section class="register-hero"><div class="register-hero-bg" style="background-image: linear-gradient(90deg,rgba(3,35,30,.94) 0%,rgba(3,35,30,.75) 55%,rgba(3,35,30,.45) 100%), url('{{ \App\Support\SiteMedia::url('register', 'hero', asset('images/kfs-runners-hero.png')) }}')"></div><div class="wrap register-hero-inner">
         <div class="register-intro"><a href="{{ route('home') }}" class="back-link">← {{ __('Back to home') }}</a><span class="eyebrow-pill"><span class="pulse-dot"></span> {{ __('KFS RUNNERS · KAFR EL-SHEIKH') }}</span><h1>{{ __('YOUR RACE.') }}<br><span>{{ __('YOUR STORY.') }}</span></h1><p>{{ __('Choose your distance, pick your kit, and take the first step toward your next finish line.') }}</p><div class="register-points"><span>♢ {{ __('Secure registration') }}</span><span>♙ {{ __('Solo or team entry') }}</span></div></div>
         <div class="register-summary-top"><span>{{ __('YOUR SELECTED RACE') }}</span><b id="summary-distance">{{ $races->firstWhere('slug', old('race', request('race'))) ? $races->firstWhere('slug', old('race', request('race')))->distance_label : ($races->first()?->distance_label ?? '—') }}</b><small id="summary-race">{{ $races->firstWhere('slug', old('race', request('race'))) ? $races->firstWhere('slug', old('race', request('race')))->name : ($races->first()?->name ?? __('Race category')) }}</small><div class="summary-rule"></div><span>{{ __('PACKAGE') }}</span><b id="summary-kit">{{ __('Full Kit') }}</b><small id="summary-kit-subtitle">{{ __('The complete race-day experience') }}</small><div class="summary-price"><small>{{ __('Ticket price preview') }}</small><strong id="summary-price">—</strong></div></div>
     </div></section>
@@ -296,7 +296,7 @@
                     <span class="order-lock">♙</span>
                 </div>
                 <div class="order-race-image">
-                    <div class="order-race-photo"></div>
+                    <div class="order-race-photo" style="background-image: linear-gradient(90deg,rgba(2,36,29,.8),rgba(2,36,29,.2)), url('{{ \App\Support\SiteMedia::url('register', 'order-card', asset('images/kfs-runners-hero.png')) }}')"></div>
                     <div class="order-race-overlay">
                         <span>KFS RUNNERS</span>
                         <b id="order-distance">{{ $races->first()?->distance_label ?? '—' }}</b>

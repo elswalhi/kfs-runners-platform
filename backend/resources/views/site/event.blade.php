@@ -9,7 +9,7 @@
 @section('content')
 <main class="kfs-event-page">
     <section class="kfs-event-hero">
-        <div class="kfs-event-hero-image" aria-hidden="true"></div>
+        <div class="kfs-event-hero-image" style="--event-hero-image: url('{{ \App\Support\SiteMedia::url('event', 'hero', asset('images/kfs-runners-hero.png')) }}')" aria-hidden="true"></div>
         <div class="wrap kfs-event-hero-content">
             <p class="kfs-event-eyebrow"><span></span>{{ __('KFS RUNNERS · KAFR EL-SHEIKH') }}</p>
             <h1>{{ __('ONE CITY.') }}<br><span>{{ __('ONE STARTING LINE.') }}</span></h1>
@@ -38,7 +38,7 @@
                     @php($fullPrice = $race->kitPrices->firstWhere('kit_type', 'full'))
                     @php($basicPrice = $race->kitPrices->firstWhere('kit_type', 'basic'))
                     <article class="kfs-event-race-card">
-                        <div class="kfs-event-race-photo"><span>{{ $race->distance_label }}</span></div>
+                        <div class="kfs-event-race-photo" style="--event-race-photo: url('{{ \App\Support\SiteMedia::url('event', 'race-card-' . $race->slug, \App\Support\SiteMedia::url('event', 'race-default', asset('images/kfs-runners-hero.png'))) }}')"><span>{{ $race->distance_label }}</span></div>
                         <div class="kfs-event-race-copy">
                             <h3>{{ $race->name }}</h3>
                             <p>

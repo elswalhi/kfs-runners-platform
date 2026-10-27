@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\PublicPromoCodeController;
 use App\Http\Controllers\Web\AdminWebAuthController;
 use App\Http\Controllers\Web\AdminWebController;
+use App\Http\Controllers\Web\PublicSiteMediaController;
 use App\Http\Controllers\Web\PublicSiteController;
 use Illuminate\Support\Facades\Route;
 
@@ -12,6 +13,9 @@ Route::get('/login', fn () => redirect()->route('admin.login'))->name('login');
 Route::get('/register', [PublicSiteController::class, 'register'])->name('register');
 Route::post('/register', [PublicSiteController::class, 'storeRegistration'])->middleware('throttle:10,1')->name('register.store');
 Route::post('/promo-codes/validate', [PublicPromoCodeController::class, 'validateCode'])->middleware('throttle:30,1')->name('promo-codes.validate');
+Route::get('/site-media/{page}/{slot}', [PublicSiteMediaController::class, 'show'])
+    ->where(['page' => 'home|event|register', 'slot' => '[a-z0-9_-]+'])
+    ->name('site-media.show');
 
 Route::get('/locale/{locale}', function (string $locale) {
     if (in_array($locale, ['en', 'ar'], true)) {
@@ -51,6 +55,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/localization/translations', [AdminWebController::class, 'updateTranslations'])->name('localization.translations');
         Route::get('/event-settings', [AdminWebController::class, 'eventSettings'])->name('event-settings');
         Route::post('/event-settings', [AdminWebController::class, 'updateEventSettings'])->name('event-settings.update');
+        Route::get('/site-media', [AdminWebController::class, 'siteMedia'])->name('site-media');
+        Route::post('/site-media/{page}/{slot}', [AdminWebController::class, 'updateSiteMedia'])->name('site-media.update');
+        Route::delete('/site-media/{page}/{slot}', [AdminWebController::class, 'deleteSiteMedia'])->name('site-media.destroy');
         Route::get('/team-import', [AdminWebController::class, 'teamImport'])->name('team-import');
         Route::post('/team-import', [AdminWebController::class, 'importTeam'])->middleware('throttle:10,1')->name('team-import.store');
     });
