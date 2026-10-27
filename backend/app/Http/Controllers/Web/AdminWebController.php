@@ -89,12 +89,12 @@ class AdminWebController
     {
         $registration->load(['race', 'team', 'payments', 'team.payments']);
         $payments = $registration->payments->merge($registration->team?->payments ?? collect())->unique('id')->sortByDesc('created_at');
-        $idNumber = $registration->id_number;
-        $maskedId = $idNumber ? '••••••' . substr((string) $idNumber, -4) : '—';
+        $maskedId = $registration->maskedIdNumber() ?? '—';
+        $idNumberUnavailable = $maskedId === '—' && filled($registration->getRawOriginal('id_number'));
         $qrDataUri = QrCodeService::generateRunnerQr($registration, 260);
         $qrPayload = QrCodeService::buildRunnerPayload($registration);
 
-        return view('admin.registration', compact('registration', 'payments', 'maskedId', 'qrDataUri', 'qrPayload'));
+        return view('admin.registration', compact('registration', 'payments', 'maskedId', 'idNumberUnavailable', 'qrDataUri', 'qrPayload'));
     }
 
     public function updateRegistration(Request $request, Registration $registration)

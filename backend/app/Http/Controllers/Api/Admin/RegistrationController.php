@@ -39,7 +39,7 @@ class RegistrationController extends Controller
     {
         $registration->load(['race', 'payments', 'team.payments']);
         $data = $this->serialize($registration);
-        $data['id_number_masked'] = $registration->id_number ? '••••••' . substr((string) $registration->id_number, -4) : null;
+        $data['id_number_masked'] = $registration->maskedIdNumber();
         $data['document_available'] = (bool) $registration->document_path;
         $data['payments'] = $registration->payments->merge($registration->team?->payments ?? collect())->unique('id')->map(fn ($p) => [
             'id' => $p->id, 'provider' => $p->provider, 'amount' => (float) $p->amount,

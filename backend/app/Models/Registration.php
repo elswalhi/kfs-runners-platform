@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Contracts\Encryption\DecryptException;
 
 class Registration extends Model
 {
@@ -27,6 +28,19 @@ class Registration extends Model
             'discount_amount' => 'decimal:2',
             'original_amount' => 'decimal:2',
         ];
+    }
+
+    public function maskedIdNumber(): ?string
+    {
+        try {
+            $idNumber = $this->id_number;
+        } catch (DecryptException $exception) {
+            report($exception);
+
+            return null;
+        }
+
+        return filled($idNumber) ? '••••••' . substr((string) $idNumber, -4) : null;
     }
 
     public function race(): BelongsTo { return $this->belongsTo(Race::class); }
