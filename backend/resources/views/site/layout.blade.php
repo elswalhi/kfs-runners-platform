@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="{{ asset('css/kfs-public.css') }}">
     <link rel="stylesheet" href="{{ asset('css/kfs-payment.css') }}">
     <link rel="stylesheet" href="{{ asset('css/kfs-blade.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/kfs-interactive.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/kfs-interactive.css') }}?v=20261027-mobile-1">
     <link rel="stylesheet" href="{{ asset('css/kfs-hero-video.css') }}">
     <link rel="stylesheet" href="{{ asset('css/kfs-brand.css') }}">
     <style>

@@ -3,7 +3,7 @@
 @section('title', __('KFS Runners · Event'))
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/kfs-event.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/kfs-event.css') }}?v=20261027-mobile-1">
 @endpush
 
 @section('content')
