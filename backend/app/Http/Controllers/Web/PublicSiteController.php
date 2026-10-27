@@ -27,8 +27,10 @@ class PublicSiteController
         $raceDate = AppSetting::get('race_date', '2026-11-20');
         $raceTime = AppSetting::get('race_time', '07:00');
         $raceDateFormatted = \Illuminate\Support\Carbon::parse($raceDate)->format('l, d F Y');
+        $raceDateTime = \Illuminate\Support\Carbon::parse($raceDate . ' ' . $raceTime, 'Africa/Cairo')->toIso8601String();
+        $countdownEnabled = (bool) AppSetting::get('countdown_enabled', true);
 
-        return view('site.event', compact('races', 'raceDate', 'raceTime', 'raceDateFormatted'));
+        return view('site.event', compact('races', 'raceDate', 'raceTime', 'raceDateFormatted', 'raceDateTime', 'countdownEnabled'));
     }
 
     public function register()

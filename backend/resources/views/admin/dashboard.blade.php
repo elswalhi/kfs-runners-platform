@@ -58,7 +58,10 @@
             <input type="time" required name="race_time" value="{{ $raceTime ?? '07:00' }}" style="background: transparent; border: none; color: #fff; font-size: 13px; font-weight: 600; outline: none; padding: 4px 6px; cursor: pointer; border-left: 1px solid #475569;">
         </div>
 
-        <input type="hidden" name="countdown_enabled" value="{{ ($countdownEnabled ?? true) ? '1' : '0' }}">
+        <label style="display:flex; align-items:center; gap:7px; color:#e2e8f0; font-size:11px; font-weight:700; white-space:nowrap;">
+            <input type="checkbox" name="countdown_enabled" value="1" {{ ($countdownEnabled ?? true) ? 'checked' : '' }} style="width:15px; height:15px; accent-color:#10b981;">
+            {{ __('Show timer on marathon page') }}
+        </label>
 
         <button type="submit" class="stitch-btn stitch-btn-primary" style="padding: 7px 16px; font-size: 13px; font-weight: 700; background: #b81420; border-color: #8e0e17; height: auto;">
             <span>{{ __('Update Race Date') }}</span>

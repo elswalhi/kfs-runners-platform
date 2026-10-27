@@ -6,7 +6,7 @@
     <div class="stitch-hero-copy">
         <span class="stitch-eyebrow">{{ __('EVENT CONFIGURATION') }}</span>
         <h1>{{ __('Race Date & Countdown Timer') }}</h1>
-        <p>{{ __('Configure the official marathon race date, starting time, and control the live countdown timer shown on the homepage.') }}</p>
+        <p>{{ __('Configure the official marathon date and start time, and show or hide the live countdown on the marathon event page.') }}</p>
     </div>
 </div>
 
@@ -23,7 +23,7 @@
         <div class="stitch-panel-header">
             <div>
                 <h2 class="stitch-panel-title">{{ __('Official Race Schedule') }}</h2>
-                <p class="stitch-panel-subtitle">{{ __('Set the target day and time for the countdown clock on the public website.') }}</p>
+                <p class="stitch-panel-subtitle">{{ __('Set the target day and time for the countdown clock on the marathon event page.') }}</p>
             </div>
         </div>
         <div style="padding: 24px;">
@@ -52,7 +52,7 @@
                         <input type="checkbox" name="countdown_enabled" id="input-countdown-enabled" value="1" {{ $countdownEnabled ? 'checked' : '' }} style="width:18px; height:18px; accent-color:#b81420;">
                         <div>
                             <span style="font-weight:700; color:#0f172a; display:block;">{{ __('Show Countdown Timer on Homepage') }}</span>
-                            <span style="color:#64748b; font-size:12px;">{{ __('When unchecked, the countdown card next to the register button is hidden.') }}</span>
+                            <span style="color:#64748b; font-size:12px;">{{ __('When unchecked, the countdown is hidden from the marathon event page.') }}</span>
                         </div>
                     </label>
                 </div>

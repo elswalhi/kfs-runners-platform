@@ -15,6 +15,20 @@
             <h1>{{ __('ONE CITY.') }}<br><span>{{ __('ONE STARTING LINE.') }}</span></h1>
             <p>{{ __('A community event for every pace, every age, and every story. Find your distance and be part of race day.') }}</p>
             <a class="kfs-event-button" href="{{ route('register') }}">{{ __('Choose your race') }} <span aria-hidden="true">→</span></a>
+            @if ($countdownEnabled)
+                <div class="kfs-countdown-card kfs-event-countdown" id="kfs-race-countdown" data-target="{{ $raceDateTime }}" aria-label="{{ __('Countdown to race day') }}">
+                    <div class="kfs-countdown-header"><span aria-hidden="true">●</span>{{ __('RACE DAY COUNTDOWN') }}</div>
+                    <div class="kfs-countdown-grid">
+                        <div class="kfs-countdown-unit"><span class="kfs-countdown-number" id="countdown-days">--</span><span class="kfs-countdown-label">{{ __('DAYS') }}</span></div>
+                        <span class="kfs-countdown-sep">:</span>
+                        <div class="kfs-countdown-unit"><span class="kfs-countdown-number" id="countdown-hours">--</span><span class="kfs-countdown-label">{{ __('HOURS') }}</span></div>
+                        <span class="kfs-countdown-sep">:</span>
+                        <div class="kfs-countdown-unit"><span class="kfs-countdown-number" id="countdown-mins">--</span><span class="kfs-countdown-label">{{ __('MINS') }}</span></div>
+                        <span class="kfs-countdown-sep">:</span>
+                        <div class="kfs-countdown-unit"><span class="kfs-countdown-number" id="countdown-secs">--</span><span class="kfs-countdown-label">{{ __('SECS') }}</span></div>
+                    </div>
+                </div>
+            @endif
         </div>
     </section>
 
@@ -54,7 +68,7 @@
                                 @if ($fullPrice)<span>{{ __('Full Kit') }} <b>{{ $fullPrice->currency }} {{ number_format((float) $fullPrice->price, 0) }}</b></span>@endif
                                 @if ($basicPrice)<span>{{ __('Basic Kit') }} <b>{{ $basicPrice->currency }} {{ number_format((float) $basicPrice->price, 0) }}</b></span>@endif
                             </div>
-                            <a class="kfs-event-race-link" href="{{ route('register', ['race' => $race->slug]) }}">{{ __('Register for this race') }} <span aria-hidden="true">→</span></a>
+                            <a class="kfs-event-race-link" href="{{ route('register', ['race' => $race->slug]) }}" aria-label="{{ __('Register for the :race marathon', ['race' => $race->name]) }}">{{ __('Register for this race') }} <span aria-hidden="true">→</span></a>
                         </div>
                     </article>
                 @empty
@@ -72,8 +86,8 @@
                 <p>{{ __('Both packages include race support. Pick the experience that works for you.') }}</p>
             </div>
             <div class="kfs-event-kit-grid">
-                <article><span class="kfs-event-kit-label">{{ __('THE COMPLETE EXPERIENCE') }}</span><h3>{{ __('Full Kit') }}</h3><ul><li>{{ __('Finisher medal') }}</li><li>{{ __('Official KFS Runners T-shirt') }}</li><li>{{ __('Runner bag') }}</li><li>{{ __('Participation certificate') }}</li><li>{{ __('Race support and photographs') }}</li></ul></article>
-                <article><span class="kfs-event-kit-label">{{ __('THE ESSENTIALS') }}</span><h3>{{ __('Basic Kit') }}</h3><ul><li>{{ __('Finisher medal') }}</li><li>{{ __('Participation certificate') }}</li><li>{{ __('Race support and photographs') }}</li></ul></article>
+                <a href="{{ route('register', ['kit' => 'full']) }}" aria-label="{{ __('Register with the Full Kit') }}"><span class="kfs-event-kit-label">{{ __('THE COMPLETE EXPERIENCE') }}</span><h3>{{ __('Full Kit') }}</h3><ul><li>{{ __('Finisher medal') }}</li><li>{{ __('Official KFS Runners T-shirt') }}</li><li>{{ __('Runner bag') }}</li><li>{{ __('Participation certificate') }}</li><li>{{ __('Race support and photographs') }}</li></ul><span class="kfs-event-kit-cta">{{ __('Choose Full Kit') }} <span aria-hidden="true">→</span></span></a>
+                <a href="{{ route('register', ['kit' => 'basic']) }}" aria-label="{{ __('Register with the Basic Kit') }}"><span class="kfs-event-kit-label">{{ __('THE ESSENTIALS') }}</span><h3>{{ __('Basic Kit') }}</h3><ul><li>{{ __('Finisher medal') }}</li><li>{{ __('Participation certificate') }}</li><li>{{ __('Race support and photographs') }}</li></ul><span class="kfs-event-kit-cta">{{ __('Choose Basic Kit') }} <span aria-hidden="true">→</span></span></a>
             </div>
         </div>
     </section>
