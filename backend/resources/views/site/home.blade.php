@@ -46,11 +46,11 @@
 
             <div class="team-home-sport-grid">
                 <article class="team-home-sport-card">
-                    <a class="team-home-sport-photo team-home-sport-running" style="--team-home-sport-image: url('{{ \App\Support\SiteMedia::url('home', 'running', asset('images/kfs-runners-hero.png')) }}')" href="#contact" aria-label="{{ __('Ask us about running and fitness training') }}"></a>
+                    <a class="team-home-sport-photo team-home-sport-running" style="--team-home-sport-image: url('{{ \App\Support\SiteMedia::url('home', 'running', asset('images/kfs-runners-hero.png')) }}')" href="https://www.facebook.com/KFSRUNNER/" target="_blank" rel="noopener noreferrer" aria-label="{{ __('Visit KFS Runners on Facebook') }}"></a>
                     <div class="team-home-sport-copy">
                         <div><p class="team-home-card-label">{{ __('TRAIN TOGETHER') }}</p><h3>{{ __('Running') }}</h3></div>
                         <p>{{ __('Running and fitness training for every level, with a supportive team beside you.') }}</p>
-                        <a class="team-home-text-link" href="mailto:elatikysports@gmail.com?subject=Running%20and%20fitness%20training">{{ __('Learn more') }} <span aria-hidden="true">→</span></a>
+                        <a class="team-home-text-link" href="https://www.facebook.com/KFSRUNNER/" target="_blank" rel="noopener noreferrer">{{ __('Learn more') }} <span aria-hidden="true">↗</span></a>
                     </div>
                 </article>
 
@@ -111,7 +111,7 @@
     <section class="team-home-contact" id="contact" aria-label="{{ __('Contact KFS Runners') }}">
         <div class="wrap team-home-contact-inner">
             <div><p class="team-home-kicker"><span></span>{{ __('COME MOVE WITH US') }}</p><h2>{{ __('Your team is waiting.') }}</h2></div>
-            <a href="mailto:elatikysports@gmail.com" class="team-home-button">{{ __('Get in touch') }} <span aria-hidden="true">→</span></a>
+            <a href="https://www.facebook.com/KFSRUNNER/" target="_blank" rel="noopener noreferrer" class="team-home-button">{{ __('Get in touch') }} <span aria-hidden="true">↗</span></a>
         </div>
     </section>
 </main>
