@@ -13,20 +13,22 @@ class PublicSiteController
 {
     public function home()
     {
+        return view('site.home');
+    }
+
+    public function event()
+    {
         $races = Race::query()
             ->where('is_active', true)
             ->with(['kitPrices' => fn ($query) => $query->where('is_active', true)])
             ->orderBy('sort_order')
             ->get();
 
-        $featuredRace = $races->first();
-
         $raceDate = AppSetting::get('race_date', '2026-11-20');
         $raceTime = AppSetting::get('race_time', '07:00');
-        $countdownEnabled = (bool) AppSetting::get('countdown_enabled', true);
-        $raceTargetIso = "{$raceDate}T{$raceTime}:00+02:00";
+        $raceDateFormatted = \Illuminate\Support\Carbon::parse($raceDate)->format('l, d F Y');
 
-        return view('site.home', compact('races', 'featuredRace', 'raceDate', 'raceTime', 'countdownEnabled', 'raceTargetIso'));
+        return view('site.event', compact('races', 'raceDate', 'raceTime', 'raceDateFormatted'));
     }
 
     public function register()

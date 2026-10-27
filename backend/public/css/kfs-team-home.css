@@ -1,0 +1,233 @@
+.team-home {
+    --team-green: #064f42;
+    --team-deep: #032f29;
+    --team-ink: #123b34;
+    --team-red: #ed1b2f;
+    --team-paper: #f4f7f4;
+    --team-muted: #62766f;
+    color: var(--team-ink);
+    background: var(--team-paper);
+}
+
+.team-home .wrap { width: min(1280px, calc(100% - 64px)); }
+.team-home h1,
+.team-home h2,
+.team-home h3,
+.team-home p { margin-top: 0; }
+
+.site-header .main-nav { gap: clamp(9px, 1.2vw, 18px); }
+.site-header .main-nav > a:not(.nav-cta) { font-size: 10px; letter-spacing: .65px; }
+.site-header .main-nav .nav-cta { padding: 11px 13px; font-size: 10px; white-space: nowrap; }
+.site-header .lang-switch-btn { padding: 7px 10px; white-space: nowrap; }
+
+.team-home-hero {
+    position: relative;
+    min-height: 635px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    isolation: isolate;
+    color: #fff;
+    background: var(--team-deep);
+}
+
+.team-home-hero-image {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    background-image: linear-gradient(90deg, rgba(2,39,32,.96) 0%, rgba(2,39,32,.88) 32%, rgba(2,39,32,.40) 61%, rgba(2,39,32,.08) 100%), url('../images/kfs-runners-hero.png');
+    background-position: center 48%;
+    background-size: cover;
+}
+
+.team-home-hero-content { padding-top: 74px; padding-bottom: 78px; }
+.team-home-eyebrow,
+.team-home-kicker,
+.team-home-card-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+    color: var(--team-red);
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 1.8px;
+    line-height: 1.5;
+}
+
+.team-home-eyebrow { color: #fff; }
+.team-home-eyebrow > span,
+.team-home-kicker > span { width: 22px; height: 3px; flex: 0 0 auto; background: var(--team-red); }
+.team-home-hero h1,
+.team-home-about h2,
+.team-home-section-heading h2,
+.team-home-groups h2,
+.team-home-contact h2 {
+    margin: 0;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    letter-spacing: -.7px;
+    line-height: .88;
+}
+
+.team-home-hero h1 { max-width: 700px; font-size: clamp(66px, 8vw, 104px); }
+.team-home-hero h1 span,
+.team-home-about h2 span,
+.team-home-section-heading h2 span,
+.team-home-groups h2 span { color: var(--team-red); }
+.team-home-hero-copy { max-width: 490px; margin: 22px 0 24px; color: rgba(255,255,255,.83); font-size: 15px; line-height: 1.75; }
+.team-home-hero-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.team-home-button,
+.team-home-next-link {
+    display: inline-flex;
+    min-height: 46px;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 0 18px;
+    border: 1px solid var(--team-red);
+    border-radius: 6px;
+    background: var(--team-red);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    transition: transform .2s ease, background .2s ease;
+}
+
+.team-home-button:hover,
+.team-home-next-link:hover { transform: translateY(-2px); background: #d91629; }
+.team-home-button-outline { border-color: rgba(255,255,255,.65); background: rgba(4,46,40,.2); }
+.team-home-button-outline:hover { background: rgba(255,255,255,.16); }
+.team-home-location { display: flex; align-items: center; gap: 8px; margin: 26px 0 0; color: rgba(255,255,255,.75); font-size: 10px; font-weight: 700; letter-spacing: .2px; }
+.team-home-location > span:first-child { color: #ff6975; font-size: 17px; }
+.team-home-location-dot { color: var(--team-red); }
+
+.team-home-about { padding: 68px 0; background: #fff; }
+.team-home-about-layout { display: grid; grid-template-columns: .88fr 1.12fr; align-items: center; gap: 54px; }
+.team-home-about h2,
+.team-home-section-heading h2,
+.team-home-groups h2 { color: var(--team-ink); font-size: clamp(44px, 5vw, 62px); }
+.team-home-about-copy > p:not(.team-home-kicker) { max-width: 520px; margin: 17px 0 18px; color: var(--team-muted); font-size: 12px; line-height: 1.85; }
+.team-home-text-link { display: inline-flex; align-items: center; gap: 9px; color: var(--team-red); font-size: 10px; font-weight: 900; text-transform: uppercase; }
+.team-home-text-link:hover { color: var(--team-green); }
+.team-home-about-photo { min-height: 270px; border-radius: 11px; background: linear-gradient(90deg, rgba(2,39,32,.05), rgba(2,39,32,.1)), url('../images/kfs-runners-hero.png') center 55% / cover; }
+
+.team-home-sports { padding: 68px 0 43px; background: #eef3ee; }
+.team-home-section-heading { display: flex; align-items: end; justify-content: space-between; gap: 35px; margin-bottom: 25px; }
+.team-home-section-heading .team-home-kicker { margin-bottom: 12px; }
+.team-home-section-heading > p { max-width: 390px; margin: 0 0 3px; color: var(--team-muted); font-size: 12px; line-height: 1.75; }
+.team-home-sport-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 17px; }
+.team-home-sport-card { overflow: hidden; border: 1px solid #e0e8e2; border-radius: 10px; background: #fff; box-shadow: 0 6px 19px rgba(3,47,41,.045); transition: transform .22s ease, box-shadow .22s ease; }
+.team-home-sport-card:hover { transform: translateY(-4px); box-shadow: 0 15px 30px rgba(3,47,41,.11); }
+.team-home-sport-photo { display: block; height: 205px; background-position: center; background-size: cover; }
+.team-home-sport-running { background-image: url('../images/kfs-runners-hero.png'); background-position: center 51%; }
+.team-home-sport-skating { background-image: url('../images/kfs-skating-group.png'); background-position: center 48%; }
+.team-home-sport-cycling { background-image: url('../images/kfs-cycling-group.png'); background-position: center 47%; }
+.team-home-sport-copy { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 9px 14px; padding: 17px 18px 18px; }
+.team-home-sport-copy > div { grid-column: 1 / -1; }
+.team-home-card-label { margin: 0 0 4px; font-size: 8px; letter-spacing: 1.3px; }
+.team-home-sport-copy h3 { margin: 0; color: var(--team-ink); font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 800; line-height: 1; }
+.team-home-sport-copy > p { grid-column: 1 / -1; max-width: 360px; min-height: 37px; margin: 0; color: var(--team-muted); font-size: 10px; line-height: 1.65; }
+.team-home-sport-copy .team-home-text-link { grid-column: 1 / -1; justify-self: start; margin-top: 3px; }
+.team-home-more-links { display: flex; align-items: center; justify-content: center; gap: 22px; margin-top: 24px; padding-top: 17px; border-top: 1px solid #d9e2db; }
+.team-home-more-links > span { color: #779087; font-size: 8px; font-weight: 900; letter-spacing: 1.5px; }
+.team-home-more-links a { display: inline-flex; align-items: center; gap: 6px; color: var(--team-ink); font-size: 9px; font-weight: 900; text-transform: uppercase; }
+.team-home-more-links a:hover { color: var(--team-red); }
+.team-home-more-links a + a { padding-left: 22px; border-left: 1px solid #cad7ce; }
+.team-home-more-links a span { color: var(--team-red); }
+
+.team-home-groups { padding: 42px 0; background: #fff; }
+.team-home-groups-layout { display: grid; grid-template-columns: .7fr .6fr 1.7fr; align-items: center; gap: 26px; }
+.team-home-groups .team-home-kicker { margin-bottom: 9px; }
+.team-home-groups h2 { font-size: clamp(38px, 4vw, 48px); white-space: nowrap; }
+.team-home-groups-intro { margin: 0; color: var(--team-muted); font-size: 10px; line-height: 1.7; }
+.team-home-group-links { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.team-home-group-links a { display: inline-flex; min-height: 39px; align-items: center; justify-content: center; gap: 10px; padding: 0 15px; border: 1px solid #d7e2db; border-radius: 99px; color: var(--team-ink); font-size: 9px; font-weight: 900; text-transform: uppercase; transition: color .2s ease, border-color .2s ease, background .2s ease; }
+.team-home-group-links a span { color: var(--team-red); }
+.team-home-group-links a:hover { border-color: var(--team-green); background: var(--team-green); color: #fff; }
+.team-home-group-links a:hover span { color: #fff; }
+
+.team-home-next { padding: 12px 0 40px; background: #fff; }
+.team-home-next-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+.team-home-next-card { position: relative; display: flex; min-height: 205px; align-items: center; overflow: hidden; padding: 24px 27px; border-radius: 10px; isolation: isolate; color: var(--team-ink); }
+.team-home-next-card::before { position: absolute; z-index: -2; inset: 0; background-position: center; background-size: cover; content: ''; transition: transform .35s ease; }
+.team-home-next-card:hover::before { transform: scale(1.035); }
+.team-home-next-card::after { position: absolute; z-index: -1; inset: 0; background: linear-gradient(90deg, rgba(255,255,255,.98) 0%, rgba(255,255,255,.96) 53%, rgba(255,255,255,.35) 100%); content: ''; }
+.team-home-event-card::before { background-image: url('../images/kfs-runners-hero.png'); background-position: center 52%; }
+.team-home-register-card::before { background-image: url('../images/kfs-runners-hero.png'); background-position: right center; }
+.team-home-next-card > div { max-width: 350px; }
+.team-home-next-card .team-home-card-label { margin-bottom: 6px; }
+.team-home-next-card h2 { max-width: 340px; margin: 0 0 6px; color: var(--team-ink); font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 800; line-height: .98; }
+.team-home-next-card > div > p:not(.team-home-card-label) { max-width: 320px; margin: 0 0 11px; color: #5c7068; font-size: 10px; line-height: 1.6; }
+.team-home-next-link { min-height: 34px; padding: 0 12px; font-size: 8px; }
+.team-home-event-card .team-home-next-link { border-color: var(--team-green); background: var(--team-green); }
+.team-home-event-card .team-home-next-link:hover { background: var(--team-deep); }
+
+.team-home-contact { padding: 42px 0; background: var(--team-deep); color: #fff; }
+.team-home-contact-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.team-home-contact .team-home-kicker { margin-bottom: 8px; color: #dcece4; }
+.team-home-contact h2 { font-size: clamp(36px, 4vw, 48px); }
+.team-home-contact .team-home-button { flex: 0 0 auto; }
+
+.team-home a:focus-visible { outline: 3px solid #7ddec0; outline-offset: 4px; }
+
+@media (max-width: 1020px) {
+    .team-home .wrap { width: min(100% - 48px, 850px); }
+    .team-home-about-layout { gap: 30px; }
+    .team-home-groups-layout { grid-template-columns: 1fr 1fr; gap: 15px 25px; }
+    .team-home-groups-intro { justify-self: end; max-width: 350px; }
+    .team-home-group-links { grid-column: 1 / -1; justify-content: flex-start; }
+}
+
+@media (max-width: 760px) {
+    .team-home .wrap { width: min(100% - 32px, 600px); }
+    .team-home-hero { min-height: 590px; align-items: flex-end; }
+    .team-home-hero-image { background-image: linear-gradient(90deg, rgba(2,39,32,.94), rgba(2,39,32,.58)), url('../images/kfs-runners-hero.png'); background-position: 58% center; }
+    .team-home-hero-content { padding-top: 75px; padding-bottom: 54px; }
+    .team-home-hero h1 { font-size: clamp(54px, 13vw, 77px); }
+    .team-home-hero-copy { max-width: 400px; font-size: 13px; }
+    .team-home-location { flex-wrap: wrap; }
+    .team-home-about { padding: 52px 0; }
+    .team-home-about-layout { grid-template-columns: 1fr; gap: 21px; }
+    .team-home-about h2,
+    .team-home-section-heading h2 { font-size: clamp(42px, 10vw, 55px); }
+    .team-home-about-photo { min-height: 225px; }
+    .team-home-sports { padding: 52px 0 34px; }
+    .team-home-section-heading { display: block; margin-bottom: 21px; }
+    .team-home-section-heading > p { margin-top: 12px; }
+    .team-home-sport-grid { grid-template-columns: 1fr; gap: 13px; }
+    .team-home-sport-card { display: grid; grid-template-columns: .9fr 1.1fr; min-height: 170px; }
+    .team-home-sport-photo { height: 100%; min-height: 170px; }
+    .team-home-sport-copy { align-content: center; padding: 15px; }
+    .team-home-sport-copy > p { min-height: 0; }
+    .team-home-more-links { justify-content: flex-start; flex-wrap: wrap; gap: 12px; }
+    .team-home-more-links > span { flex-basis: 100%; }
+    .team-home-more-links a + a { padding-left: 12px; }
+    .team-home-groups { padding: 37px 0; }
+    .team-home-groups-layout { grid-template-columns: 1fr; gap: 11px; }
+    .team-home-groups-intro { justify-self: start; }
+    .team-home-group-links { grid-column: auto; justify-content: flex-start; }
+    .team-home-next { padding-bottom: 30px; }
+    .team-home-next-grid { grid-template-columns: 1fr; }
+    .team-home-next-card { min-height: 185px; padding: 19px; }
+    .team-home-contact-inner { align-items: flex-start; flex-direction: column; }
+}
+
+@media (max-width: 460px) {
+    .team-home .wrap { width: calc(100% - 26px); }
+    .team-home-hero { min-height: 540px; }
+    .team-home-hero-actions { align-items: stretch; flex-direction: column; max-width: 280px; }
+    .team-home-button { width: 100%; }
+    .team-home-location { align-items: flex-start; font-size: 9px; }
+    .team-home-about h2 { font-size: 42px; }
+    .team-home-sport-card { grid-template-columns: 1fr; }
+    .team-home-sport-photo { height: 190px; min-height: 0; }
+    .team-home-sport-copy { padding: 16px; }
+    .team-home-more-links { gap: 9px; }
+    .team-home-more-links a { font-size: 8px; }
+    .team-home-more-links a + a { padding-left: 8px; }
+    .team-home-group-links { align-items: stretch; flex-direction: column; }
+    .team-home-group-links a { justify-content: space-between; }
+}

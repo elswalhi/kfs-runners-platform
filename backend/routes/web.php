@@ -7,6 +7,7 @@ use App\Http\Controllers\Web\PublicSiteController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicSiteController::class, 'home'])->name('home');
+Route::get('/event', [PublicSiteController::class, 'event'])->name('event');
 Route::get('/login', fn () => redirect()->route('admin.login'))->name('login');
 Route::get('/register', [PublicSiteController::class, 'register'])->name('register');
 Route::post('/register', [PublicSiteController::class, 'storeRegistration'])->middleware('throttle:10,1')->name('register.store');
