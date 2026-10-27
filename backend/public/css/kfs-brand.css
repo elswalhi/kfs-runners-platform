@@ -1,0 +1,4 @@
+.brand-logo { display:block; height:auto; object-fit:contain; }
+.brand-logo-header { width:150px; max-height:66px; }
+.brand-logo-footer { width:190px; padding:7px 9px; border-radius:6px; background:#fff; }
+@media (max-width:600px) { .brand-logo-header { width:130px; max-height:58px; } }

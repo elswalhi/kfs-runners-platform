@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="{{ asset('css/kfs-blade.css') }}">
     <link rel="stylesheet" href="{{ asset('css/kfs-interactive.css') }}">
     <link rel="stylesheet" href="{{ asset('css/kfs-hero-video.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/kfs-brand.css') }}">
     <style>
         [dir="rtl"] body {
             font-family: 'Cairo', 'Inter', sans-serif;
@@ -59,7 +60,7 @@
 <header class="site-header">
     <div class="header-inner wrap">
         <a href="{{ route('home') }}" class="brand-link" aria-label="KFS Runners home">
-            <span class="brand"><span class="brand-mark" aria-hidden="true">♧</span><span class="brand-copy"><span class="brand-kfs">KFS <b>RUNNERS</b></span><span class="brand-location">{{ __('Kafr El-Sheikh, Egypt') }}</span></span></span>
+            <img class="brand-logo brand-logo-header" src="{{ asset('images/kfs-runners-logo.png') }}" alt="KFS Runners · Kafr El-Sheikh">
         </a>
         <button class="mobile-menu-btn" type="button" aria-label="Open menu" aria-expanded="false" id="mobile-menu-toggle">☰</button>
         <nav class="main-nav" aria-label="Main navigation" id="main-nav">
@@ -79,7 +80,7 @@
 
 <footer class="site-footer">
     <div class="wrap footer-main">
-        <div class="footer-brand-col"><span class="brand brand-light"><span class="brand-mark" aria-hidden="true">♧</span><span class="brand-copy"><span class="brand-kfs">KFS <b>RUNNERS</b></span><span class="brand-location">KAFR EL-SHEIKH</span></span></span><p>{{ __('More than a race. A community that moves forward together.') }}</p></div>
+        <div class="footer-brand-col"><img class="brand-logo brand-logo-footer" src="{{ asset('images/kfs-runners-logo.png') }}" alt="KFS Runners · Kafr El-Sheikh"><p>{{ __('More than a race. A community that moves forward together.') }}</p></div>
         <div class="footer-links"><h4>{{ __('Explore') }}</h4><a href="{{ route('home') }}">{{ __('Home') }}</a><a href="{{ route('home') }}#our-sports">{{ __('Our sports') }}</a><a href="{{ route('home') }}#our-groups">{{ __('Our groups') }}</a><a href="{{ route('event') }}">{{ __('Event') }}</a><a href="{{ route('register') }}">{{ __('Marathon registration') }}</a></div>
         <div class="footer-links"><h4>{{ __('Get in touch') }}</h4><a href="mailto:elatikysports@gmail.com">✉ elatikysports@gmail.com</a><a href="tel:01508015156">☎ 01508015156</a><span>{{ __('Kafr El-Sheikh, Egypt') }}</span></div>
         <div class="footer-social-col"><h4>{{ __('Follow the movement') }}</h4><div class="social-row"><a href="https://www.facebook.com/" target="_blank" rel="noreferrer" aria-label="Facebook">f</a><a href="https://www.instagram.com/" target="_blank" rel="noreferrer" aria-label="Instagram">◎</a><a href="{{ route('register') }}" aria-label="Register">↗</a></div><p>{{ __('Find your next finish line.') }}</p></div>
