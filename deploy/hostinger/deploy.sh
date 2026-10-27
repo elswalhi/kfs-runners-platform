@@ -65,6 +65,14 @@ cd "$APP_DIR"
 "$PHP_BIN" artisan config:clear || true
 "$PHP_BIN" artisan route:clear || true
 "$PHP_BIN" artisan cache:clear || true
+
+# Apply schema changes and add the bundled historical event pages. Avoid running
+# the full DatabaseSeeder here because it also synchronizes the administrator account.
+echo "🗄️ [Deploy] Applying database migrations..."
+"$PHP_BIN" artisan migrate --force
+echo "📰 [Deploy] Seeding historical event pages..."
+"$PHP_BIN" artisan db:seed --class="Database\\Seeders\\HistoricalEventsSeeder" --force
+
 "$PHP_BIN" artisan view:cache || true
 
 # Purge LiteSpeed web server cache

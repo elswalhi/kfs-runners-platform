@@ -5,6 +5,8 @@ This is the Laravel 13 application. All site and administration screens use Blad
 ## Routes
 
 - `GET /` — public event landing page.
+- `GET /events` and `GET /events/{slug}` — public event archive and individual event details with photo galleries.
+- `/admin/events` — protected event and photo gallery management.
 - `GET, POST /register` — runner registration and EasyKash hosted checkout redirect.
 - `GET /admin/login` — administrator sign-in.
 - `GET /admin` — dashboard.
@@ -26,3 +28,7 @@ php artisan serve
 ```
 
 Configure `KFS_ADMIN_EMAIL`, `KFS_ADMIN_PASSWORD`, `EASYKASH_API_KEY`, and `EASYKASH_HMAC_SECRET` in `.env`. Rotate credentials that have been shared in chat before production use.
+
+## Hostinger deployment
+
+Pushing to `main` runs the Hostinger deployment workflow. The deploy script applies pending migrations and runs `HistoricalEventsSeeder` so the 2021, 2022, and 2023 marathon archive pages and their bundled photos are available automatically. It does not run the full database seeder, so it does not reset the administrator account.

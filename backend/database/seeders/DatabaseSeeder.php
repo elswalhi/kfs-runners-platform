@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(RaceSeeder::class);
+        $this->call(HistoricalEventsSeeder::class);
 
         $email = env('KFS_ADMIN_EMAIL');
         $password = env('KFS_ADMIN_PASSWORD');

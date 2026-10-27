@@ -2,13 +2,18 @@
 
 use App\Http\Controllers\Api\PublicPromoCodeController;
 use App\Http\Controllers\Web\AdminWebAuthController;
+use App\Http\Controllers\Web\AdminEventController;
 use App\Http\Controllers\Web\AdminWebController;
+use App\Http\Controllers\Web\PublicEventController;
 use App\Http\Controllers\Web\PublicSiteMediaController;
 use App\Http\Controllers\Web\PublicSiteController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicSiteController::class, 'home'])->name('home');
 Route::get('/event', [PublicSiteController::class, 'event'])->name('event');
+Route::get('/events', [PublicEventController::class, 'index'])->name('events.index');
+Route::get('/events/{event:slug}', [PublicEventController::class, 'show'])->name('events.show');
+Route::get('/event-photos/{photo}', [PublicEventController::class, 'photo'])->name('event-photos.show');
 Route::get('/login', fn () => redirect()->route('admin.login'))->name('login');
 Route::get('/register', [PublicSiteController::class, 'register'])->name('register');
 Route::post('/register', [PublicSiteController::class, 'storeRegistration'])->middleware('throttle:10,1')->name('register.store');
@@ -45,6 +50,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/races', [AdminWebController::class, 'storeRace'])->name('races.store');
         Route::put('/races/{race}', [AdminWebController::class, 'updateRace'])->name('races.update');
         Route::delete('/races/{race}', [AdminWebController::class, 'deleteRace'])->name('races.destroy');
+        Route::get('/events', [AdminEventController::class, 'index'])->name('events.index');
+        Route::get('/events/create', [AdminEventController::class, 'create'])->name('events.create');
+        Route::post('/events', [AdminEventController::class, 'store'])->name('events.store');
+        Route::get('/events/{event}/edit', [AdminEventController::class, 'edit'])->name('events.edit');
+        Route::put('/events/{event}', [AdminEventController::class, 'update'])->name('events.update');
+        Route::delete('/events/{event}', [AdminEventController::class, 'destroy'])->name('events.destroy');
+        Route::post('/events/{event}/photos', [AdminEventController::class, 'addPhotos'])->name('events.photos.store');
+        Route::get('/events/{event}/photos/{photo}/preview', [AdminEventController::class, 'photoPreview'])->name('events.photos.preview');
+        Route::patch('/events/{event}/photos/{photo}/cover', [AdminEventController::class, 'setCover'])->name('events.photos.cover');
+        Route::delete('/events/{event}/photos/{photo}', [AdminEventController::class, 'deletePhoto'])->name('events.photos.destroy');
         Route::get('/pricing', [AdminWebController::class, 'pricing'])->name('pricing');
         Route::post('/pricing', [AdminWebController::class, 'storePrice'])->name('pricing.store');
         Route::put('/pricing/{raceKitPrice}', [AdminWebController::class, 'updatePrice'])->name('pricing.update');
