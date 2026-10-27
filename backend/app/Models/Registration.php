@@ -30,7 +30,7 @@ class Registration extends Model
         ];
     }
 
-    public function maskedIdNumber(): ?string
+    public function decryptedIdNumber(): ?string
     {
         try {
             $idNumber = $this->id_number;
@@ -40,7 +40,14 @@ class Registration extends Model
             return null;
         }
 
-        return filled($idNumber) ? '••••••' . substr((string) $idNumber, -4) : null;
+        return filled($idNumber) ? (string) $idNumber : null;
+    }
+
+    public function maskedIdNumber(): ?string
+    {
+        $idNumber = $this->decryptedIdNumber();
+
+        return $idNumber !== null ? '••••••' . substr($idNumber, -4) : null;
     }
 
     public function race(): BelongsTo { return $this->belongsTo(Race::class); }

@@ -63,7 +63,7 @@
 
             <div class="stitch-detail-item">
                 <span class="label">National ID / Passport</span>
-                <strong class="val" style="font-family: 'JetBrains Mono', monospace;">{{ $maskedId }}</strong>
+                <strong class="val" style="font-family: 'JetBrains Mono', monospace; overflow-wrap:anywhere;">{{ $idNumberDisplay }}</strong>
                 @if ($idNumberUnavailable)
                     <small style="display:block; margin-top:5px; color:#b45309; font-size:11px; line-height:1.5;">This ID could not be decrypted. Confirm the server APP_KEY is the same one used when this registration was saved.</small>
                 @endif
