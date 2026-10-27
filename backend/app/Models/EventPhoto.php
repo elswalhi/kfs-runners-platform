@@ -24,6 +24,15 @@ class EventPhoto extends Model
 
     public function publicUrl(): string
     {
+        if ($this->isExternalUrl()) {
+            return $this->path;
+        }
+
+        if (is_string($this->path) && str_starts_with($this->path, 'drive:')) {
+            $fileId = substr($this->path, 6);
+            return "https://lh3.googleusercontent.com/d/{$fileId}";
+        }
+
         if ($this->isBundledAsset()) {
             return asset($this->path);
         }
@@ -33,11 +42,25 @@ class EventPhoto extends Model
 
     public function adminUrl(): string
     {
+        if ($this->isExternalUrl()) {
+            return $this->path;
+        }
+
+        if (is_string($this->path) && str_starts_with($this->path, 'drive:')) {
+            $fileId = substr($this->path, 6);
+            return "https://lh3.googleusercontent.com/d/{$fileId}";
+        }
+
         if ($this->isBundledAsset()) {
             return asset($this->path);
         }
 
         return route('admin.events.photos.preview', ['event' => $this->event_id, 'photo' => $this->id]);
+    }
+
+    public function isExternalUrl(): bool
+    {
+        return is_string($this->path) && (str_starts_with($this->path, 'https://') || str_starts_with($this->path, 'http://'));
     }
 
     public function isBundledAsset(): bool

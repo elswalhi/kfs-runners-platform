@@ -36,6 +36,11 @@
             <label class="wide" dir="rtl"><span>{{ __('Event details (Arabic)') }}</span><textarea name="description_ar" rows="7" dir="rtl">{{ old('description_ar', $event->description_ar) }}</textarea></label>
             <label class="wide"><span>{{ __('Registration or information link (optional)') }}</span><input type="url" name="registration_url" value="{{ old('registration_url', $event->registration_url) }}" placeholder="https://"></label>
             <label class="wide"><span>{{ __('Original event page (optional)') }}</span><input type="url" name="source_url" value="{{ old('source_url', $event->source_url) }}" placeholder="https://"></label>
+            <label class="wide">
+                <span>{{ __('Google Drive Folder URL') }} @if ($event->drive_url) <a href="{{ $event->drive_url }}" target="_blank" rel="noopener noreferrer" style="margin-inline-start: 8px; font-weight: normal; color: #3b82f6; text-decoration: underline;">{{ __('Open Drive folder') }} ↗</a> @endif</span>
+                <input type="url" name="drive_url" value="{{ old('drive_url', $event->drive_url) }}" placeholder="https://drive.google.com/drive/folders/...">
+                <small>{{ __('Link a public Google Drive folder containing event photos.') }}</small>
+            </label>
         </div>
         @if ($isCreating)
             <label class="event-admin-upload"><span>{{ __('Event photos') }}</span><input type="file" name="photos[]" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple><small>{{ __('Select up to 20 JPG, PNG, or WebP images. The first image becomes the cover. Max 5 MB each.') }}</small></label>
@@ -47,12 +52,50 @@
 
 @unless ($isCreating)
     <section class="event-admin-panel event-admin-gallery-panel">
-        <header><h2>{{ __('Event photos') }}</h2><p>{{ __('Add photos, choose the cover image, or remove images from this gallery.') }}</p></header>
-        <form class="event-admin-photo-upload" method="POST" action="{{ route('admin.events.photos.store', $event) }}" enctype="multipart/form-data">
-            @csrf
-            <label class="event-admin-upload"><span>{{ __('Add photos to gallery') }}</span><input type="file" name="photos[]" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple required><small>{{ __('Select up to 20 JPG, PNG, or WebP images. Max 5 MB each.') }}</small></label>
-            <button class="stitch-btn stitch-btn-primary" type="submit">{{ __('Upload photos') }}</button>
-        </form>
+        <header><h2>{{ __('Event photos') }}</h2><p>{{ __('Sync photos from Google Drive, upload images directly, choose the cover image, or remove images.') }}</p></header>
+
+        <div class="event-admin-drive-sync-card" style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 10px; padding: 1.25rem; margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <div>
+                    <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="color: #60a5fa;"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+                        {{ __('Google Drive Photo Sync') }}
+                    </h3>
+                    <p style="margin: 0.25rem 0 0; color: #a1a1aa; font-size: 0.85rem;">{{ __('Automatically import all photos from your public Google Drive folder.') }}</p>
+                </div>
+                @if ($event->drive_url)
+                    <a href="{{ $event->drive_url }}" target="_blank" rel="noopener noreferrer" class="stitch-btn stitch-btn-secondary" style="font-size: 0.85rem; padding: 0.35rem 0.75rem;">
+                        {{ __('Open Drive folder') }} ↗
+                    </a>
+                @endif
+            </div>
+
+            <form method="POST" action="{{ route('admin.events.drive.sync', $event) }}">
+                @csrf
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+                    <input type="url" name="drive_url" value="{{ old('drive_url', $event->drive_url) }}" placeholder="https://drive.google.com/drive/folders/..." style="flex: 1; min-width: 260px;" required>
+                    <button class="stitch-btn stitch-btn-primary" type="submit" style="white-space: nowrap;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-inline-end: 4px;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                        {{ __('Sync photos now') }}
+                    </button>
+                </div>
+                <div style="display: flex; gap: 1rem; align-items: center; font-size: 0.85rem; color: #94a3b8;">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none;">
+                        <input type="checkbox" name="replace_existing" value="1">
+                        <span>{{ __('Replace previously synced Drive photos') }}</span>
+                    </label>
+                </div>
+            </form>
+        </div>
+
+        <div style="margin: 1.5rem 0 1rem; border-top: 1px dashed rgba(255, 255, 255, 0.1); padding-top: 1.25rem;">
+            <p style="margin: 0 0 0.75rem; font-weight: 700; font-size: 0.95rem; color: #cbd5e1;">{{ __('Or upload images directly:') }}</p>
+            <form class="event-admin-photo-upload" method="POST" action="{{ route('admin.events.photos.store', $event) }}" enctype="multipart/form-data">
+                @csrf
+                <label class="event-admin-upload"><span>{{ __('Add photos to gallery') }}</span><input type="file" name="photos[]" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple required><small>{{ __('Select up to 20 JPG, PNG, or WebP images. Max 5 MB each.') }}</small></label>
+                <button class="stitch-btn stitch-btn-primary" type="submit">{{ __('Upload photos') }}</button>
+            </form>
+        </div>
         @if ($event->photos->isNotEmpty())
             <div class="event-admin-photo-grid">
                 @foreach ($event->photos as $photo)

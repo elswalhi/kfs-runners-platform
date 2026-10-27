@@ -49,6 +49,10 @@
 .kfs-event-detail-aside span { margin-top:6px; color:#8a9a91; font-size:8px; font-weight:900; letter-spacing:1.2px; }
 .kfs-event-detail-aside strong { color:#123b34; font-size:13px; }
 .kfs-event-register-link { display:flex; justify-content:center; margin-top:10px; padding:12px; border-radius:6px; background:#b81420; color:#fff; font-size:10px; font-weight:900; }
+.kfs-event-drive-aside-link { display:flex; justify-content:center; align-items:center; gap:6px; margin-top:8px; padding:11px; border:1px solid #123b34; border-radius:6px; background:#fff; color:#123b34; font-size:10px; font-weight:900; text-transform:uppercase; transition:all .2s ease; text-decoration:none; }
+.kfs-event-drive-aside-link:hover { background:#123b34; color:#fff; }
+.kfs-event-drive-pill { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border:1px solid #093d32; border-radius:999px; background:#fff; color:#093d32; font-size:10px; font-weight:900; text-transform:uppercase; transition:all .2s ease; text-decoration:none; }
+.kfs-event-drive-pill:hover { background:#093d32; color:#fff; }
 .kfs-event-gallery { background:#f4f7f4; }
 .kfs-event-gallery-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
 .kfs-event-gallery-grid a { display:block; height:225px; overflow:hidden; border-radius:8px; background:#dce7df; }

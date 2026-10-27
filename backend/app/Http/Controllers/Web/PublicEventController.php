@@ -33,6 +33,10 @@ class PublicEventController
     {
         abort_unless($photo->event?->is_published, 404);
 
+        if ($photo->isExternalUrl()) {
+            return redirect()->away($photo->publicUrl());
+        }
+
         return $this->streamUploadedPhoto($photo);
     }
 

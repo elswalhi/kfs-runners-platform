@@ -14,7 +14,7 @@ class Event extends Model
     protected $fillable = [
         'title', 'title_ar', 'slug', 'event_year', 'location', 'location_ar',
         'summary', 'summary_ar', 'description', 'description_ar',
-        'registration_url', 'source_url', 'is_published', 'sort_order',
+        'registration_url', 'source_url', 'drive_url', 'is_published', 'sort_order',
     ];
 
     protected function casts(): array

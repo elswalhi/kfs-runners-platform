@@ -32,7 +32,7 @@ class ExampleTest extends TestCase
         \App\Models\AppSetting::set('race_date', '2026-12-25');
         \App\Models\AppSetting::set('race_time', '08:30');
 
-        $response = $this->get('/');
+        $response = $this->get('/event');
         $response->assertStatus(200);
         $response->assertSee('data-target="2026-12-25T08:30:00+02:00"', false);
     }
@@ -152,5 +152,44 @@ class ExampleTest extends TestCase
         $response->assertSee('10 KM');
         $response->assertSee('data:image/png;base64,');
         $response->assertSee('T-Shirt: L');
+    }
+
+    public function test_google_drive_folder_id_extractor(): void
+    {
+        $id1 = \App\Services\GoogleDriveService::extractFolderId('https://drive.google.com/drive/folders/1-Wje_0tqu3YtWpJkQ_FgloPwwNxx8_sN');
+        $this->assertEquals('1-Wje_0tqu3YtWpJkQ_FgloPwwNxx8_sN', $id1);
+
+        $id2 = \App\Services\GoogleDriveService::extractFolderId('https://drive.google.com/drive/u/0/folders/1-Wje_0tqu3YtWpJkQ_FgloPwwNxx8_sN?usp=sharing');
+        $this->assertEquals('1-Wje_0tqu3YtWpJkQ_FgloPwwNxx8_sN', $id2);
+
+        $id3 = \App\Services\GoogleDriveService::extractFolderId('1-Wje_0tqu3YtWpJkQ_FgloPwwNxx8_sN');
+        $this->assertEquals('1-Wje_0tqu3YtWpJkQ_FgloPwwNxx8_sN', $id3);
+    }
+
+    public function test_event_photo_renders_external_google_drive_url(): void
+    {
+        $event = \App\Models\Event::create([
+            'title' => 'Test Event 2026',
+            'slug' => 'test-event-2026',
+            'event_year' => 2026,
+            'drive_url' => 'https://drive.google.com/drive/folders/1-Wje_0tqu3YtWpJkQ_FgloPwwNxx8_sN',
+            'is_published' => true,
+        ]);
+
+        $photo = $event->photos()->create([
+            'path' => 'https://lh3.googleusercontent.com/d/1F3Y7lXkqGW2LfYSyeCCZ0qLiuszDDmSi',
+            'alt' => 'IMG_6483.JPG',
+            'is_cover' => true,
+            'sort_order' => 1,
+        ]);
+
+        $this->assertTrue($photo->isExternalUrl());
+        $this->assertEquals('https://lh3.googleusercontent.com/d/1F3Y7lXkqGW2LfYSyeCCZ0qLiuszDDmSi', $photo->publicUrl());
+        $this->assertEquals('https://lh3.googleusercontent.com/d/1F3Y7lXkqGW2LfYSyeCCZ0qLiuszDDmSi', $photo->adminUrl());
+
+        $response = $this->get('/events/' . $event->slug);
+        $response->assertStatus(200);
+        $response->assertSee('https://lh3.googleusercontent.com/d/1F3Y7lXkqGW2LfYSyeCCZ0qLiuszDDmSi');
+        $response->assertSee('https://drive.google.com/drive/folders/1-Wje_0tqu3YtWpJkQ_FgloPwwNxx8_sN');
     }
 }

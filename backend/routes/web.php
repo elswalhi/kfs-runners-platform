@@ -57,6 +57,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::put('/events/{event}', [AdminEventController::class, 'update'])->name('events.update');
         Route::delete('/events/{event}', [AdminEventController::class, 'destroy'])->name('events.destroy');
         Route::post('/events/{event}/photos', [AdminEventController::class, 'addPhotos'])->name('events.photos.store');
+        Route::post('/events/{event}/drive-sync', [AdminEventController::class, 'syncDrivePhotos'])->name('events.drive.sync');
         Route::get('/events/{event}/photos/{photo}/preview', [AdminEventController::class, 'photoPreview'])->name('events.photos.preview');
         Route::patch('/events/{event}/photos/{photo}/cover', [AdminEventController::class, 'setCover'])->name('events.photos.cover');
         Route::delete('/events/{event}/photos/{photo}', [AdminEventController::class, 'deletePhoto'])->name('events.photos.destroy');
