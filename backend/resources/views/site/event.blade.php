@@ -8,8 +8,19 @@
 
 @section('content')
 <main class="kfs-event-page">
-    <section class="kfs-event-hero">
-        <div class="kfs-event-hero-image" style="--event-hero-image: url('{{ \App\Support\SiteMedia::url('event', 'hero', asset('images/kfs-runners-hero.png')) }}')" aria-hidden="true"></div>
+    @php
+        $eventHeroImage = \App\Support\SiteMedia::url('event', 'hero', asset('images/kfs-runners-hero.png'));
+        $eventHeroVideo = \App\Support\SiteMedia::videoUrl('event');
+    @endphp
+    <section class="kfs-event-hero" data-hero-section>
+        <div class="kfs-event-hero-image" style="--event-hero-image: url('{{ $eventHeroImage }}')" aria-hidden="true"></div>
+        @if ($eventHeroVideo)
+            <video class="kfs-hero-video" data-hero-video autoplay muted loop playsinline preload="metadata" poster="{{ $eventHeroImage }}" aria-hidden="true" tabindex="-1">
+                <source src="{{ $eventHeroVideo }}" type="{{ \App\Support\SiteMedia::videoMimeType(\App\Support\SiteMedia::videoPath('event')) }}">
+            </video>
+            <div class="kfs-hero-video-shade" aria-hidden="true"></div>
+            @include('site.partials.hero-video-controls')
+        @endif
         <div class="wrap kfs-event-hero-content">
             <p class="kfs-event-eyebrow"><span></span>{{ __('KFS RUNNERS · KAFR EL-SHEIKH') }}</p>
             <h1>{{ __('ONE CITY.') }}<br><span>{{ __('ONE STARTING LINE.') }}</span></h1>

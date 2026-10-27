@@ -16,6 +16,9 @@ Route::post('/promo-codes/validate', [PublicPromoCodeController::class, 'validat
 Route::get('/site-media/{page}/{slot}', [PublicSiteMediaController::class, 'show'])
     ->where(['page' => 'home|event|register', 'slot' => '[a-z0-9_-]+'])
     ->name('site-media.show');
+Route::get('/site-video/{page}/{slot}', [PublicSiteMediaController::class, 'showVideo'])
+    ->where(['page' => 'event|register', 'slot' => 'hero'])
+    ->name('site-video.show');
 
 Route::get('/locale/{locale}', function (string $locale) {
     if (in_array($locale, ['en', 'ar'], true)) {
@@ -58,6 +61,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/site-media', [AdminWebController::class, 'siteMedia'])->name('site-media');
         Route::post('/site-media/{page}/{slot}', [AdminWebController::class, 'updateSiteMedia'])->name('site-media.update');
         Route::delete('/site-media/{page}/{slot}', [AdminWebController::class, 'deleteSiteMedia'])->name('site-media.destroy');
+        Route::post('/site-media/videos/{page}/{slot}', [AdminWebController::class, 'updateSiteVideo'])->name('site-media.videos.update');
+        Route::delete('/site-media/videos/{page}/{slot}', [AdminWebController::class, 'deleteSiteVideo'])->name('site-media.videos.destroy');
         Route::get('/team-import', [AdminWebController::class, 'teamImport'])->name('team-import');
         Route::post('/team-import', [AdminWebController::class, 'importTeam'])->middleware('throttle:10,1')->name('team-import.store');
     });

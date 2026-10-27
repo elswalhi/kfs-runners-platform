@@ -411,7 +411,16 @@ class AdminWebController
         }
         unset($page);
 
-        return view('admin.site-media', compact('pages'));
+        $heroVideos = SiteMedia::videoSlots();
+        foreach ($heroVideos as $pageKey => &$video) {
+            $path = SiteMedia::videoPath($pageKey);
+            $video['is_custom'] = $path && Storage::disk('public')->exists($path);
+            $video['video_url'] = SiteMedia::videoUrl($pageKey);
+            $video['image_url'] = SiteMedia::url($pageKey, $video['image_slot'], asset('images/kfs-runners-hero.png'));
+        }
+        unset($video);
+
+        return view('admin.site-media', compact('pages', 'heroVideos'));
     }
 
     public function updateSiteMedia(Request $request, string $page, string $slot)
@@ -459,6 +468,53 @@ class AdminWebController
         }
 
         return back()->with('success', __('Default image restored.'));
+    }
+
+    public function updateSiteVideo(Request $request, string $page, string $slot)
+    {
+        abort_unless(SiteMedia::videoSlot($page, $slot), 404);
+
+        $data = $request->validate([
+            'video' => ['required', 'file', 'mimetypes:video/mp4,video/webm', 'max:20480'],
+        ]);
+
+        $disk = Storage::disk('public');
+        $newPath = $data['video']->store('site-media/' . $page . '/videos', 'public');
+        if (! $newPath) {
+            return back()->withErrors(['video' => __('The video could not be saved. Please check the storage permissions and try again.')]);
+        }
+
+        $videos = AppSetting::get('site_videos', []);
+        $videos = is_array($videos) ? $videos : [];
+        $oldPath = SiteMedia::videoPath($page, $slot);
+        $videos[$page][$slot] = $newPath;
+        AppSetting::set('site_videos', $videos);
+
+        if ($oldPath && $oldPath !== $newPath) {
+            $disk->delete($oldPath);
+        }
+
+        return back()->with('success', __('Hero video updated for :page.', ['page' => SiteMedia::videoSlots()[$page]['label'] ?? $page]));
+    }
+
+    public function deleteSiteVideo(string $page, string $slot)
+    {
+        abort_unless(SiteMedia::videoSlot($page, $slot), 404);
+
+        $videos = AppSetting::get('site_videos', []);
+        $videos = is_array($videos) ? $videos : [];
+        $oldPath = SiteMedia::videoPath($page, $slot);
+        unset($videos[$page][$slot]);
+        if (empty($videos[$page])) {
+            unset($videos[$page]);
+        }
+
+        AppSetting::set('site_videos', $videos);
+        if ($oldPath) {
+            Storage::disk('public')->delete($oldPath);
+        }
+
+        return back()->with('success', __('Hero video removed. The default hero image is active again.'));
     }
 
     public function teamImport()

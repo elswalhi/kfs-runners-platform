@@ -9,6 +9,64 @@ use Illuminate\Support\Facades\Storage;
 
 class SiteMedia
 {
+    public static function videoSlots(): array
+    {
+        return [
+            'event' => [
+                'label' => 'Event',
+                'hint' => 'Background video at the top of the Event page.',
+                'image_slot' => 'hero',
+            ],
+            'register' => [
+                'label' => 'Marathon Registration',
+                'hint' => 'Background video at the top of the registration page.',
+                'image_slot' => 'hero',
+            ],
+        ];
+    }
+
+    public static function videoSlot(string $page, string $slot): ?array
+    {
+        return $slot === 'hero' ? (self::videoSlots()[$page] ?? null) : null;
+    }
+
+    public static function videoPath(string $page, string $slot = 'hero'): ?string
+    {
+        if (! self::videoSlot($page, $slot)) {
+            return null;
+        }
+
+        $videos = AppSetting::get('site_videos', []);
+        $path = is_array($videos) ? data_get($videos, $page . '.' . $slot) : null;
+        $expectedPrefix = 'site-media/' . $page . '/videos/';
+        $extension = is_string($path) ? strtolower(pathinfo($path, PATHINFO_EXTENSION)) : '';
+
+        if (! is_string($path) || ! str_starts_with($path, $expectedPrefix) || str_contains($path, '..') || ! in_array($extension, ['mp4', 'webm'], true)) {
+            return null;
+        }
+
+        return $path;
+    }
+
+    public static function videoUrl(string $page, string $slot = 'hero'): ?string
+    {
+        $path = self::videoPath($page, $slot);
+        if (! $path || ! Storage::disk('public')->exists($path)) {
+            return null;
+        }
+
+        return route('site-video.show', [
+            'page' => $page,
+            'slot' => $slot,
+            'v' => substr(sha1($path), 0, 12),
+        ]);
+    }
+
+    public static function videoMimeType(string $path): string
+    {
+        return strtolower(pathinfo($path, PATHINFO_EXTENSION)) === 'webm' ? 'video/webm' : 'video/mp4';
+    }
+
     public static function pages(?Collection $races = null): array
     {
         $pages = self::fixedPages();

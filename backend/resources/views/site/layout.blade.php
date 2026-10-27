@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="{{ asset('css/kfs-payment.css') }}">
     <link rel="stylesheet" href="{{ asset('css/kfs-blade.css') }}">
     <link rel="stylesheet" href="{{ asset('css/kfs-interactive.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/kfs-hero-video.css') }}">
     <style>
         [dir="rtl"] body {
             font-family: 'Cairo', 'Inter', sans-serif;
@@ -96,6 +97,7 @@
     });
 </script>
 <script src="{{ asset('js/kfs-interactive.js') }}"></script>
+<script src="{{ asset('js/kfs-hero-video.js') }}"></script>
 @stack('scripts')
 </body>
 </html>

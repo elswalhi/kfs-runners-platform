@@ -11,8 +11,8 @@
 <div class="stitch-hero media-page-hero">
     <div class="stitch-hero-copy">
         <span class="stitch-eyebrow">{{ __('WEBSITE CONTENT') }}</span>
-        <h1>{{ __('Manage Website Images') }}</h1>
-        <p>{{ __('Choose images for each page independently. Upload a replacement or restore the original image at any time.') }}</p>
+        <h1>{{ __('Manage Website Media') }}</h1>
+        <p>{{ __('Choose images for each page independently, and add interactive hero videos to the Event and Registration pages.') }}</p>
     </div>
 </div>
 
@@ -22,16 +22,60 @@
 
 @if ($errors->any())
     <div class="media-flash media-flash-error" role="alert">
-        <strong>{{ __('Image could not be saved.') }}</strong>
+        <strong>{{ __('Media could not be saved.') }}</strong>
         <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
     </div>
 @endif
 
 <nav class="media-page-jump" aria-label="{{ __('Website pages') }}">
+    <a href="#hero-videos">{{ __('Hero videos') }} <span>{{ count($heroVideos) }}</span></a>
     @foreach ($pages as $pageKey => $page)
         <a href="#media-page-{{ $pageKey }}">{{ __($page['label']) }} <span>{{ count($page['slots']) }}</span></a>
     @endforeach
 </nav>
+
+<section class="media-page-section" id="hero-videos">
+    <header class="media-section-heading">
+        <div><span>{{ __('INTERACTIVE HEROES') }}</span><h2>{{ __('Hero videos') }}</h2><p>{{ __('Videos play silently in the background. Visitors can pause, play, or turn the sound on.') }}</p></div>
+        <a href="#top" class="media-back-top">{{ __('Back to top') }} ↑</a>
+    </header>
+
+    <div class="media-slot-grid">
+        @foreach ($heroVideos as $pageKey => $video)
+            <article class="media-slot-card">
+                <div class="media-slot-preview media-video-preview">
+                    @if ($video['is_custom'])
+                        <video src="{{ $video['video_url'] }}" controls muted playsinline preload="metadata" aria-label="{{ __($video['label']) }} {{ __('hero video preview') }}"></video>
+                    @else
+                        <img src="{{ $video['image_url'] }}" alt="{{ __($video['label']) }} {{ __('hero fallback image') }}" loading="lazy">
+                    @endif
+                    <span class="media-slot-status {{ $video['is_custom'] ? 'is-custom' : '' }}">
+                        {{ $video['is_custom'] ? __('Custom video') : __('Image fallback') }}
+                    </span>
+                </div>
+                <div class="media-slot-content">
+                    <div class="media-slot-title"><div><h3>{{ __($video['label']) }} {{ __('hero video') }}</h3><p>{{ __($video['hint']) }} {{ __('MP4 or WebM, up to 20 MB.') }}</p></div></div>
+                    <form class="media-upload-form" method="POST" action="{{ route('admin.site-media.videos.update', ['page' => $pageKey, 'slot' => 'hero']) }}" enctype="multipart/form-data">
+                        @csrf
+                        <label class="media-file-label">
+                            <span>{{ __('Choose video') }}</span>
+                            <input type="file" name="video" accept=".mp4,.webm,video/mp4,video/webm" required>
+                        </label>
+                        <small>{{ __('MP4 or WebM · max 20 MB') }}</small>
+                        <button class="stitch-btn stitch-btn-primary" type="submit">{{ $video['is_custom'] ? __('Replace video') : __('Upload video') }}</button>
+                    </form>
+                    @if ($video['is_custom'])
+                        <form method="POST" action="{{ route('admin.site-media.videos.destroy', ['page' => $pageKey, 'slot' => 'hero']) }}" class="media-restore-form" onsubmit="return confirm('{{ __('Remove this video and use the hero image instead?') }}')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit">{{ __('Use default hero image') }}</button>
+                        </form>
+                    @endif
+                </div>
+            </article>
+        @endforeach
+    </div>
+</section>
 
 @foreach ($pages as $pageKey => $page)
     <section class="media-page-section" id="media-page-{{ $pageKey }}">
