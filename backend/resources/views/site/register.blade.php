@@ -395,6 +395,7 @@
 
     const price = value => new Intl.NumberFormat('en-EG', { style: 'currency', currency: 'EGP', maximumFractionDigits: 0 }).format(Number(value || 0));
     const setText = (id, value) => { const node = document.getElementById(id); if (node) node.textContent = value; };
+    const escapeHtml = str => String(str ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     function getTicketPrice(t) {
         const race = allRaces.find(r => r.slug === t.race) || allRaces[0];
@@ -406,6 +407,23 @@
         const extraTicketsContainer = document.getElementById('extra-tickets-list');
         const extraAttendeesContainer = document.getElementById('extra-attendees-list');
 
+        // Capture existing inputs keyed by ticket ID so user data is never lost when removing an extra ticket
+        const savedAttendeeValues = {};
+        if (extraAttendeesContainer) {
+            extraAttendeesContainer.querySelectorAll('.kfs-attendee-section').forEach(sec => {
+                const tid = Number(sec.dataset.ticketId);
+                if (tid) {
+                    savedAttendeeValues[tid] = {
+                        firstName: sec.querySelector('input[name$="[firstName]"]')?.value || '',
+                        lastName: sec.querySelector('input[name$="[lastName]"]')?.value || '',
+                        birthDate: sec.querySelector('input[name$="[birthDate]"]')?.value || '',
+                        gender: sec.querySelector('select[name$="[gender]"]')?.value || '',
+                        idNumber: sec.querySelector('input[name$="[idNumber]"]')?.value || '',
+                    };
+                }
+            });
+        }
+
         if (extraTicketsContainer) {
             extraTicketsContainer.innerHTML = '';
             tickets.slice(1).forEach((t, idx) => {
@@ -414,6 +432,7 @@
                 const card = document.createElement('div');
                 card.className = 'kfs-ticket-card';
                 card.id = `ticket-card-${tNum}`;
+                card.dataset.ticketId = t.id;
 
                 card.innerHTML = `
                     <div class="kfs-ticket-header">
@@ -452,7 +471,7 @@
             });
         }
 
-        // Render attendee cards for runners #2+ in Step 2
+        // Render attendee cards for extra runners (#2+) in Step 2 with remove button
         if (extraAttendeesContainer) {
             extraAttendeesContainer.innerHTML = '';
             tickets.slice(1).forEach((t, idx) => {
@@ -461,28 +480,39 @@
                 const section = document.createElement('div');
                 section.className = 'kfs-attendee-section';
                 section.id = `attendee-card-${tNum}`;
+                section.dataset.ticketId = t.id;
+
+                const saved = savedAttendeeValues[t.id] || {};
+                const valFn = saved.firstName || '';
+                const valLn = saved.lastName || '';
+                const valDob = saved.birthDate || '';
+                const valGender = saved.gender || '';
+                const valId = saved.idNumber || '';
 
                 section.innerHTML = `
                     <div class="kfs-attendee-header">
                         <b style="font-size:12px; color:#064b3e;">{{ __('Runner') }} #${tNum} (${race.distance} · ${t.kit === 'full' ? '{{ __('Full Kit') }}' : '{{ __('Basic Kit') }}'})</b>
-                        <small style="color:#6b8278;">{{ __('Ticket') }} #${tNum}</small>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <small style="color:#6b8278;">{{ __('Ticket') }} #${tNum}</small>
+                            <button type="button" class="kfs-ticket-remove-btn" data-remove-ticket="${t.id}" title="{{ __('Remove ticket') }}">✕ {{ __('Remove ticket') }}</button>
+                        </div>
                     </div>
                     <div class="form-grid two-col">
                         <label>{{ __('First name') }} <b>*</b>
                             <div class="kfs-field-wrap">
-                                <input required name="runners[${idx + 1}][firstName]" id="input-firstName-${tNum}" autocomplete="given-name" placeholder="{{ __('First name') }}">
+                                <input required name="runners[${idx + 1}][firstName]" id="input-firstName-${tNum}" autocomplete="given-name" placeholder="{{ __('First name') }}" value="${escapeHtml(valFn)}">
                                 <span class="kfs-validation-badge">✓</span>
                             </div>
                         </label>
                         <label>{{ __('Last name') }} <b>*</b>
                             <div class="kfs-field-wrap">
-                                <input required name="runners[${idx + 1}][lastName]" id="input-lastName-${tNum}" autocomplete="family-name" placeholder="{{ __('Last name') }}">
+                                <input required name="runners[${idx + 1}][lastName]" id="input-lastName-${tNum}" autocomplete="family-name" placeholder="{{ __('Last name') }}" value="${escapeHtml(valLn)}">
                                 <span class="kfs-validation-badge">✓</span>
                             </div>
                         </label>
                         <label>{{ __('Date of birth') }} <b>*</b>
                             <div class="kfs-field-wrap">
-                                <input required type="date" name="runners[${idx + 1}][birthDate]" id="input-birthDate-${tNum}" max="{{ now()->subDay()->toDateString() }}">
+                                <input required type="date" name="runners[${idx + 1}][birthDate]" id="input-birthDate-${tNum}" max="{{ now()->subDay()->toDateString() }}" value="${escapeHtml(valDob)}">
                                 <span class="kfs-validation-badge">✓</span>
                             </div>
                         </label>
@@ -491,8 +521,8 @@
                                 <span class="select-wrap">
                                     <select required name="runners[${idx + 1}][gender]" id="input-gender-${tNum}">
                                         <option value="">{{ __('Choose gender') }}</option>
-                                        <option value="male">{{ __('Male') }}</option>
-                                        <option value="female">{{ __('Female') }}</option>
+                                        <option value="male" ${valGender === 'male' ? 'selected' : ''}>{{ __('Male') }}</option>
+                                        <option value="female" ${valGender === 'female' ? 'selected' : ''}>{{ __('Female') }}</option>
                                     </select>
                                     <span>⌄</span>
                                 </span>
@@ -501,7 +531,7 @@
                         </label>
                         <label class="full-span">{{ __('ID / Passport number') }} <b>*</b>
                             <div class="kfs-field-wrap">
-                                <input required name="runners[${idx + 1}][idNumber]" id="input-idNumber-${tNum}" placeholder="{{ __('ID / Passport number') }}">
+                                <input required name="runners[${idx + 1}][idNumber]" id="input-idNumber-${tNum}" placeholder="{{ __('ID / Passport number') }}" value="${escapeHtml(valId)}">
                                 <span class="kfs-validation-badge">✓</span>
                             </div>
                         </label>
@@ -511,6 +541,20 @@
                     <input type="hidden" name="runners[${idx + 1}][shirtSize]" value="${t.shirtSize || ''}">
                 `;
                 extraAttendeesContainer.appendChild(section);
+
+                // Attach live field validation listeners to dynamic fields
+                const fn = section.querySelector(`#input-firstName-${tNum}`);
+                const ln = section.querySelector(`#input-lastName-${tNum}`);
+                const dob = section.querySelector(`#input-birthDate-${tNum}`);
+                const gen = section.querySelector(`#input-gender-${tNum}`);
+                const idn = section.querySelector(`#input-idNumber-${tNum}`);
+
+                const checkField = (el, valid) => window.kfsSetFieldState?.(el, valid, (el?.value?.length || 0) > 0);
+                if (fn) { fn.addEventListener('input', () => checkField(fn, fn.value.trim().length >= 2)); fn.addEventListener('blur', () => checkField(fn, fn.value.trim().length >= 2)); }
+                if (ln) { ln.addEventListener('input', () => checkField(ln, ln.value.trim().length >= 2)); ln.addEventListener('blur', () => checkField(ln, ln.value.trim().length >= 2)); }
+                if (dob) { dob.addEventListener('change', () => checkField(dob, !!dob.value && new Date(dob.value) < new Date())); }
+                if (gen) { gen.addEventListener('change', () => checkField(gen, !!gen.value)); }
+                if (idn) { idn.addEventListener('input', () => checkField(idn, idn.value.trim().length >= 4)); idn.addEventListener('blur', () => checkField(idn, idn.value.trim().length >= 4)); }
             });
         }
 
@@ -550,14 +594,17 @@
             });
         });
 
+        // Wire remove ticket buttons (strictly extra tickets only, never Ticket #1)
         document.querySelectorAll('[data-remove-ticket]').forEach(btn => {
-            btn.addEventListener('click', e => {
+            btn.onclick = e => {
+                e.preventDefault();
                 const tid = Number(btn.dataset.removeTicket);
+                if (!tid || tid === tickets[0]?.id) return;
                 tickets = tickets.filter(item => item.id !== tid);
                 renderTickets();
                 render();
                 window.kfsToast?.('{{ __('Remove ticket') }} ✓', 'info');
-            });
+            };
         });
     }
 
@@ -652,11 +699,27 @@
                         <strong>{{ __('Runner') }} #${i + 1}:</strong> <span id="review-runner-name-${i + 1}">—</span>
                         <div style="font-size:10px; color:#688075; margin-top:2px;">${r.name} (${r.distance}) · ${kName} ${t.shirtSize ? `· Size ${t.shirtSize}` : ''}</div>
                     </div>
-                    <b>${price(getTicketPrice(t))}</b>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <b>${price(getTicketPrice(t))}</b>
+                        ${i > 0 ? `<button type="button" class="kfs-ticket-remove-btn" data-remove-ticket="${t.id}" title="{{ __('Remove ticket') }}" style="padding:2px 8px; font-size:10px;">✕ {{ __('Remove') }}</button>` : ''}
+                    </div>
                 `;
                 reviewList.appendChild(row);
             });
         }
+
+        // Wire remove ticket buttons across all steps (strictly extra tickets only, never Ticket #1)
+        document.querySelectorAll('[data-remove-ticket]').forEach(btn => {
+            btn.onclick = e => {
+                e.preventDefault();
+                const tid = Number(btn.dataset.removeTicket);
+                if (!tid || tid === tickets[0]?.id) return;
+                tickets = tickets.filter(item => item.id !== tid);
+                renderTickets();
+                render();
+                window.kfsToast?.('{{ __('Remove ticket') }} ✓', 'info');
+            };
+        });
     }
 
     // Add another ticket button click
@@ -973,8 +1036,8 @@
         }
 
         // If multiple tickets, ensure runner[0] & buyer inputs are populated
+        let hiddenContainer = document.getElementById('hidden-runner-0-inputs');
         if (tickets.length > 1) {
-            let hiddenContainer = document.getElementById('hidden-runner-0-inputs');
             if (!hiddenContainer) {
                 hiddenContainer = document.createElement('div');
                 hiddenContainer.id = 'hidden-runner-0-inputs';
@@ -996,6 +1059,8 @@
                 <input type="hidden" name="buyerEmail" value="${document.getElementById('input-email')?.value || ''}">
                 <input type="hidden" name="buyerPhone" value="${document.getElementById('input-phone')?.value || ''}">
             `;
+        } else if (hiddenContainer) {
+            hiddenContainer.remove();
         }
     });
 
