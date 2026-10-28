@@ -199,14 +199,29 @@
                                     </div>
                                 </label>
                             </div>
+
+                            <!-- Runner #1 Document Upload -->
+                            <div class="kfs-runner-doc-wrap" style="margin-top:16px; padding-top:14px; border-top:1px dashed #dce8e1;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                    <span style="font-size:11px; font-weight:800; color:#064b3e; display:flex; align-items:center; gap:6px;">
+                                        <span>⇧</span> {{ __('Runner document') }}
+                                    </span>
+                                    <small style="color:#778b82; font-size:10px;">{{ __('Optional') }}</small>
+                                </div>
+                                <label class="upload-drop" id="upload-drop-1">
+                                    <input type="file" name="idFile" id="runner-1-doc-file" class="kfs-runner-doc-file" data-runner-target="file-name-1" accept="image/jpeg,image/png,application/pdf">
+                                    <span class="upload-icon">⇧</span>
+                                    <span>
+                                        <b id="file-name-1">{{ __('Upload ID / passport (optional)') }}</b>
+                                        <small>{{ __('JPG, PNG or PDF · Max 2 MB') }}</small>
+                                    </span>
+                                </label>
+                            </div>
                         </div>
 
                         <!-- Extra Attendees Injected Dynamically for Runners #2+ -->
                         <div id="extra-attendees-list"></div>
                     </div>
-
-                    <div class="form-section-heading section-heading-spaced"><span>⇧</span><span>{{ __('Runner document') }}</span><small>{{ __('Optional') }}</small></div>
-                    <label class="upload-drop"><input type="file" name="idFile" accept="image/jpeg,image/png,application/pdf"><span class="upload-icon">⇧</span><span><b id="file-name">{{ __('Upload ID / passport (optional)') }}</b><small>{{ __('JPG, PNG or PDF · Max 2 MB') }}</small></span></label>
 
                     <div class="team-select-group" style="margin-top:20px;">
                         <label class="team-name-label" style="display:block; font-weight:700; font-size:12px; color:#064b3e; margin-bottom:8px;">
@@ -534,6 +549,22 @@
                                 <input required name="runners[${idx + 1}][idNumber]" id="input-idNumber-${tNum}" placeholder="{{ __('ID / Passport number') }}" value="${escapeHtml(valId)}">
                                 <span class="kfs-validation-badge">✓</span>
                             </div>
+                        </label>
+                    </div>
+                    <div class="kfs-runner-doc-wrap" style="margin-top:16px; padding-top:14px; border-top:1px dashed #dce8e1;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span style="font-size:11px; font-weight:800; color:#064b3e; display:flex; align-items:center; gap:6px;">
+                                <span>⇧</span> {{ __('Runner document') }}
+                            </span>
+                            <small style="color:#778b82; font-size:10px;">{{ __('Optional') }}</small>
+                        </div>
+                        <label class="upload-drop" id="upload-drop-${tNum}">
+                            <input type="file" name="runners[${idx + 1}][idFile]" id="runner-${tNum}-doc-file" class="kfs-runner-doc-file" data-runner-target="file-name-${tNum}" accept="image/jpeg,image/png,application/pdf">
+                            <span class="upload-icon">⇧</span>
+                            <span>
+                                <b id="file-name-${tNum}">{{ __('Upload ID / passport (optional)') }}</b>
+                                <small>{{ __('JPG, PNG or PDF · Max 2 MB') }}</small>
+                            </span>
                         </label>
                     </div>
                     <input type="hidden" name="runners[${idx + 1}][race]" value="${t.race}">
@@ -1059,8 +1090,48 @@
                 <input type="hidden" name="buyerEmail" value="${document.getElementById('input-email')?.value || ''}">
                 <input type="hidden" name="buyerPhone" value="${document.getElementById('input-phone')?.value || ''}">
             `;
-        } else if (hiddenContainer) {
-            hiddenContainer.remove();
+
+            const r1File = document.getElementById('runner-1-doc-file');
+            if (r1File) {
+                r1File.name = 'runners[0][idFile]';
+            }
+        } else {
+            if (hiddenContainer) {
+                hiddenContainer.remove();
+            }
+            const r1File = document.getElementById('runner-1-doc-file');
+            if (r1File) {
+                r1File.name = 'idFile';
+            }
+        }
+    });
+
+    // Delegated file upload listener for all runner document inputs
+    document.addEventListener('change', event => {
+        if (event.target && event.target.classList.contains('kfs-runner-doc-file')) {
+            const input = event.target;
+            const targetId = input.dataset.runnerTarget;
+            const label = document.getElementById(targetId);
+            if (label) {
+                if (input.files && input.files.length > 0) {
+                    const file = input.files[0];
+                    if (file.size > 2 * 1024 * 1024) {
+                        alert('{{ __('File is too large. Maximum size is 2 MB.') }}');
+                        input.value = '';
+                        label.textContent = '{{ __('Upload ID / passport (optional)') }}';
+                        label.style.color = '';
+                        return;
+                    }
+                    const sizeKb = Math.round(file.size / 1024);
+                    const sizeStr = sizeKb > 1024 ? (sizeKb / 1024).toFixed(1) + ' MB' : sizeKb + ' KB';
+                    label.textContent = `✓ ${file.name} (${sizeStr})`;
+                    label.style.color = '#064b3e';
+                } else {
+                    label.textContent = '{{ __('Upload ID / passport (optional)') }}';
+                    label.style.color = '';
+                }
+            }
+>>>>>>> 37e380f (feat: enable document upload inside each individual runner card for multi-ticket and single registrations)
         }
     });
 

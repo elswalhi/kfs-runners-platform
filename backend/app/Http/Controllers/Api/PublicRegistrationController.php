@@ -73,6 +73,7 @@ class PublicRegistrationController extends Controller
             'promoCode' => ['nullable', 'string', 'max:64'],
             'terms' => ['accepted'],
             'idFile' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
+            'runners.*.idFile' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
         ]);
 
         $normalizedPhone = $this->normalizeEgyptianMobile($validated['phone']);
@@ -114,7 +115,7 @@ class PublicRegistrationController extends Controller
             $finalAmount = max(0.00, round($originalAmount - $discountAmount, 2));
         }
 
-        $documentPath = $request->file('idFile')?->store('runner-documents', 'local');
+        $documentPath = ($request->file('runners.0.idFile') ?? $request->file('idFile'))?->store('runner-documents', 'local');
 
         // Handle 100% Free Registration (discount reduces price to 0)
         if ($finalAmount == 0.00) {
@@ -315,6 +316,8 @@ class PublicRegistrationController extends Controller
             'runners.*.race' => ['required', 'string', 'exists:races,slug'],
             'runners.*.kit' => ['required', Rule::in(['full', 'basic'])],
             'runners.*.shirtSize' => ['nullable', Rule::in(['S', 'M', 'L', 'XL', 'XXL'])],
+            'runners.*.idFile' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
+            'idFile' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
             'teamName' => ['nullable', 'string', 'max:150'],
             'promoCode' => ['nullable', 'string', 'max:64'],
             'terms' => ['accepted'],
@@ -384,11 +387,11 @@ class PublicRegistrationController extends Controller
         }
 
         // Database transaction: Create Team, Registrations, Payment
-        $team = DB::transaction(function () use ($validated, $buyerName, $runnerItems, $originalAmount, $discountAmount, $finalAmount, $promo) {
+        $team = DB::transaction(function () use ($request, $validated, $buyerName, $runnerItems, $originalAmount, $discountAmount, $finalAmount, $promo) {
             $isPaid = ($finalAmount == 0.00);
 
             $team = Team::query()->create([
-                'name' => $validated['teamName'] ?: ($buyerName . ' Group (' . count($runnerItems) . ' Runners)'),
+                'name' => ($validated['teamName'] ?? null) ?: ($buyerName . ' Group (' . count($runnerItems) . ' Runners)'),
                 'contact_name' => $buyerName,
                 'email' => $validated['buyerEmail'],
                 'phone' => $validated['buyerPhone'],
@@ -398,12 +401,15 @@ class PublicRegistrationController extends Controller
 
             $discountPerRunner = count($runnerItems) > 0 ? round($discountAmount / count($runnerItems), 2) : 0.00;
 
-            foreach ($runnerItems as $item) {
+            foreach ($runnerItems as $index => $item) {
                 $r = $item['runner'];
                 $runnerPhone = !empty($r['phone']) ? ($this->normalizeEgyptianMobile($r['phone']) ?? $validated['buyerPhone']) : $validated['buyerPhone'];
                 $runnerEmail = !empty($r['email']) ? $r['email'] : $validated['buyerEmail'];
                 $rDiscount = min($item['amount'], $discountPerRunner);
                 $rFinalAmount = max(0.00, round($item['amount'] - $rDiscount, 2));
+
+                $runnerDoc = $request->file("runners.{$index}.idFile") ?: ($index === 0 ? $request->file('idFile') : null);
+                $documentPath = $runnerDoc?->store('runner-documents', 'local');
 
                 Registration::query()->create([
                     'registration_code' => $this->newCode(),
@@ -421,6 +427,7 @@ class PublicRegistrationController extends Controller
                     'id_number' => $r['idNumber'],
                     'shirt_size' => $r['kit'] === 'full' ? ($r['shirtSize'] ?? null) : null,
                     'team_name' => $team->name,
+                    'document_path' => $documentPath,
                     'status' => $isPaid ? 'confirmed' : 'pending',
                     'payment_status' => $isPaid ? 'paid' : 'pending',
                     'amount' => $rFinalAmount,

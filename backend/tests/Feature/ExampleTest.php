@@ -192,4 +192,83 @@ class ExampleTest extends TestCase
         $response->assertSee('https://lh3.googleusercontent.com/d/1F3Y7lXkqGW2LfYSyeCCZ0qLiuszDDmSi');
         $response->assertSee('https://drive.google.com/drive/folders/1-Wje_0tqu3YtWpJkQ_FgloPwwNxx8_sN');
     }
+
+    public function test_multi_runner_registration_stores_document_for_each_runner(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('local');
+
+        $race = \App\Models\Race::create([
+            'name' => '10 KM Race',
+            'slug' => '10k-doc-test',
+            'distance_label' => '10 KM',
+            'distance_km' => 10,
+            'is_active' => true,
+            'sort_order' => 1,
+        ]);
+
+        \App\Models\RaceKitPrice::create([
+            'race_id' => $race->id,
+            'kit_type' => 'basic',
+            'price' => 200,
+            'currency' => 'EGP',
+            'is_active' => true,
+        ]);
+
+        $promo = \App\Models\PromoCode::create([
+            'code' => 'FREE100DOC',
+            'discount_type' => 'percentage',
+            'discount_value' => 100,
+            'is_active' => true,
+        ]);
+
+        $file1 = \Illuminate\Http\UploadedFile::fake()->create('runner1_id.jpg', 120, 'image/jpeg');
+        $file2 = \Illuminate\Http\UploadedFile::fake()->create('runner2_id.png', 180, 'image/png');
+
+        $response = $this->post('/api/registrations', [
+            'buyerFirstName' => 'Tarek',
+            'buyerLastName' => 'Ali',
+            'buyerEmail' => 'tarek@example.com',
+            'buyerPhone' => '01011112222',
+            'promoCode' => 'FREE100DOC',
+            'terms' => '1',
+            'runners' => [
+                [
+                    'firstName' => 'Tarek',
+                    'lastName' => 'Ali',
+                    'email' => 'tarek@example.com',
+                    'phone' => '01011112222',
+                    'birthDate' => '1995-05-15',
+                    'gender' => 'male',
+                    'idNumber' => '29505151234567',
+                    'race' => '10k-doc-test',
+                    'kit' => 'basic',
+                    'idFile' => $file1,
+                ],
+                [
+                    'firstName' => 'Ahmed',
+                    'lastName' => 'Ali',
+                    'email' => 'ahmed@example.com',
+                    'phone' => '01033334444',
+                    'birthDate' => '1998-08-20',
+                    'gender' => 'male',
+                    'idNumber' => '29808201234567',
+                    'race' => '10k-doc-test',
+                    'kit' => 'basic',
+                    'idFile' => $file2,
+                ],
+            ],
+        ]);
+
+        $response->assertStatus(201);
+
+        $reg1 = \App\Models\Registration::where('first_name', 'Tarek')->first();
+        $this->assertNotNull($reg1);
+        $this->assertNotNull($reg1->document_path);
+        \Illuminate\Support\Facades\Storage::disk('local')->assertExists($reg1->document_path);
+
+        $reg2 = \App\Models\Registration::where('first_name', 'Ahmed')->first();
+        $this->assertNotNull($reg2);
+        $this->assertNotNull($reg2->document_path);
+        \Illuminate\Support\Facades\Storage::disk('local')->assertExists($reg2->document_path);
+    }
 }

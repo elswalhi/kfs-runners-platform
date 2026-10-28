@@ -91,6 +91,7 @@
     "Optional": "اختياري",
     "Upload ID \/ passport (optional)": "رفع صورة بطاقة الرقم القومي أو جواز السفر (اختياري)",
     "JPG, PNG or PDF · Max 2 MB": "ملفات JPG أو PNG أو PDF بحد أقصى 2 ميجابايت",
+    "File is too large. Maximum size is 2 MB.": "حجم الملف كبير جداً. الحد الأقصى المسموح به هو 2 ميجابايت.",
     "Team \/ running club": "اسم الفريق \/ نادي الجري",
     "Promo code or voucher": "كود الخصم (البروموكود) أو القسيمة",
     "Apply": "تطبيق",
