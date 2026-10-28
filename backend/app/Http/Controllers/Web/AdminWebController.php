@@ -378,9 +378,8 @@ class AdminWebController
         $raceDate = AppSetting::get('race_date', '2026-11-20');
         $raceTime = AppSetting::get('race_time', '07:00');
         $countdownEnabled = (bool) AppSetting::get('countdown_enabled', true);
-        $siteTheme = AppSetting::get('site_theme', 'original');
 
-        return view('admin.event-settings', compact('raceDate', 'raceTime', 'countdownEnabled', 'siteTheme'));
+        return view('admin.event-settings', compact('raceDate', 'raceTime', 'countdownEnabled'));
     }
 
     public function updateEventSettings(Request $request)
@@ -389,18 +388,14 @@ class AdminWebController
             'race_date' => ['required', 'date_format:Y-m-d'],
             'race_time' => ['required', 'string', 'max:10'],
             'countdown_enabled' => ['nullable'],
-            'site_theme' => ['nullable', 'string', 'in:teal_gold,original'],
         ]);
 
         AppSetting::set('race_date', $data['race_date']);
         AppSetting::set('race_time', $data['race_time']);
         AppSetting::set('countdown_enabled', $request->boolean('countdown_enabled'));
-        if (! empty($data['site_theme'])) {
-            AppSetting::set('site_theme', $data['site_theme']);
-            session(['site_theme' => $data['site_theme']]);
-        }
+        AppSetting::set('site_theme', 'original');
 
-        return back()->with('success', __('Settings and color theme updated successfully!'));
+        return back()->with('success', __('Race date and countdown updated successfully!'));
     }
 
     public function siteMedia()

@@ -1,18 +1,15 @@
 @php
-    $themeReq = request('theme');
-    if ($themeReq && in_array($themeReq, ['teal_gold', 'original', 'new'], true)) {
-        session(['site_theme' => ($themeReq === 'new' ? 'teal_gold' : $themeReq)]);
+    if (session()->has('site_theme')) {
+        session()->forget('site_theme');
     }
-    $siteTheme = session('site_theme', \App\Models\AppSetting::get('site_theme', 'original'));
-    $isTealGold = ($siteTheme === 'teal_gold');
 @endphp
 <!doctype html>
-<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}" data-theme="{{ $isTealGold ? 'teal-gold' : 'original' }}">
+<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="theme-color" content="{{ $isTealGold ? '#0D2B3A' : '#064b3e' }}">
+    <meta name="theme-color" content="#064b3e">
     <script>
         (function() {
             try {
@@ -43,8 +40,7 @@
     <link rel="stylesheet" href="{{ asset('css/kfs-interactive.css') }}?v=20261027-mobile-1">
     <link rel="stylesheet" href="{{ asset('css/kfs-hero-video.css') }}">
     <link rel="stylesheet" href="{{ asset('css/kfs-brand.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/kfs-theme-palette.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/kfs-dark-mode.css') }}?v=20261028-1">
+    <link rel="stylesheet" href="{{ asset('css/kfs-dark-mode.css') }}?v=20261028-2">
     <style>
         [dir="rtl"] body {
             font-family: 'Cairo', 'Inter', sans-serif;
@@ -86,7 +82,7 @@
     </style>
     @stack('styles')
 </head>
-<body class="{{ $isTealGold ? 'theme-teal-gold' : 'theme-original' }}">
+<body>
 <header class="site-header">
     <div class="header-inner wrap">
         <a href="{{ route('home') }}" class="brand-link" aria-label="KFS Runners home">

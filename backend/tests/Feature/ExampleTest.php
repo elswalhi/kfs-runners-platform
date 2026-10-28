@@ -276,36 +276,10 @@ class ExampleTest extends TestCase
     {
         $response = $this->get('/');
         $response->assertStatus(200);
-        $response->assertSee('data-theme="original"', false);
-        $response->assertSee('theme-original', false);
         $response->assertSee('kfs-dark-mode.css', false);
         $response->assertSee('theme-toggle-btn', false);
         $response->assertSee('id="theme-toggle-btn"', false);
         $response->assertSee('id="theme-toggle-mobile-menu"', false);
-
-        // Can switch to teal_gold via query param
-        $responseTeal = $this->get('/?theme=teal_gold');
-        $responseTeal->assertStatus(200);
-        $responseTeal->assertSee('data-theme="teal-gold"', false);
-        $responseTeal->assertSee('theme-teal-gold', false);
-    }
-
-    public function test_admin_can_update_site_theme(): void
-    {
-        $admin = \App\Models\User::factory()->create([
-            'role' => 'admin',
-        ]);
-
-        $response = $this->actingAs($admin)
-            ->from('/admin/event-settings')
-            ->post('/admin/event-settings', [
-                'race_date' => '2026-11-20',
-                'race_time' => '07:00',
-                'countdown_enabled' => '1',
-                'site_theme' => 'original',
-            ]);
-
-        $response->assertRedirect('/admin/event-settings');
-        $this->assertSame('original', \App\Models\AppSetting::get('site_theme'));
+        $response->assertDontSee('kfs-theme-palette.css', false);
     }
 }
