@@ -529,14 +529,66 @@ html.dark .kfs-step-item.active {
 html.dark .registration-form-col,
 html.dark .order-card,
 html.dark .need-help-card {
-    background: #121e1a !important;
-    border-color: #223830 !important;
-    box-shadow: 0 14px 45px rgba(0, 0, 0, 0.35) !important;
+    background: #101c18 !important;
+    border-color: #1e332b !important;
+    box-shadow: 0 14px 45px rgba(0, 0, 0, 0.45) !important;
     color: #f1f6f3 !important;
 }
 
+/* ==========================================================================
+   Ticket Cards & Attendee Cards in Dark Mode
+   ========================================================================== */
+html.dark .kfs-ticket-card,
+html.dark .kfs-attendee-section {
+    background: #14231e !important;
+    border: 1px solid #233930 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35) !important;
+    color: #f1f6f3 !important;
+}
+
+html.dark .kfs-ticket-card:hover {
+    border-color: #10b981 !important;
+}
+
+html.dark .kfs-ticket-header,
+html.dark .kfs-attendee-header {
+    border-bottom: 1px dashed #243a31 !important;
+}
+
+html.dark .kfs-ticket-badge {
+    color: #10b981 !important;
+    font-weight: 800;
+}
+
+html.dark .kfs-ticket-price,
+html.dark .kfs-ticket-header b,
+html.dark [id^="ticket-price-"] {
+    color: #10b981 !important;
+}
+
+html.dark .kfs-attendee-title,
+html.dark .kfs-attendee-header b {
+    color: #10b981 !important;
+}
+
+html.dark .kfs-attendee-badge,
+html.dark .kfs-attendee-header small {
+    background: #19382b !important;
+    color: #6ee7b7 !important;
+    border: 1px solid #23523d !important;
+}
+
+html.dark .form-section-heading {
+    color: #f1f6f3 !important;
+}
+
+html.dark .form-section-heading span:first-child {
+    color: #ff3b4b !important;
+}
+
 html.dark .form-title-row {
-    border-bottom-color: #223830 !important;
+    border-bottom-color: #1e332b !important;
 }
 
 html.dark .form-title-row h2 {
@@ -555,8 +607,8 @@ html.dark .team-name-label {
 html.dark .form-grid input,
 html.dark .team-name-label input,
 html.dark .select-wrap select {
-    background: #16241f !important;
-    border-color: #283e35 !important;
+    background: #192b23 !important;
+    border-color: #273e35 !important;
     color: #f1f6f3 !important;
 }
 
@@ -576,28 +628,41 @@ html.dark .select-wrap svg {
     color: #8da49a !important;
 }
 
-html.dark .race-select-card {
-    background: #16241f !important;
-    border-color: #283e35 !important;
+/* Inner selection cards (Race and Kit) */
+html.dark .race-select-card,
+html.dark .kit-select-card {
+    background: #192b23 !important;
+    border: 1px solid #273e35 !important;
     color: #f1f6f3 !important;
 }
 
-html.dark .race-select-card:hover {
+html.dark .race-select-card:hover,
+html.dark .kit-select-card:hover {
+    background: #1e352b !important;
     border-color: #10b981 !important;
     transform: translateY(-2px);
 }
 
-html.dark .race-select-card.selected {
-    background: #1a3028 !important;
+html.dark .race-select-card.selected,
+html.dark .kit-select-card.selected {
+    background: #1b3d2f !important;
     border-color: #10b981 !important;
     box-shadow: inset 0 0 0 1px #10b981 !important;
 }
 
-html.dark .select-distance {
+html.dark .select-distance,
+html.dark .kit-price {
     color: #10b981 !important;
 }
 
-html.dark .race-select-card > small {
+html.dark .race-select-card strong,
+html.dark .kit-select-card strong {
+    color: #f1f6f3 !important;
+}
+
+html.dark .race-select-card > small,
+html.dark .kit-select-card > small,
+html.dark .kit-select-card li {
     color: #8da49a !important;
 }
 
@@ -608,30 +673,6 @@ html.dark .radio-empty {
 html.dark .race-select-check,
 html.dark .kit-check {
     color: #10b981 !important;
-}
-
-html.dark .kit-select-card {
-    background: #16241f !important;
-    border-color: #283e35 !important;
-    color: #f1f6f3 !important;
-}
-
-html.dark .kit-select-card.selected {
-    background: #1a3028 !important;
-    border-color: #10b981 !important;
-    box-shadow: inset 0 0 0 1px #10b981 !important;
-}
-
-html.dark .kit-select-card > strong {
-    color: #f1f6f3 !important;
-}
-
-html.dark .kit-select-card > small {
-    color: #8da49a !important;
-}
-
-html.dark .kit-select-card li {
-    color: #8da49a !important;
 }
 
 html.dark .kit-select-card li svg {
@@ -820,6 +861,102 @@ html.dark .need-help-card p {
 html.dark .need-help-card .text-link {
     color: #10b981 !important;
     border-bottom-color: #10b981 !important;
+}
+
+/* Multi-Ticket & Review Step elements */
+html.dark .kfs-add-ticket-btn {
+    background: #14231e !important;
+    border: 2px dashed #263e34 !important;
+    color: #10b981 !important;
+}
+
+html.dark .kfs-add-ticket-btn:hover {
+    background: #192b23 !important;
+    border-color: #10b981 !important;
+    color: #34d399 !important;
+}
+
+html.dark .kfs-copy-main-btn {
+    background: #192b23 !important;
+    border-color: #273f35 !important;
+    color: #10b981 !important;
+}
+
+html.dark .kfs-copy-main-btn:hover {
+    background: #064b3e !important;
+    border-color: #10b981 !important;
+    color: #ffffff !important;
+}
+
+html.dark .kfs-ticket-remove-btn {
+    background: #2b1517 !important;
+    border: 1px solid #4b2326 !important;
+    color: #f87171 !important;
+}
+
+html.dark .kfs-ticket-remove-btn:hover {
+    background: #dc2626 !important;
+    color: #ffffff !important;
+}
+
+html.dark .kfs-ticket-race-select,
+html.dark .kfs-ticket-kit-select,
+html.dark .kfs-ticket-size-select {
+    background: #192b23 !important;
+    border: 1px solid #273e35 !important;
+    color: #f1f6f3 !important;
+}
+
+html.dark .kfs-buyer-preview-box,
+html.dark div[style*="background:#f4f8f5"],
+html.dark div[style*="background: #f4f8f5"] {
+    background: #14231e !important;
+    border: 1px solid #233930 !important;
+    color: #f1f6f3 !important;
+}
+
+html.dark .kfs-buyer-badge {
+    color: #10b981 !important;
+}
+
+html.dark .kfs-buyer-details,
+html.dark .kfs-buyer-details b {
+    color: #f1f6f3 !important;
+}
+
+html.dark .kfs-order-items-list {
+    margin: 14px 0;
+}
+
+html.dark .kfs-order-item-row {
+    background: #192b23 !important;
+    border: 1px solid #273e35 !important;
+    color: #f1f6f3 !important;
+}
+
+html.dark .kfs-order-item-row b {
+    color: #10b981 !important;
+}
+
+html.dark .promo-code-box,
+html.dark div[style*="background:#f8faf9"],
+html.dark div[style*="background: #f8faf9"] {
+    background: #14231e !important;
+    border: 1px solid #233930 !important;
+    color: #f1f6f3 !important;
+}
+
+html.dark #promo-code-input {
+    background: #192b23 !important;
+    border: 1px solid #273e35 !important;
+    color: #10b981 !important;
+}
+
+html.dark #team-name-select,
+html.dark #other-team-input {
+    background: #192b23 !important;
+    border: 1px solid #283e35 !important;
+    color: #f1f6f3 !important;
 }
 
 /* --------------------------------------------------------------------------

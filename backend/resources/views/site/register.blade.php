@@ -83,7 +83,7 @@
                         <div class="kfs-ticket-card" id="ticket-card-1">
                             <div class="kfs-ticket-header">
                                 <span class="kfs-ticket-badge">🎟 {{ __('Runner') }} #1 ({{ __('Main contact & buyer') }})</span>
-                                <span class="kfs-ticket-price" id="ticket-price-1" style="font-weight:900; color:#064b3e;">—</span>
+                                <span class="kfs-ticket-price" id="ticket-price-1" style="font-weight:900;">—</span>
                             </div>
 
                             <div class="form-section-heading" style="margin-top:0;"><span>◇</span><span>{{ __('Choose your race') }}</span></div>
@@ -144,8 +144,8 @@
                         <!-- Runner 1 Attendee Card (Main Contact & Buyer) -->
                         <div class="kfs-attendee-section" id="attendee-card-1">
                             <div class="kfs-attendee-header">
-                                <b style="font-size:12px; color:#064b3e;">{{ __('Runner') }} #1 ({{ __('Main contact & buyer') }} · <span id="attendee-race-label-1">—</span>)</b>
-                                <small style="color:#137333; font-weight:700; background:#e6f4ea; padding:3px 8px; border-radius:4px;">{{ __('Receives payment confirmation & e-tickets') }}</small>
+                                <b class="kfs-attendee-title" style="font-size:12px;">{{ __('Runner') }} #1 ({{ __('Main contact & buyer') }} · <span id="attendee-race-label-1">—</span>)</b>
+                                <small class="kfs-attendee-badge" style="font-weight:700; padding:3px 8px; border-radius:4px;">{{ __('Receives payment confirmation & e-tickets') }}</small>
                             </div>
                             <div class="form-grid two-col">
                                 <label>{{ __('First name') }} <b>*</b>
@@ -266,12 +266,12 @@
                     </div>
 
                     <!-- Primary Contact Preview -->
-                    <div style="background:#f4f8f5; border:1px solid #dce8e1; border-radius:10px; padding:16px 20px; margin-top:16px;">
+                    <div class="kfs-buyer-preview-box" style="border:1px solid #dce8e1; border-radius:10px; padding:16px 20px; margin-top:16px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                            <span style="font-size:10px; font-weight:800; letter-spacing:1px; color:#064b3e; text-transform:uppercase;">{{ __('Main contact & buyer') }}</span>
+                            <span class="kfs-buyer-badge" style="font-size:10px; font-weight:800; letter-spacing:1px; text-transform:uppercase;">{{ __('Main contact & buyer') }}</span>
                             <button type="button" id="edit-buyer-btn" style="background:none; border:none; color:#ed1b2f; font-size:11px; font-weight:800; cursor:pointer;">✎ {{ __('Edit') }}</button>
                         </div>
-                        <div style="display:flex; gap:20px; flex-wrap:wrap; font-size:11px; color:#113a30;">
+                        <div style="display:flex; gap:20px; flex-wrap:wrap; font-size:11px;" class="kfs-buyer-details">
                             <div><span style="color:#778b82;">{{ __('Name') }}:</span> <b id="review-buyer-name">—</b></div>
                             <div><span style="color:#778b82;">{{ __('Email address') }}:</span> <b id="review-buyer-email">—</b></div>
                             <div><span style="color:#778b82;">{{ __('Phone number') }}:</span> <b id="review-buyer-phone">—</b></div>
@@ -453,7 +453,7 @@
                     <div class="kfs-ticket-header">
                         <span class="kfs-ticket-badge">🎟 {{ __('Runner') }} #${tNum}</span>
                         <div style="display:flex; align-items:center; gap:12px;">
-                            <b style="font-weight:900; color:#064b3e;">${price(getTicketPrice(t))}</b>
+                            <b class="kfs-ticket-price" style="font-weight:900;">${price(getTicketPrice(t))}</b>
                             <button type="button" class="kfs-ticket-remove-btn" data-remove-ticket="${t.id}">✕ {{ __('Remove ticket') }}</button>
                         </div>
                     </div>
@@ -506,7 +506,7 @@
 
                 section.innerHTML = `
                     <div class="kfs-attendee-header">
-                        <b style="font-size:12px; color:#064b3e;">{{ __('Runner') }} #${tNum} (${race.distance} · ${t.kit === 'full' ? '{{ __('Full Kit') }}' : '{{ __('Basic Kit') }}'})</b>
+                        <b class="kfs-attendee-title" style="font-size:12px;">{{ __('Runner') }} #${tNum} (${race.distance} · ${t.kit === 'full' ? '{{ __('Full Kit') }}' : '{{ __('Basic Kit') }}'})</b>
                         <div style="display:flex; align-items:center; gap:10px;">
                             <small style="color:#6b8278;">{{ __('Ticket') }} #${tNum}</small>
                             <button type="button" class="kfs-ticket-remove-btn" data-remove-ticket="${t.id}" title="{{ __('Remove ticket') }}">✕ {{ __('Remove ticket') }}</button>

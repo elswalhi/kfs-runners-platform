@@ -40,7 +40,7 @@
     <link rel="stylesheet" href="{{ asset('css/kfs-interactive.css') }}?v=20261027-mobile-1">
     <link rel="stylesheet" href="{{ asset('css/kfs-hero-video.css') }}">
     <link rel="stylesheet" href="{{ asset('css/kfs-brand.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/kfs-dark-mode.css') }}?v=20261028-2">
+    <link rel="stylesheet" href="{{ asset('css/kfs-dark-mode.css') }}?v=20261028-3">
     <style>
         [dir="rtl"] body {
             font-family: 'Cairo', 'Inter', sans-serif;
