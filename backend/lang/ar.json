@@ -375,5 +375,11 @@
     "Could not find any photos in the provided Google Drive folder. Please ensure the folder sharing setting is set to \"Anyone with the link can view\".": "لم يتم العثور على أي صور في مجلد جوجل درايف. يرجى التأكد من ضبط إعداد المشاركة على \"أي شخص لديه الرابط يمكنه العرض\".",
     "All :count photos from Google Drive are already synced.": "جميع الصور البالغ عددها :count صورة من جوجل درايف تمت مزامنتها بالفعل.",
     "Synced :count photos from Google Drive. Event now has :total photos.": "تمت مزامنة :count صورة من جوجل درايف. إجمالي صور الفعالية الآن :total صورة.",
-    "Event details updated and :count photos synced from Google Drive.": "تم تحديث بيانات الفعالية ومزامنة :count صورة من جوجل درايف."
+    "Event details updated and :count photos synced from Google Drive.": "تم تحديث بيانات الفعالية ومزامنة :count صورة من جوجل درايف.",
+    "Website Color Theme": "مظهر وألوان الموقع",
+    "Teal & Ochre Gold": "تيل وذهبي ساحلي (البالتة الجديدة)",
+    "Original Forest & Red": "الأخضر الداكن والأحمر (الألوان الأصلية)",
+    "Theme": "المظهر",
+    "Theme Switcher": "تبديل مظهر وألوان الموقع",
+    "Save Settings & Color Theme": "حفظ الإعدادات والمظهر"
 }

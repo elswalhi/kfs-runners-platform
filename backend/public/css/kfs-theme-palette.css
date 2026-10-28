@@ -1,0 +1,411 @@
+/* ==========================================================================
+   KFS RUNNERS - COASTAL TEAL & OCHRE GOLD PALETTE (2026 SPECIAL EDITION)
+   Colors:
+     • Deep Petrol Navy: #0D2B3A
+     • Vibrant Teal:     #11797E
+     • Warm Ochre Gold:  #C9A15A
+     • Desert Cream:     #F2E6CE
+   ========================================================================== */
+
+:root[data-theme="teal-gold"],
+body.theme-teal-gold {
+    --green: #11797E;
+    --green-deep: #0D2B3A;
+    --green-ink: #0D2B3A;
+    --red: #C9A15A;
+    --red-dark: #b58c42;
+    --muted: #5a717b;
+    --line: #dfd7c9;
+    --white: #ffffff;
+    --paper: #FAF8F2;
+    --sand: #F2E6CE;
+    --shadow: 0 18px 50px rgba(13, 43, 58, 0.12);
+
+    /* Team Homepage Variables */
+    --team-green: #11797E;
+    --team-deep: #0D2B3A;
+    --team-ink: #0D2B3A;
+    --team-red: #C9A15A;
+    --team-paper: #FAF8F2;
+    --team-muted: #5a717b;
+
+    color: #0D2B3A;
+    background: #FAF8F2;
+}
+
+/* Page body background */
+body.theme-teal-gold {
+    background-color: #FAF8F2;
+}
+
+/* ================= HEADER & NAV ================= */
+body.theme-teal-gold .site-header {
+    background: rgba(250, 248, 242, 0.97);
+    border-bottom: 1px solid rgba(17, 121, 126, 0.12);
+}
+
+body.theme-teal-gold .main-nav > a:not(.nav-cta) {
+    color: #0D2B3A;
+}
+
+body.theme-teal-gold .main-nav > a:not(.nav-cta):hover,
+body.theme-teal-gold .main-nav > a.active {
+    color: #11797E;
+}
+
+body.theme-teal-gold .nav-cta,
+body.theme-teal-gold .btn-red,
+body.theme-teal-gold .form-submit {
+    background: #C9A15A !important;
+    color: #0D2B3A !important;
+    font-weight: 900 !important;
+    box-shadow: 0 8px 22px rgba(201, 161, 90, 0.28) !important;
+    border: none;
+}
+
+body.theme-teal-gold .nav-cta:hover,
+body.theme-teal-gold .btn-red:hover,
+body.theme-teal-gold .form-submit:hover {
+    background: #b58c42 !important;
+    color: #ffffff !important;
+    transform: translateY(-2px);
+}
+
+body.theme-teal-gold .lang-switch-btn {
+    border-color: #dfd7c9;
+    color: #0D2B3A;
+    background: #ffffff;
+}
+
+body.theme-teal-gold .lang-switch-btn:hover {
+    border-color: #11797E;
+    background: #e8f4f5;
+    color: #11797E;
+}
+
+body.theme-teal-gold .brand-mark {
+    border-color: #C9A15A;
+    color: #11797E;
+}
+
+/* ================= HERO SECTIONS ================= */
+body.theme-teal-gold .hero-section,
+body.theme-teal-gold .team-home-hero,
+body.theme-teal-gold .kfs-events-intro,
+body.theme-teal-gold .kfs-event-detail-hero,
+body.theme-teal-gold .register-hero {
+    background: #0D2B3A !important;
+    color: #ffffff;
+}
+
+body.theme-teal-gold .team-home-hero-bg {
+    background-image: linear-gradient(90deg, rgba(13, 43, 58, 0.95) 0%, rgba(13, 43, 58, 0.82) 58%, rgba(13, 43, 58, 0.50) 100%), var(--team-home-hero-img) !important;
+}
+
+body.theme-teal-gold .register-hero-bg {
+    background-image: linear-gradient(90deg, rgba(13, 43, 58, 0.96) 0%, rgba(13, 43, 58, 0.80) 55%, rgba(13, 43, 58, 0.48) 100%), url('https://media.elwatannews.com/media/img/mediaarc/large/10626156771729958774.jpg') !important;
+}
+
+body.theme-teal-gold .kfs-event-detail-shade {
+    background: linear-gradient(90deg, rgba(13, 43, 58, 0.92), rgba(13, 43, 58, 0.65) 58%, rgba(13, 43, 58, 0.30)), linear-gradient(0deg, rgba(13, 43, 58, 0.65), transparent 48%) !important;
+}
+
+body.theme-teal-gold .hero-text h1 span,
+body.theme-teal-gold .team-home-hero h1 span,
+body.theme-teal-gold .kfs-events-intro h1 span,
+body.theme-teal-gold .register-intro h1 span,
+body.theme-teal-gold .form-title-row h2 span,
+body.theme-teal-gold .order-card-heading h3 span {
+    color: #C9A15A !important;
+}
+
+body.theme-teal-gold .eyebrow-pill {
+    background: rgba(201, 161, 90, 0.14);
+    border-color: rgba(201, 161, 90, 0.35);
+    color: #F2E6CE;
+}
+
+body.theme-teal-gold .pulse-dot,
+body.theme-teal-gold .kfs-events-eyebrow span,
+body.theme-teal-gold .team-home-eyebrow span {
+    background: #C9A15A !important;
+    box-shadow: 0 0 0 5px rgba(201, 161, 90, 0.22) !important;
+}
+
+body.theme-teal-gold .team-home-eyebrow,
+body.theme-teal-gold .kfs-events-eyebrow {
+    color: #C9A15A !important;
+}
+
+/* ================= COUNTDOWN & EVENT ================= */
+body.theme-teal-gold .kfs-countdown-card {
+    background: rgba(13, 43, 58, 0.92) !important;
+    border: 1px solid rgba(201, 161, 90, 0.35) !important;
+}
+
+body.theme-teal-gold .kfs-countdown-num {
+    color: #C9A15A !important;
+}
+
+body.theme-teal-gold .kfs-countdown-lbl {
+    color: #F2E6CE !important;
+}
+
+body.theme-teal-gold .kfs-countdown-badge {
+    background: rgba(17, 121, 126, 0.25) !important;
+    color: #F2E6CE !important;
+    border-color: rgba(17, 121, 126, 0.45) !important;
+}
+
+/* ================= SECTIONS & CARDS ================= */
+body.theme-teal-gold .intro-strip,
+body.theme-teal-gold .team-home-about,
+body.theme-teal-gold .team-home-groups,
+body.theme-teal-gold .team-home-next,
+body.theme-teal-gold .included-section,
+body.theme-teal-gold .kfs-event-detail-content {
+    background: #FAF8F2;
+}
+
+body.theme-teal-gold .team-home-sports {
+    background: #F2E6CE;
+}
+
+body.theme-teal-gold .team-home-sport-card,
+body.theme-teal-gold .race-card,
+body.theme-teal-gold .registration-form-col,
+body.theme-teal-gold .order-card,
+body.theme-teal-gold .kfs-attendee-section,
+body.theme-teal-gold .kfs-ticket-card,
+body.theme-teal-gold .kfs-events-card {
+    background: #ffffff;
+    border-color: #dfd7c9;
+}
+
+body.theme-teal-gold .race-distance {
+    color: #0D2B3A !important;
+}
+
+body.theme-teal-gold .race-card:hover,
+body.theme-teal-gold .team-home-sport-card:hover,
+body.theme-teal-gold .kfs-events-card:hover {
+    border-color: #11797E;
+    box-shadow: 0 16px 38px rgba(13, 43, 58, 0.12);
+}
+
+body.theme-teal-gold .experience-section {
+    background: #0D2B3A !important;
+}
+
+body.theme-teal-gold .kit-info-card {
+    background: #FAF8F2;
+    color: #0D2B3A;
+}
+
+body.theme-teal-gold .kit-symbol {
+    background: #e8f4f5;
+    color: #11797E;
+}
+
+body.theme-teal-gold .kit-full .kit-symbol {
+    background: rgba(201, 161, 90, 0.15);
+    color: #C9A15A;
+}
+
+body.theme-teal-gold .kit-tag {
+    background: rgba(201, 161, 90, 0.15);
+    color: #9b772c;
+}
+
+body.theme-teal-gold .kit-basic .kit-tag {
+    background: #e8f4f5;
+    color: #11797E;
+}
+
+/* ================= REGISTRATION PAGE CARDS ================= */
+body.theme-teal-gold .race-select-card,
+body.theme-teal-gold .kit-select-card {
+    border-color: #dfd7c9;
+    background: #ffffff;
+}
+
+body.theme-teal-gold .race-select-card:hover,
+body.theme-teal-gold .kit-select-card:hover {
+    border-color: #11797E;
+    background: #f7fbfb;
+}
+
+body.theme-teal-gold .race-select-card.selected,
+body.theme-teal-gold .kit-select-card.selected {
+    border-color: #11797E !important;
+    background: #f0f7f7 !important;
+    box-shadow: 0 0 0 2px #11797E, 0 8px 24px rgba(17, 121, 126, 0.10) !important;
+}
+
+body.theme-teal-gold .race-select-card.selected::after,
+body.theme-teal-gold .kit-select-card.selected::after {
+    border-color: #11797E !important;
+    background: #11797E !important;
+}
+
+body.theme-teal-gold .shirt-size-choice.size-active {
+    background: #11797E !important;
+    border-color: #11797E !important;
+    color: #ffffff !important;
+}
+
+body.theme-teal-gold .kfs-step-item.active {
+    border-color: #11797E;
+    color: #11797E;
+}
+
+body.theme-teal-gold .kfs-step-num {
+    background: #e8f4f5;
+    color: #11797E;
+}
+
+body.theme-teal-gold .kfs-step-item.active .kfs-step-num {
+    background: #11797E;
+    color: #ffffff;
+}
+
+body.theme-teal-gold .form-section-heading {
+    color: #11797E !important;
+}
+
+body.theme-teal-gold .order-price-total {
+    background: #F2E6CE !important;
+    color: #0D2B3A !important;
+}
+
+body.theme-teal-gold .order-price-total span,
+body.theme-teal-gold .order-price-total strong {
+    color: #0D2B3A !important;
+}
+
+/* Mobile dock */
+body.theme-teal-gold .kfs-mobile-checkout-dock {
+    background: rgba(13, 43, 58, 0.98);
+    border-top: 1px solid rgba(201, 161, 90, 0.35);
+}
+
+body.theme-teal-gold .kfs-dock-btn {
+    background: #C9A15A !important;
+    color: #0D2B3A !important;
+    font-weight: 900 !important;
+}
+
+/* ================= CTA BAND & FOOTER ================= */
+body.theme-teal-gold .cta-band,
+body.theme-teal-gold .team-home-contact {
+    background: #0D2B3A !important;
+    color: #ffffff;
+}
+
+body.theme-teal-gold .cta-band h2 b {
+    color: #C9A15A !important;
+}
+
+body.theme-teal-gold .site-footer {
+    background: #091f2a !important;
+    color: #F2E6CE;
+}
+
+body.theme-teal-gold .footer-links a:hover {
+    color: #C9A15A !important;
+}
+
+body.theme-teal-gold .social-row a:hover {
+    background: #C9A15A !important;
+    border-color: #C9A15A !important;
+    color: #0D2B3A !important;
+}
+
+body.theme-teal-gold .footer-bottom {
+    border-top-color: rgba(242, 230, 206, 0.15) !important;
+}
+
+body.theme-teal-gold .footer-bottom-inner {
+    color: rgba(242, 230, 206, 0.55);
+}
+
+/* ================= FLOATING THEME PREVIEW BAR ================= */
+.kfs-theme-switcher-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: rgba(13, 43, 58, 0.94);
+    border: 1px solid rgba(201, 161, 90, 0.45);
+    border-radius: 999px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.28);
+    backdrop-filter: blur(10px);
+    font-size: 11px;
+    font-weight: 700;
+    color: #F2E6CE;
+    direction: ltr;
+}
+
+[dir="rtl"] .kfs-theme-switcher-bar {
+    left: auto;
+    right: 20px;
+    direction: rtl;
+}
+
+.kfs-theme-switcher-bar .theme-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    color: #C9A15A;
+    font-weight: 800;
+    margin-inline-end: 4px;
+}
+
+.kfs-theme-switcher-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.kfs-theme-switcher-btn.active {
+    background: #C9A15A;
+    color: #0D2B3A;
+    box-shadow: 0 2px 8px rgba(201, 161, 90, 0.35);
+}
+
+.kfs-theme-switcher-btn:not(.active) {
+    background: rgba(255, 255, 255, 0.1);
+    color: #F2E6CE;
+}
+
+.kfs-theme-switcher-btn:not(.active):hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(201, 161, 90, 0.4);
+    color: #ffffff;
+}
+
+@media (max-width: 600px) {
+    .kfs-theme-switcher-bar {
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        right: auto;
+    }
+    [dir="rtl"] .kfs-theme-switcher-bar {
+        left: 50%;
+        transform: translateX(-50%);
+        right: auto;
+    }
+}

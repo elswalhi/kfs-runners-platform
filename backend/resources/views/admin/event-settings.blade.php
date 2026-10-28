@@ -57,10 +57,69 @@
                     </label>
                 </div>
 
+                <!-- Theme Palette Selector -->
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:18px; margin-bottom:24px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                        <span style="font-weight:700; color:#0f172a; font-size:14px;">🎨 {{ __('Website Color Theme') }}</span>
+                        <small style="color:#64748b;">{{ __('Choose which palette is active across the site') }}</small>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+                        <!-- Teal & Gold Palette -->
+                        <label style="border: 2px solid {{ $siteTheme === 'teal_gold' ? '#11797E' : '#e2e8f0' }}; background: {{ $siteTheme === 'teal_gold' ? '#f0fdfa' : '#ffffff' }}; border-radius:10px; padding:14px; cursor:pointer; display:flex; flex-direction:column; gap:10px; transition:all .2s ease;">
+                            <div style="display:flex; align-items:center; justify-content:space-between;">
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <input type="radio" name="site_theme" value="teal_gold" {{ $siteTheme === 'teal_gold' ? 'checked' : '' }} style="accent-color:#11797E;">
+                                    <b style="font-size:13px; color:#0D2B3A;">🌊 {{ __('Teal & Ochre Gold') }}</b>
+                                </div>
+                                @if($siteTheme === 'teal_gold')
+                                    <span style="font-size:10px; background:#11797E; color:#fff; padding:2px 7px; border-radius:100px; font-weight:800;">ACTIVE</span>
+                                @endif
+                            </div>
+                            <div style="display:flex; gap:6px; margin:4px 0;">
+                                <span style="flex:1; height:24px; border-radius:4px; background:#0D2B3A;" title="#0D2B3A"></span>
+                                <span style="flex:1; height:24px; border-radius:4px; background:#11797E;" title="#11797E"></span>
+                                <span style="flex:1; height:24px; border-radius:4px; background:#C9A15A;" title="#C9A15A"></span>
+                                <span style="flex:1; height:24px; border-radius:4px; background:#F2E6CE; border:1px solid #dfd7c9;" title="#F2E6CE"></span>
+                            </div>
+                            <small style="font-size:11px; color:#64748b;">{{ __('New modern Mediterranean palette requested for evaluation.') }}</small>
+                        </label>
+
+                        <!-- Original Palette -->
+                        <label style="border: 2px solid {{ $siteTheme === 'original' ? '#064b3e' : '#e2e8f0' }}; background: {{ $siteTheme === 'original' ? '#f0fdf4' : '#ffffff' }}; border-radius:10px; padding:14px; cursor:pointer; display:flex; flex-direction:column; gap:10px; transition:all .2s ease;">
+                            <div style="display:flex; align-items:center; justify-content:space-between;">
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <input type="radio" name="site_theme" value="original" {{ $siteTheme === 'original' ? 'checked' : '' }} style="accent-color:#064b3e;">
+                                    <b style="font-size:13px; color:#064b3e;">🌲 {{ __('Original Forest & Red') }}</b>
+                                </div>
+                                @if($siteTheme === 'original')
+                                    <span style="font-size:10px; background:#064b3e; color:#fff; padding:2px 7px; border-radius:100px; font-weight:800;">ACTIVE</span>
+                                @endif
+                            </div>
+                            <div style="display:flex; gap:6px; margin:4px 0;">
+                                <span style="flex:1; height:24px; border-radius:4px; background:#052f29;" title="#052f29"></span>
+                                <span style="flex:1; height:24px; border-radius:4px; background:#064b3e;" title="#064b3e"></span>
+                                <span style="flex:1; height:24px; border-radius:4px; background:#b81420;" title="#b81420"></span>
+                                <span style="flex:1; height:24px; border-radius:4px; background:#f7f8f5; border:1px solid #dce5e1;" title="#f7f8f5"></span>
+                            </div>
+                            <small style="font-size:11px; color:#64748b;">{{ __('Original marathon brand identity.') }}</small>
+                        </label>
+                    </div>
+
+                    <div style="display:flex; gap:14px; margin-top:12px; font-size:11px;">
+                        <a href="{{ route('home') }}?theme=teal_gold" target="_blank" style="color:#11797E; font-weight:700; text-decoration:underline;">
+                            👁️ {{ __('Preview Teal & Gold on site') }} ↗
+                        </a>
+                        <a href="{{ route('home') }}?theme=original" target="_blank" style="color:#064b3e; font-weight:700; text-decoration:underline;">
+                            👁️ {{ __('Preview Original on site') }} ↗
+                        </a>
+                    </div>
+                </div>
+
                 <div style="display:flex; justify-content:flex-end;">
-                    <button class="stitch-btn stitch-btn-primary" type="submit" style="padding:12px 28px; font-weight:700; font-size:15px; background:#b81420; border-color:#8e0e17;">
+                    <button class="stitch-btn stitch-btn-primary" type="submit" style="padding:12px 28px; font-weight:700; font-size:15px; background:#11797E; border-color:#0e6569;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                        <span>{{ __('Save Race Date & Countdown') }}</span>
+                        <span>{{ __('Save Settings & Color Theme') }}</span>
                     </button>
                 </div>
             </form>

@@ -271,4 +271,38 @@ class ExampleTest extends TestCase
         $this->assertNotNull($reg2->document_path);
         \Illuminate\Support\Facades\Storage::disk('local')->assertExists($reg2->document_path);
     }
+
+    public function test_site_theme_defaults_to_teal_gold_and_can_toggle_via_query_param(): void
+    {
+        $response = $this->get('/');
+        $response->assertStatus(200);
+        $response->assertSee('data-theme="teal-gold"', false);
+        $response->assertSee('theme-teal-gold', false);
+        $response->assertSee('kfs-theme-palette.css', false);
+
+        // Toggle to original via query param
+        $responseOriginal = $this->get('/?theme=original');
+        $responseOriginal->assertStatus(200);
+        $responseOriginal->assertSee('data-theme="original"', false);
+        $responseOriginal->assertSee('theme-original', false);
+    }
+
+    public function test_admin_can_update_site_theme(): void
+    {
+        $admin = \App\Models\User::factory()->create([
+            'role' => 'admin',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->from('/admin/event-settings')
+            ->post('/admin/event-settings', [
+                'race_date' => '2026-11-20',
+                'race_time' => '07:00',
+                'countdown_enabled' => '1',
+                'site_theme' => 'original',
+            ]);
+
+        $response->assertRedirect('/admin/event-settings');
+        $this->assertSame('original', \App\Models\AppSetting::get('site_theme'));
+    }
 }

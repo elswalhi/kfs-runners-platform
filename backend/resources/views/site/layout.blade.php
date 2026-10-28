@@ -1,10 +1,18 @@
+@php
+    $themeReq = request('theme');
+    if ($themeReq && in_array($themeReq, ['teal_gold', 'original', 'new'], true)) {
+        session(['site_theme' => ($themeReq === 'new' ? 'teal_gold' : $themeReq)]);
+    }
+    $siteTheme = session('site_theme', \App\Models\AppSetting::get('site_theme', 'teal_gold'));
+    $isTealGold = ($siteTheme === 'teal_gold');
+@endphp
 <!doctype html>
-<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
+<html lang="{{ app()->getLocale() }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}" data-theme="{{ $isTealGold ? 'teal-gold' : 'original' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="theme-color" content="#064b3e">
+    <meta name="theme-color" content="{{ $isTealGold ? '#0D2B3A' : '#064b3e' }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
@@ -19,6 +27,7 @@
     <link rel="stylesheet" href="{{ asset('css/kfs-interactive.css') }}?v=20261027-mobile-1">
     <link rel="stylesheet" href="{{ asset('css/kfs-hero-video.css') }}">
     <link rel="stylesheet" href="{{ asset('css/kfs-brand.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/kfs-theme-palette.css') }}">
     <style>
         [dir="rtl"] body {
             font-family: 'Cairo', 'Inter', sans-serif;
@@ -60,7 +69,7 @@
     </style>
     @stack('styles')
 </head>
-<body>
+<body class="{{ $isTealGold ? 'theme-teal-gold' : 'theme-original' }}">
 <header class="site-header">
     <div class="header-inner wrap">
         <a href="{{ route('home') }}" class="brand-link" aria-label="KFS Runners home">
@@ -103,6 +112,15 @@
 </script>
 <script src="{{ asset('js/kfs-interactive.js') }}"></script>
 <script src="{{ asset('js/kfs-hero-video.js') }}"></script>
+<aside class="kfs-theme-switcher-bar" aria-label="{{ __('Theme Switcher') }}">
+    <span class="theme-badge">🎨 {{ __('Theme') }}:</span>
+    <a href="{{ request()->fullUrlWithQuery(['theme' => 'teal_gold']) }}" class="kfs-theme-switcher-btn {{ $isTealGold ? 'active' : '' }}" title="Coastal Teal & Ochre Gold">
+        🌊 {{ __('Teal & Gold') }}
+    </a>
+    <a href="{{ request()->fullUrlWithQuery(['theme' => 'original']) }}" class="kfs-theme-switcher-btn {{ ! $isTealGold ? 'active' : '' }}" title="Forest Green & Crimson Red">
+        🌲 {{ __('Original') }}
+    </a>
+</aside>
 @stack('scripts')
 </body>
 </html>
