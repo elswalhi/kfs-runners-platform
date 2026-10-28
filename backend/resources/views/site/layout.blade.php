@@ -14,8 +14,7 @@
         (function() {
             try {
                 var saved = localStorage.getItem('kfs_color_mode');
-                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                var mode = saved ? saved : (prefersDark ? 'dark' : 'light');
+                var mode = (saved === 'dark') ? 'dark' : 'light';
                 if (mode === 'dark') {
                     document.documentElement.classList.add('dark');
                     document.documentElement.setAttribute('data-color-mode', 'dark');
