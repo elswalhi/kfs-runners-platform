@@ -272,19 +272,22 @@ class ExampleTest extends TestCase
         \Illuminate\Support\Facades\Storage::disk('local')->assertExists($reg2->document_path);
     }
 
-    public function test_site_theme_defaults_to_teal_gold_and_can_toggle_via_query_param(): void
+    public function test_site_defaults_to_original_theme_and_renders_dark_mode_navbar_toggle(): void
     {
         $response = $this->get('/');
         $response->assertStatus(200);
-        $response->assertSee('data-theme="teal-gold"', false);
-        $response->assertSee('theme-teal-gold', false);
-        $response->assertSee('kfs-theme-palette.css', false);
+        $response->assertSee('data-theme="original"', false);
+        $response->assertSee('theme-original', false);
+        $response->assertSee('kfs-dark-mode.css', false);
+        $response->assertSee('theme-toggle-btn', false);
+        $response->assertSee('id="theme-toggle-btn"', false);
+        $response->assertSee('id="theme-toggle-mobile-menu"', false);
 
-        // Toggle to original via query param
-        $responseOriginal = $this->get('/?theme=original');
-        $responseOriginal->assertStatus(200);
-        $responseOriginal->assertSee('data-theme="original"', false);
-        $responseOriginal->assertSee('theme-original', false);
+        // Can switch to teal_gold via query param
+        $responseTeal = $this->get('/?theme=teal_gold');
+        $responseTeal->assertStatus(200);
+        $responseTeal->assertSee('data-theme="teal-gold"', false);
+        $responseTeal->assertSee('theme-teal-gold', false);
     }
 
     public function test_admin_can_update_site_theme(): void

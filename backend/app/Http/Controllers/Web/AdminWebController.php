@@ -378,7 +378,7 @@ class AdminWebController
         $raceDate = AppSetting::get('race_date', '2026-11-20');
         $raceTime = AppSetting::get('race_time', '07:00');
         $countdownEnabled = (bool) AppSetting::get('countdown_enabled', true);
-        $siteTheme = AppSetting::get('site_theme', 'teal_gold');
+        $siteTheme = AppSetting::get('site_theme', 'original');
 
         return view('admin.event-settings', compact('raceDate', 'raceTime', 'countdownEnabled', 'siteTheme'));
     }

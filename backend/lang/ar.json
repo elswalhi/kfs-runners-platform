@@ -381,5 +381,10 @@
     "Original Forest & Red": "الأخضر الداكن والأحمر (الألوان الأصلية)",
     "Theme": "المظهر",
     "Theme Switcher": "تبديل مظهر وألوان الموقع",
-    "Save Settings & Color Theme": "حفظ الإعدادات والمظهر"
+    "Save Settings & Color Theme": "حفظ الإعدادات والمظهر",
+    "Toggle dark mode": "تبديل الوضع الليلي والنهاري",
+    "Dark mode": "الوضع الليلي",
+    "Light mode": "الوضع النهاري",
+    "Switch to Light Mode": "تفعيل الوضع النهاري",
+    "Switch to Dark Mode": "تفعيل الوضع الليلي"
 }

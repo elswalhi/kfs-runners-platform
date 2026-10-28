@@ -3,7 +3,7 @@
     if ($themeReq && in_array($themeReq, ['teal_gold', 'original', 'new'], true)) {
         session(['site_theme' => ($themeReq === 'new' ? 'teal_gold' : $themeReq)]);
     }
-    $siteTheme = session('site_theme', \App\Models\AppSetting::get('site_theme', 'teal_gold'));
+    $siteTheme = session('site_theme', \App\Models\AppSetting::get('site_theme', 'original'));
     $isTealGold = ($siteTheme === 'teal_gold');
 @endphp
 <!doctype html>
@@ -13,6 +13,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="{{ $isTealGold ? '#0D2B3A' : '#064b3e' }}">
+    <script>
+        (function() {
+            try {
+                var saved = localStorage.getItem('kfs_color_mode');
+                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                var mode = saved ? saved : (prefersDark ? 'dark' : 'light');
+                if (mode === 'dark') {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.setAttribute('data-color-mode', 'dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.setAttribute('data-color-mode', 'light');
+                }
+            } catch (e) {}
+        })();
+    </script>
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
@@ -28,6 +44,7 @@
     <link rel="stylesheet" href="{{ asset('css/kfs-hero-video.css') }}">
     <link rel="stylesheet" href="{{ asset('css/kfs-brand.css') }}">
     <link rel="stylesheet" href="{{ asset('css/kfs-theme-palette.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/kfs-dark-mode.css') }}?v=20261028-1">
     <style>
         [dir="rtl"] body {
             font-family: 'Cairo', 'Inter', sans-serif;
@@ -75,7 +92,6 @@
         <a href="{{ route('home') }}" class="brand-link" aria-label="KFS Runners home">
             <img class="brand-logo brand-logo-header" src="{{ asset('images/kfs-runners-logo.png') }}" alt="KFS Runners · Kafr El-Sheikh">
         </a>
-        <button class="mobile-menu-btn" type="button" aria-label="Open menu" aria-expanded="false" id="mobile-menu-toggle">☰</button>
         <nav class="main-nav" aria-label="Main navigation" id="main-nav">
             <a href="{{ route('home') }}">{{ __('Home') }}</a>
             <a href="{{ route('home') }}#our-sports">{{ __('Our sports') }}</a>
@@ -85,7 +101,34 @@
             <a href="{{ route('locale.switch', app()->getLocale() === 'ar' ? 'en' : 'ar') }}" class="lang-switch-btn" title="Toggle language">
                 <span>{{ app()->getLocale() === 'ar' ? '🇬🇧 English' : '🇪🇬 العربية' }}</span>
             </a>
+            <button type="button" class="theme-toggle-btn nav-inline-toggle" id="theme-toggle-mobile-menu" aria-label="{{ __('Toggle dark mode') }}">
+                <span class="theme-toggle-icon-wrap" aria-hidden="true">🌙</span>
+                <span class="theme-toggle-label">{{ __('Dark mode') }}</span>
+            </button>
         </nav>
+        <div class="header-controls">
+            <button type="button" class="theme-toggle-btn header-toggle" id="theme-toggle-btn" aria-label="{{ __('Toggle dark mode') }}" title="{{ __('Toggle dark mode') }}">
+                <span class="theme-icon-sun" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </span>
+                <span class="theme-icon-moon" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </span>
+            </button>
+            <button class="mobile-menu-btn" type="button" aria-label="Open menu" aria-expanded="false" id="mobile-menu-toggle">☰</button>
+        </div>
     </div>
 </header>
 
@@ -112,15 +155,72 @@
 </script>
 <script src="{{ asset('js/kfs-interactive.js') }}"></script>
 <script src="{{ asset('js/kfs-hero-video.js') }}"></script>
-<aside class="kfs-theme-switcher-bar" aria-label="{{ __('Theme Switcher') }}">
-    <span class="theme-badge">🎨 {{ __('Theme') }}:</span>
-    <a href="{{ request()->fullUrlWithQuery(['theme' => 'teal_gold']) }}" class="kfs-theme-switcher-btn {{ $isTealGold ? 'active' : '' }}" title="Coastal Teal & Ochre Gold">
-        🌊 {{ __('Teal & Gold') }}
-    </a>
-    <a href="{{ request()->fullUrlWithQuery(['theme' => 'original']) }}" class="kfs-theme-switcher-btn {{ ! $isTealGold ? 'active' : '' }}" title="Forest Green & Crimson Red">
-        🌲 {{ __('Original') }}
-    </a>
-</aside>
+<script>
+    (function() {
+        const doc = document.documentElement;
+
+        function getTheme() {
+            return doc.getAttribute('data-color-mode') === 'dark' ? 'dark' : 'light';
+        }
+
+        function applyTheme(mode) {
+            const isDark = (mode === 'dark');
+            if (isDark) {
+                doc.classList.add('dark');
+                doc.setAttribute('data-color-mode', 'dark');
+            } else {
+                doc.classList.remove('dark');
+                doc.setAttribute('data-color-mode', 'light');
+            }
+
+            try {
+                localStorage.setItem('kfs_color_mode', mode);
+            } catch (e) {}
+
+            const metaTheme = document.querySelector('meta[name="theme-color"]');
+            if (metaTheme) {
+                metaTheme.setAttribute('content', isDark ? '#0b1210' : '#064b3e');
+            }
+
+            const isAr = doc.getAttribute('lang') === 'ar';
+
+            // Update mobile inline toggle
+            document.querySelectorAll('.nav-inline-toggle').forEach(btn => {
+                const label = btn.querySelector('.theme-toggle-label');
+                const icon = btn.querySelector('.theme-toggle-icon-wrap');
+                if (label) {
+                    label.textContent = isDark 
+                        ? (isAr ? 'الوضع النهاري' : 'Light Mode') 
+                        : (isAr ? 'الوضع الليلي' : 'Dark Mode');
+                }
+                if (icon) {
+                    icon.textContent = isDark ? '☀️' : '🌙';
+                }
+            });
+
+            // Update header toggle title & aria-label
+            document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+                btn.setAttribute('aria-pressed', String(isDark));
+                const titleText = isDark 
+                    ? (isAr ? 'تفعيل الوضع النهاري' : 'Switch to Light Mode') 
+                    : (isAr ? 'تفعيل الوضع الليلي' : 'Switch to Dark Mode');
+                btn.setAttribute('title', titleText);
+                btn.setAttribute('aria-label', titleText);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            applyTheme(getTheme());
+
+            document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    applyTheme(getTheme() === 'dark' ? 'light' : 'dark');
+                });
+            });
+        });
+    })();
+</script>
 @stack('scripts')
 </body>
 </html>
