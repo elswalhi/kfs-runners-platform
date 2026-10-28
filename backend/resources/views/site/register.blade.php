@@ -1131,7 +1131,6 @@
                     label.style.color = '';
                 }
             }
->>>>>>> 37e380f (feat: enable document upload inside each individual runner card for multi-ticket and single registrations)
         }
     });
 
