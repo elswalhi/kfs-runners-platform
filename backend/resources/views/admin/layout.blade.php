@@ -27,8 +27,7 @@
             border-left: 1px solid var(--st-border);
         }
         [dir="rtl"] .stitch-main {
-            margin-left: 0;
-            margin-right: 260px;
+            margin-inline: 0;
         }
         @media (max-width: 860px) {
             [dir="rtl"] .stitch-sidebar {
@@ -40,7 +39,7 @@
                 transform: translateX(0);
             }
             [dir="rtl"] .stitch-main {
-                margin-right: 0;
+                margin-inline: 0;
             }
         }
         [dir="rtl"] .stitch-search-wrapper svg {
@@ -56,17 +55,17 @@
         }
     </style>
     @stack('styles')
+    <link rel="stylesheet" href="{{ asset('css/kfs-admin-pages.css') }}">
 </head>
 <body>
 <div class="stitch-app">
     <!-- Stitch Sidebar -->
     <aside class="stitch-sidebar" id="stitch-sidebar">
         <a href="{{ route('admin.dashboard') }}" class="stitch-brand">
-            <div class="stitch-brand-logo">K↗</div>
-            <div class="stitch-brand-text">
-                <span class="stitch-brand-title">KFS RUNNERS</span>
+            <span class="stitch-brand-mark">
+                <img class="stitch-brand-logo-image" src="{{ asset('images/kfs-runners-logo.png') }}" alt="KFS Runners">
                 <span class="stitch-brand-badge">{{ __('RACE CONTROL') }}</span>
-            </div>
+            </span>
         </a>
 
         <div class="stitch-nav-group">
@@ -182,7 +181,7 @@
 
                 <div class="stitch-status-pill">
                     <span class="stitch-status-dot"></span>
-                    <span>EasyKash Gateway Live</span>
+                    <span>EasyKash payment provider</span>
                 </div>
 
                 <a href="{{ route('home') }}" target="_blank" class="stitch-btn-icon" title="View Public Website">

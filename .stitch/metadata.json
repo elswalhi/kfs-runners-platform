@@ -1,0 +1,68 @@
+{
+  "projectId": "3487148057369341536",
+  "title": "KFS Runners — Admin Dashboard",
+  "screens": [
+    {
+      "id": "projects/3487148057369341536/screens/352189efaab145dfbedfdda0f1556a29",
+      "title": "KFS Runners Admin — Race Overview",
+      "designSystemId": "2ca15a2c56e641799ec710af3141de2d",
+      "screenshot": "projects/3487148057369341536/files/e1cef85247ed4b56aa099293fab6553e",
+      "html": "projects/3487148057369341536/files/b1f0705b68c64598b0b6d86d4c96ddcc"
+    },
+    {
+      "id": "projects/3487148057369341536/screens/9bb9dc1339a64183be3ecf6988a33a45",
+      "title": "KFS Runners Admin — Registrations"
+    },
+    {
+      "id": "projects/3487148057369341536/screens/ed9bfcb7b81940afbcf069c7c5f9ba42",
+      "title": "KFS Runners Admin — Runner Profile"
+    },
+    {
+      "id": "projects/3487148057369341536/screens/2b5509afc61344b4b5ccd52f0c419c1f",
+      "title": "KFS Runners Admin — Payments Ledger"
+    },
+    {
+      "id": "projects/3487148057369341536/screens/712ede7d5a5e4e159f93b2912a27e86c",
+      "title": "KFS Runners Admin — Race Categories"
+    },
+    {
+      "id": "projects/3487148057369341536/screens/ac6db23f51d14ac7bfe949f29101dfb1",
+      "title": "KFS Runners Admin — Race & Pricing"
+    },
+    {
+      "id": "projects/3487148057369341536/screens/44f4c23074ea426780537fe05f5af6fe",
+      "title": "KFS Runners Admin — Age Groups"
+    },
+    {
+      "id": "projects/3487148057369341536/screens/8e5b4800e384420181174df2f0ccb5e4",
+      "title": "KFS Runners Admin — Promo Codes"
+    },
+    {
+      "id": "projects/3487148057369341536/screens/acfe0d22f2bb4e22a05d510077e1717a",
+      "title": "KFS Runners Admin — Events Index"
+    },
+    {
+      "id": "projects/3487148057369341536/screens/e7a792dc8592421cbda82b8e90bf65a6",
+      "title": "KFS Runners Admin — Event Edit & Media"
+    },
+    {
+      "id": "projects/3487148057369341536/screens/faeb144b8ba241bcbc4df88a008b94d9",
+      "title": "KFS Runners Admin — Website Media"
+    },
+    {
+      "id": "projects/3487148057369341536/screens/e36dbd0b99e645639eeb3e3ff96880f0",
+      "title": "KFS Runners Admin — Team Excel Import"
+    },
+    {
+      "id": "projects/3487148057369341536/screens/ed97785f9f0048e48e44e9e6cc5b3af1",
+      "title": "KFS Runners Admin — Event Schedule Settings"
+    },
+    {
+      "id": "projects/3487148057369341536/screens/5a1f0e6902f0455eadefbb3e03150b94",
+      "title": "KFS Runners Admin — Localization & Languages"
+    }
+  ],
+  "designSystem": {
+    "summary": "KFS green and red race operations interface with responsive English and Arabic layouts."
+  }
+}

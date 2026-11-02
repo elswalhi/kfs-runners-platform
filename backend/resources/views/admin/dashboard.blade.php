@@ -1,354 +1,246 @@
 @extends('admin.layout')
 
-@section('title', __('Overview') . ' · KFS Runners Race Control')
+@section('title', __('Race overview') . ' · KFS Runners Race Control')
 @section('section', __('Overview'))
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/kfs-admin-dashboard.css') }}">
+@endpush
+
 @section('content')
-<!-- Hero Header -->
-<div class="stitch-hero">
-    <div class="stitch-hero-info">
-        <div class="stitch-eyebrow">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            <span>{{ __('RACE OPERATIONS DASHBOARD') }}</span>
-        </div>
-        <h1 class="stitch-hero-title">{{ __('Welcome back') }}, <span>{{ auth()->user()->name }}</span></h1>
-        <p class="stitch-hero-desc">{{ __('Live overview of marathon participants, payments reconciliation, and category performance.') }}</p>
-    </div>
-    <div class="stitch-hero-actions">
-        <a href="{{ route('admin.export-overview') }}" class="stitch-btn stitch-btn-secondary">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
-            <span>{{ __('Export CSV') }}</span>
-        </a>
-        <a href="{{ route('admin.registrations') }}" class="stitch-btn stitch-btn-primary">
-            <span>{{ __('View Registrations') }}</span>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-        </a>
-    </div>
-</div>
+@php
+    $maxTrendValue = max(1, (float) $trend->max('value'));
+    $weeklyRevenue = (float) $trend->sum('value');
+    $paidRate = $total > 0 ? (int) round(($paid / $total) * 100) : 0;
+    $categoryTones = ['pine', 'red', 'sage', 'sand', 'slate'];
+@endphp
 
-@if(session('success'))
-<div style="background:#ecfdf5; border:1px solid #a7f3d0; color:#065f46; padding:14px 18px; border-radius:10px; margin-bottom:20px; display:flex; align-items:center; gap:10px; font-weight:600;">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-    <span>{{ session('success') }}</span>
-</div>
-@endif
-
-<!-- Race Day Countdown Quick Control Banner -->
-<div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 14px; padding: 18px 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; border: 1px solid #334155; box-shadow: 0 4px 12px rgba(0,0,0,0.06);">
-    <div style="display: flex; align-items: center; gap: 16px;">
-        <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(184, 20, 32, 0.15); border: 1px solid rgba(184, 20, 32, 0.3); display: flex; align-items: center; justify-content: center; color: #ef4444; font-size: 20px;">
-            ⏱️
+<div class="kfs-dashboard">
+    <header class="kfs-dashboard-heading">
+        <div class="kfs-dashboard-heading-copy">
+            <div class="kfs-dashboard-eyebrow"><span></span>{{ __('Race operations') }}</div>
+            <h1>{{ __('Race overview') }}</h1>
+            <p>{{ __('Monitor registrations, payments, and race-day readiness from one place.') }}</p>
         </div>
-        <div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #ef4444;">{{ __('RACE DAY & COUNTDOWN') }}</span>
-                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: {{ ($countdownEnabled ?? true) ? '#10b981' : '#64748b' }};"></span>
-                <span style="font-size: 11px; color: {{ ($countdownEnabled ?? true) ? '#10b981' : '#94a3b8' }}; font-weight: 600;">{{ ($countdownEnabled ?? true) ? __('Active on Website') : __('Hidden') }}</span>
+        <div class="kfs-dashboard-actions">
+            <a class="kfs-dashboard-button secondary" href="{{ route('admin.export-overview') }}">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 17v3h14v-3"/></svg>
+                {{ __('Export CSV') }}
+            </a>
+            <a class="kfs-dashboard-button primary" href="{{ route('admin.registrations') }}">
+                {{ __('View registrations') }}
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+            </a>
+        </div>
+    </header>
+
+    <section class="kfs-race-control" aria-labelledby="kfs-race-control-title">
+        <div class="kfs-race-control-summary">
+            <div class="kfs-race-control-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M8 14h3"/></svg>
             </div>
-            <h3 style="margin: 2px 0 0 0; font-size: 16px; font-weight: 800; color: #f8fafc;">
-                {{ \Carbon\Carbon::parse($raceDate ?? '2026-11-20')->translatedFormat('l, d F Y') }} · {{ $raceTime ?? '07:00' }}
-            </h3>
-        </div>
-    </div>
-
-    <form method="POST" action="{{ route('admin.event-settings.update') }}" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0;">
-        @csrf
-        <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.06); padding: 4px 8px; border-radius: 8px; border: 1px solid #475569;">
-            <input type="date" required name="race_date" value="{{ $raceDate ?? '2026-11-20' }}" style="background: transparent; border: none; color: #fff; font-size: 13px; font-weight: 600; outline: none; padding: 4px 6px; cursor: pointer;">
-            <input type="time" required name="race_time" value="{{ $raceTime ?? '07:00' }}" style="background: transparent; border: none; color: #fff; font-size: 13px; font-weight: 600; outline: none; padding: 4px 6px; cursor: pointer; border-left: 1px solid #475569;">
-        </div>
-
-        <label style="display:flex; align-items:center; gap:7px; color:#e2e8f0; font-size:11px; font-weight:700; white-space:nowrap;">
-            <input type="checkbox" name="countdown_enabled" value="1" {{ ($countdownEnabled ?? true) ? 'checked' : '' }} style="width:15px; height:15px; accent-color:#10b981;">
-            {{ __('Show timer on marathon page') }}
-        </label>
-
-        <button type="submit" class="stitch-btn stitch-btn-primary" style="padding: 7px 16px; font-size: 13px; font-weight: 700; background: #b81420; border-color: #8e0e17; height: auto;">
-            <span>{{ __('Update Race Date') }}</span>
-        </button>
-
-        <a href="{{ route('admin.event-settings') }}" style="color: #94a3b8; font-size: 12px; text-decoration: underline; margin-left: 4px;">
-            {{ __('Full Settings') }} →
-        </a>
-    </form>
-</div>
-
-<div class="stitch-panel" style="margin-bottom:24px; border:1px solid #fecaca; background:#fffafa;">
-    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:24px; flex-wrap:wrap; padding:20px 22px;">
-        <div style="max-width:680px;">
-            <div class="stitch-eyebrow" style="color:#b91c1c;">{{ __('DANGER ZONE') }}</div>
-            <h2 style="margin:6px 0; color:#7f1d1d; font-size:18px;">{{ __('Remove all orders') }}</h2>
-            <p style="margin:0; color:#7f1d1d; font-size:12px; line-height:1.7;">
-                {{ __('This permanently deletes runner registrations, teams, payment records, and uploaded runner documents. It does not refund real payments. Races and settings remain, and bib sequences restart at their configured starting numbers.') }}
-            </p>
-            <small style="display:block; margin-top:9px; color:#7f1d1d; font-weight:700;">
-                {{ __('Current data: :runners runners, :teams teams, :payments payment records.', ['runners' => $total, 'teams' => $teamCount, 'payments' => $paymentCount]) }}
-            </small>
-        </div>
-        <form method="POST" action="{{ route('admin.registrations.clear-all') }}" onsubmit="return confirm('{{ __('Permanently remove all orders and payment history?') }}')" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:0;">
-            @csrf
-            <input name="confirmation_phrase" required pattern="DELETE ALL" autocomplete="off" class="stitch-input" style="height:40px; width:150px;" placeholder="{{ __('Type DELETE ALL') }}">
-            <button type="submit" class="stitch-btn stitch-btn-danger" style="height:40px;">
-                {{ __('Remove all orders') }}
-            </button>
-        </form>
-    </div>
-</div>
-
-<!-- 4 Modern Stitch KPI Cards -->
-<div class="stitch-kpi-grid">
-    <!-- Card 1: Total Runners -->
-    <div class="stitch-kpi-card tone-blue">
-        <div class="stitch-kpi-header">
-            <span class="stitch-kpi-title">{{ __('Total Registrations') }}</span>
-            <div class="stitch-kpi-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            </div>
-        </div>
-        <div class="stitch-kpi-value">{{ number_format($total) }}</div>
-        <div class="stitch-kpi-footer">
-            <span class="stitch-kpi-pill info">
-                <span>All distances</span>
-            </span>
-            <span>Individual & teams</span>
-        </div>
-    </div>
-
-    <!-- Card 2: Confirmed Revenue -->
-    <div class="stitch-kpi-card tone-emerald">
-        <div class="stitch-kpi-header">
-            <span class="stitch-kpi-title">Confirmed Revenue</span>
-            <div class="stitch-kpi-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-            </div>
-        </div>
-        <div class="stitch-kpi-value">EGP {{ number_format($revenue, 2) }}</div>
-        <div class="stitch-kpi-footer">
-            <span class="stitch-kpi-pill success">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                <span>Settled</span>
-            </span>
-            <span>EasyKash verified</span>
-        </div>
-    </div>
-
-    <!-- Card 3: Paid Runners -->
-    <div class="stitch-kpi-card tone-emerald">
-        <div class="stitch-kpi-header">
-            <span class="stitch-kpi-title">Paid Entries</span>
-            <div class="stitch-kpi-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            </div>
-        </div>
-        <div class="stitch-kpi-value">{{ number_format($paid) }}</div>
-        <div class="stitch-kpi-footer">
-            @php($conversion = $total > 0 ? round(($paid / $total) * 100) : 0)
-            <span class="stitch-kpi-pill success">{{ $conversion }}% rate</span>
-            <span>Ready for bib pickup</span>
-        </div>
-    </div>
-
-    <!-- Card 4: Pending Payments -->
-    <div class="stitch-kpi-card tone-amber">
-        <div class="stitch-kpi-header">
-            <span class="stitch-kpi-title">Awaiting Payment</span>
-            <div class="stitch-kpi-icon">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </div>
-        </div>
-        <div class="stitch-kpi-value">{{ number_format($pending) }}</div>
-        <div class="stitch-kpi-footer">
-            <span class="stitch-kpi-pill warning">In checkout</span>
-            <span>Awaiting gateway confirmation</span>
-        </div>
-    </div>
-</div>
-
-<!-- 2-Column Analytics: Payment Trend & Race Breakdown -->
-<div class="stitch-grid-2col">
-    <!-- Payment Trend Bar Chart -->
-    <div class="stitch-panel">
-        <div class="stitch-panel-header">
-            <div class="stitch-panel-title-wrap">
-                <h3>Revenue Performance</h3>
-                <p>Confirmed payments trend over the last 7 days</p>
-            </div>
-            <span class="stitch-kpi-pill success">
-                7-day total: EGP {{ number_format($trend->sum('value'), 2) }}
-            </span>
-        </div>
-
-        <div class="stitch-chart-wrap">
-            @php($maxTrend = max(1, $trend->max('value')))
-            <div class="stitch-chart-bars">
-                @foreach($trend as $day)
-                    @php($percent = max(6, (int) round(($day['value'] / $maxTrend) * 100)))
-                    @php($isPeak = $day['value'] > 0 && $day['value'] === $trend->max('value'))
-                    <div class="stitch-chart-col">
-                        <div class="stitch-bar-container">
-                            <div class="stitch-bar" 
-                                 style="height: {{ $percent }}%; {{ $isPeak ? 'background: linear-gradient(180deg, #34d399 0%, #047857 100%); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);' : '' }}" 
-                                 title="{{ $day['label'] }}: EGP {{ number_format($day['value'], 2) }}">
-                            </div>
-                        </div>
-                        <span class="stitch-bar-label">{{ $day['label'] }}</span>
-                    </div>
-                @endforeach
-            </div>
-
-            <div class="stitch-chart-summary">
-                <span>Peak day volume: <strong>EGP {{ number_format($trend->max('value'), 2) }}</strong></span>
-                <span style="display: flex; align-items: center; gap: 6px;">
-                    <span style="width: 8px; height: 8px; border-radius: 2px; background: #10b981;"></span>
-                    <span>EasyKash Verified</span>
+            <div class="kfs-race-control-copy">
+                <div class="kfs-race-control-label">{{ __('Race day & countdown') }}</div>
+                <h2 id="kfs-race-control-title">{{ \Carbon\Carbon::parse($raceDate ?? '2026-11-20')->translatedFormat('l, d F Y') }} <span>·</span> {{ $raceTime ?? '07:00' }}</h2>
+                <span class="kfs-countdown-state {{ ($countdownEnabled ?? true) ? 'is-active' : 'is-hidden' }}">
+                    <i></i>{{ ($countdownEnabled ?? true) ? __('Countdown active on website') : __('Countdown hidden on website') }}
                 </span>
             </div>
         </div>
-    </div>
-
-    <!-- Race Category Breakdown -->
-    <div class="stitch-panel">
-        <div class="stitch-panel-header">
-            <div class="stitch-panel-title-wrap">
-                <h3>Race Categories</h3>
-                <p>Participant distribution by distance</p>
+        <form class="kfs-race-control-form" method="POST" action="{{ route('admin.event-settings.update') }}">
+            @csrf
+            <label class="kfs-dashboard-field">
+                <span>{{ __('Race date') }}</span>
+                <input type="date" required name="race_date" value="{{ $raceDate ?? '2026-11-20' }}">
+            </label>
+            <label class="kfs-dashboard-field time-field">
+                <span>{{ __('Start time') }}</span>
+                <input type="time" required name="race_time" value="{{ $raceTime ?? '07:00' }}">
+            </label>
+            <label class="kfs-countdown-toggle">
+                <input type="checkbox" name="countdown_enabled" value="1" {{ ($countdownEnabled ?? true) ? 'checked' : '' }}>
+                <span class="kfs-toggle-track" aria-hidden="true"><i></i></span>
+                <span>{{ __('Show website countdown') }}</span>
+            </label>
+            <div class="kfs-race-control-actions">
+                <button class="kfs-dashboard-button primary" type="submit">{{ __('Update schedule') }}</button>
+                <a href="{{ route('admin.event-settings') }}">{{ __('Full settings') }} <span aria-hidden="true">→</span></a>
             </div>
-            <a class="stitch-panel-link" href="{{ route('admin.races') }}">
-                <span>Manage</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-            </a>
-        </div>
+        </form>
+    </section>
 
-        <div class="stitch-category-list">
-            @php($categoryColors = ['cat-21k', 'cat-10k', 'cat-5k', 'cat-family', 'cat-para'])
-            @forelse($raceBreakdown as $index => $race)
-                @php($racePercent = $total > 0 ? round(($race->registrations_count / $total) * 100) : 0)
-                @php($colorClass = $categoryColors[$index % count($categoryColors)])
-                <div class="stitch-category-item">
-                    <div class="stitch-category-meta">
-                        <div class="stitch-category-name">
-                            <span class="stitch-category-dot {{ $colorClass }}"></span>
-                            <span>{{ $race->name }} ({{ $race->distance_label }})</span>
-                        </div>
-                        <span class="stitch-category-count">
-                            <strong>{{ $race->registrations_count }}</strong> ({{ $racePercent }}%)
-                        </span>
-                    </div>
-                    <div class="stitch-progress-track">
-                        <div class="stitch-progress-bar {{ $colorClass }}" style="width: {{ max(4, $racePercent) }}%;"></div>
-                    </div>
+    <section class="kfs-dashboard-kpis" aria-label="{{ __('Race summary') }}">
+        <article class="kfs-kpi-card">
+            <div class="kfs-kpi-card-top">
+                <span>{{ __('Total registrations') }}</span>
+                <span class="kfs-kpi-icon green" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </span>
+            </div>
+            <strong class="kfs-kpi-value">{{ number_format($total) }}</strong>
+            <div class="kfs-kpi-foot"><span>{{ __('Across all race categories') }}</span><a href="{{ route('admin.registrations') }}">{{ __('View list') }} <b>→</b></a></div>
+        </article>
+
+        <article class="kfs-kpi-card">
+            <div class="kfs-kpi-card-top">
+                <span>{{ __('Paid entries') }}</span>
+                <span class="kfs-kpi-icon green" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M3 7h18v13H3zM3 10h18M7 15h3M6 4h12"/></svg>
+                </span>
+            </div>
+            <strong class="kfs-kpi-value">{{ number_format($paid) }}</strong>
+            <div class="kfs-kpi-foot"><span class="kfs-kpi-status success"><i></i>{{ __('Payment confirmed') }}</span><span>{{ $paidRate }}% {{ __('of registrations') }}</span></div>
+        </article>
+
+        <article class="kfs-kpi-card">
+            <div class="kfs-kpi-card-top">
+                <span>{{ __('Awaiting payment') }}</span>
+                <span class="kfs-kpi-icon amber" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                </span>
+            </div>
+            <strong class="kfs-kpi-value">{{ number_format($pending) }}</strong>
+            <div class="kfs-kpi-foot"><span class="kfs-kpi-status pending"><i></i>{{ __('Pending') }}</span><span>{{ __('Waiting for gateway confirmation') }}</span></div>
+        </article>
+
+        <article class="kfs-kpi-card revenue-card">
+            <div class="kfs-kpi-card-top">
+                <span>{{ __('Confirmed revenue') }}</span>
+                <span class="kfs-kpi-icon red" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </span>
+            </div>
+            <strong class="kfs-kpi-value"><small>EGP</small> {{ number_format($revenue, 2) }}</strong>
+            <div class="kfs-kpi-foot"><span class="kfs-kpi-status success"><i></i>{{ __('Paid registrations only') }}</span><a href="{{ route('admin.payments') }}">{{ __('Payments') }} <b>→</b></a></div>
+        </article>
+    </section>
+
+    <section class="kfs-dashboard-analytics" aria-label="{{ __('Race analytics') }}">
+        <article class="kfs-dashboard-panel kfs-revenue-panel">
+            <div class="kfs-panel-heading">
+                <div>
+                    <span class="kfs-panel-eyebrow">{{ __('Last 7 days') }}</span>
+                    <h2>{{ __('Revenue performance') }}</h2>
+                    <p>{{ __('Confirmed payments by registration date') }}</p>
                 </div>
-            @empty
-                <p style="color: var(--st-text-muted); font-size: 13px; text-align: center; padding: 24px 0;">No race categories created yet.</p>
-            @endforelse
-        </div>
-    </div>
-</div>
+                <div class="kfs-panel-total"><small>EGP</small><strong>{{ number_format($weeklyRevenue, 2) }}</strong></div>
+            </div>
+            <div class="kfs-revenue-chart" role="img" aria-label="{{ __('Confirmed revenue over the last 7 days') }}">
+                @foreach($trend as $day)
+                    @php($dayRevenue = (float) $day['value'])
+                    @php($barHeight = $dayRevenue > 0 ? max(8, (int) round(($dayRevenue / $maxTrendValue) * 100)) : 4)
+                    @php($isPeakDay = $dayRevenue > 0 && $dayRevenue >= (float) $trend->max('value'))
+                    <div class="kfs-revenue-day" title="{{ $day['label'] }}: EGP {{ number_format($dayRevenue, 2) }}">
+                        <div class="kfs-revenue-bar-track"><span class="{{ $isPeakDay ? 'is-peak' : '' }}" style="height: {{ $barHeight }}%"></span></div>
+                        <span class="kfs-revenue-day-label">{{ $day['label'] }}</span>
+                    </div>
+                @endforeach
+            </div>
+            <div class="kfs-chart-legend"><span><i></i>{{ __('EasyKash confirmed payments') }}</span><span>{{ __('7-day total') }} · EGP {{ number_format($weeklyRevenue, 2) }}</span></div>
+        </article>
 
-<!-- Recent Registrations Table -->
-<div class="stitch-table-panel">
-    <div class="stitch-table-header">
-        <div class="stitch-panel-title-wrap">
-            <h3>Recent Registrations</h3>
-            <p>Latest participant entries and payment states</p>
-        </div>
-        <a class="stitch-panel-link" href="{{ route('admin.registrations') }}">
-            <span>View All ({{ $total }})</span>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
-        </a>
-    </div>
-
-    <div class="stitch-table-scroll">
-        <table class="stitch-table">
-            <thead>
-                <tr>
-                    <th>Bib #</th>
-                    <th>{{ __('Age') }}</th>
-                    <th>Reference</th>
-                    <th>Runner</th>
-                    <th>Distance</th>
-                    <th>Kit</th>
-                    <th>Amount</th>
-                    <th>Payment Status</th>
-                    <th>Registered At</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($recent as $registration)
-                    <tr>
-                        <td><span class="stitch-code-badge">#{{ $registration->bib_number }}</span></td>
-                        <td>
-                            <strong>{{ $registration->age_on_race_day ?? '—' }}</strong>
-                            @if($registration->age_on_race_day !== null)
-                                <small style="display:block;color:var(--st-text-muted);">{{ $registration->age_group_name ?? __('No age group') }}</small>
-                            @endif
-                        </td>
-                        <td>
-                            <a href="{{ route('admin.registrations.show', $registration) }}" class="stitch-code-badge">
-                                {{ $registration->registration_code }}
-                            </a>
-                        </td>
-                        <td>
-                            <div class="stitch-runner-cell">
-                                <div class="stitch-runner-avatar">
-                                    {{ strtoupper(substr($registration->first_name, 0, 1) . substr($registration->last_name, 0, 1)) }}
-                                </div>
-                                <div>
-                                    <div class="stitch-runner-name">{{ $registration->first_name }} {{ $registration->last_name }}</div>
-                                    <div class="stitch-runner-sub">{{ $registration->email }}</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>
-                            <span class="stitch-distance-chip">
-                                {{ $registration->race?->distance_label ?? '—' }}
-                            </span>
-                        </td>
-                        <td>
-                            <span style="font-weight: 600; font-size: 12px; color: var(--st-text-secondary);">
-                                {{ ucfirst($registration->kit_type) }}
-                                @if($registration->shirt_size)
-                                    <small style="color: var(--st-text-muted);">({{ $registration->shirt_size }})</small>
-                                @endif
-                            </span>
-                        </td>
-                        <td>
-                            <strong style="font-weight: 800; color: var(--st-text-primary);">
-                                EGP {{ number_format($registration->amount, 2) }}
-                            </strong>
-                        </td>
-                        <td>
-                            <span class="stitch-badge status-{{ $registration->payment_status }}">
-                                @if($registration->payment_status === 'paid')
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                    <span>Paid</span>
-                                @elseif($registration->payment_status === 'pending')
-                                    <span style="width: 6px; height: 6px; border-radius: 50%; background: #f59e0b;"></span>
-                                    <span>Pending</span>
-                                @else
-                                    <span>{{ ucfirst($registration->payment_status) }}</span>
-                                @endif
-                            </span>
-                        </td>
-                        <td style="color: var(--st-text-muted); font-size: 12px; white-space: nowrap;">
-                            {{ $registration->created_at?->format('d M Y, h:i A') }}
-                        </td>
-                        <td style="text-align: right;">
-                            <a href="{{ route('admin.registrations.show', $registration) }}" class="stitch-btn stitch-btn-secondary" style="padding: 6px 12px; font-size: 11px;">
-                                Details
-                            </a>
-                        </td>
-                    </tr>
+        <article class="kfs-dashboard-panel kfs-category-panel">
+            <div class="kfs-panel-heading">
+                <div>
+                    <span class="kfs-panel-eyebrow">{{ __('Participant distribution') }}</span>
+                    <h2>{{ __('Race categories') }}</h2>
+                    <p>{{ __('Registrations across each distance') }}</p>
+                </div>
+                <a class="kfs-panel-link" href="{{ route('admin.races') }}">{{ __('Manage') }} <span aria-hidden="true">→</span></a>
+            </div>
+            <div class="kfs-category-list">
+                @forelse($raceBreakdown as $index => $race)
+                    @php($racePercent = $total > 0 ? min(100, (int) round(($race->registrations_count / $total) * 100)) : 0)
+                    <div class="kfs-category-row">
+                        <div class="kfs-category-meta">
+                            <span class="kfs-category-name"><i class="tone-{{ $categoryTones[$index % count($categoryTones)] }}"></i>{{ $race->name }} <small>{{ $race->distance_label }}</small></span>
+                            <strong>{{ number_format($race->registrations_count) }} <small>· {{ $racePercent }}%</small></strong>
+                        </div>
+                        <div class="kfs-category-track"><span class="tone-{{ $categoryTones[$index % count($categoryTones)] }}" style="width: {{ $racePercent }}%"></span></div>
+                    </div>
                 @empty
-                    <tr>
-                        <td colspan="10" style="text-align: center; padding: 36px; color: var(--st-text-muted);">
-                            No registrations recorded yet.
-                        </td>
-                    </tr>
+                    <p class="kfs-empty-state">{{ __('No race categories have been added yet.') }}</p>
                 @endforelse
-            </tbody>
-        </table>
-    </div>
+            </div>
+        </article>
+    </section>
+
+    <section class="kfs-dashboard-panel kfs-recent-panel" aria-labelledby="kfs-recent-title">
+        <div class="kfs-panel-heading kfs-recent-heading">
+            <div>
+                <span class="kfs-panel-eyebrow">{{ __('Latest activity') }}</span>
+                <h2 id="kfs-recent-title">{{ __('Recent registrations') }}</h2>
+                <p>{{ __('Bib number, age group, and payment status at a glance') }}</p>
+            </div>
+            <a class="kfs-dashboard-button secondary" href="{{ route('admin.registrations') }}">{{ __('View all :count', ['count' => number_format($total)]) }} <span aria-hidden="true">→</span></a>
+        </div>
+
+        <div class="kfs-table-scroll" role="region" aria-label="{{ __('Recent runner registrations') }}" tabindex="0">
+            <table class="kfs-dashboard-table">
+                <thead>
+                    <tr>
+                        <th scope="col">{{ __('Bib') }}</th>
+                        <th scope="col">{{ __('Runner') }}</th>
+                        <th scope="col">{{ __('Age & group') }}</th>
+                        <th scope="col">{{ __('Distance') }}</th>
+                        <th scope="col">{{ __('Registration reference') }}</th>
+                        <th scope="col">{{ __('Kit') }}</th>
+                        <th scope="col">{{ __('Amount') }}</th>
+                        <th scope="col">{{ __('Payment status') }}</th>
+                        <th scope="col">{{ __('Registered') }}</th>
+                        <th scope="col"><span class="sr-only">{{ __('Actions') }}</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($recent as $registration)
+                        <tr>
+                            <td><span class="kfs-bib-number">#{{ $registration->bib_number ?: '—' }}</span></td>
+                            <td>
+                                <div class="kfs-runner-cell">
+                                    <span class="kfs-runner-avatar">{{ strtoupper(substr($registration->first_name, 0, 1) . substr($registration->last_name, 0, 1)) }}</span>
+                                    <span class="kfs-runner-details"><strong>{{ $registration->first_name }} {{ $registration->last_name }}</strong><small>{{ $registration->email }}</small></span>
+                                </div>
+                            </td>
+                            <td>
+                                <strong class="kfs-runner-age">{{ $registration->age_on_race_day ?? '—' }}</strong>
+                                <small class="kfs-age-group">{{ $registration->age_group_name ?? __('No age group') }}</small>
+                            </td>
+                            <td><span class="kfs-distance-chip">{{ $registration->race?->distance_label ?? '—' }}</span></td>
+                            <td><a class="kfs-registration-code" href="{{ route('admin.registrations.show', $registration) }}">{{ $registration->registration_code }}</a></td>
+                            <td><span class="kfs-kit-label">{{ ucfirst($registration->kit_type) }}@if($registration->shirt_size) <small>· {{ $registration->shirt_size }}</small>@endif</span></td>
+                            <td><strong class="kfs-amount">EGP {{ number_format($registration->amount, 2) }}</strong></td>
+                            <td><span class="kfs-payment-status status-{{ $registration->payment_status }}"><i></i>{{ __(ucfirst($registration->payment_status)) }}</span></td>
+                            <td><time class="kfs-registered-at" datetime="{{ $registration->created_at?->toIso8601String() }}">{{ $registration->created_at?->format('d M Y, h:i A') }}</time></td>
+                            <td><a class="kfs-row-action" href="{{ route('admin.registrations.show', $registration) }}">{{ __('Details') }} <span aria-hidden="true">→</span></a></td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="10" class="kfs-table-empty">{{ __('No registrations have been recorded yet.') }}</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="kfs-danger-zone" aria-labelledby="kfs-danger-title">
+        <div class="kfs-danger-copy">
+            <span class="kfs-danger-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg>
+            </span>
+            <div>
+                <span class="kfs-panel-eyebrow">{{ __('Admin-only action') }}</span>
+                <h2 id="kfs-danger-title">{{ __('Remove all orders') }}</h2>
+                <p>{{ __('Permanently deletes registrations, teams, payment records, and uploaded runner documents. Real payments are not refunded. Races and settings remain.') }}</p>
+                <small>{{ __('Current data: :runners runners, :teams teams, :payments payment records.', ['runners' => number_format($total), 'teams' => number_format($teamCount), 'payments' => number_format($paymentCount)]) }}</small>
+            </div>
+        </div>
+        <form class="kfs-danger-form" method="POST" action="{{ route('admin.registrations.clear-all') }}" onsubmit="return confirm('{{ __('Permanently remove all orders and payment history?') }}')">
+            @csrf
+            <label class="kfs-dashboard-field">
+                <span>{{ __('Type DELETE ALL to confirm') }}</span>
+                <input name="confirmation_phrase" required pattern="DELETE ALL" autocomplete="off" placeholder="DELETE ALL">
+            </label>
+            <button class="kfs-dashboard-button danger" type="submit">{{ __('Remove all orders') }}</button>
+        </form>
+    </section>
 </div>
 @endsection
