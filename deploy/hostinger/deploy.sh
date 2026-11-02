@@ -3,12 +3,19 @@ set -e
 
 echo "🚀 [Deploy] Starting deployment on Hostinger..."
 
-# Locate Hostinger domain folder (kfsmarathon.elatiky.com or runners.elatiky.com)
-TARGET_DOMAIN="kfsmarathon.elatiky.com"
-if [ ! -d "$HOME/domains/$TARGET_DOMAIN" ]; then
-  if [ -d "$HOME/domains/runners.elatiky.com" ]; then
-    TARGET_DOMAIN="runners.elatiky.com"
+# Prefer the current public URL, keeping the previous configured app as a fallback.
+TARGET_DOMAIN=""
+for CANDIDATE_DOMAIN in runners.elatiky.com kfsmarathon.elatiky.com; do
+  CANDIDATE_APP="$HOME/domains/$CANDIDATE_DOMAIN/kfs-app"
+  if [ -f "$CANDIDATE_APP/.env" ] && [ -d "$CANDIDATE_APP/vendor" ]; then
+    TARGET_DOMAIN="$CANDIDATE_DOMAIN"
+    break
   fi
+done
+
+if [ -z "$TARGET_DOMAIN" ]; then
+  echo "❌ [Deploy] No configured Laravel app found under ~/domains/runners.elatiky.com or ~/domains/kfsmarathon.elatiky.com."
+  exit 1
 fi
 
 APP_DIR="$HOME/domains/$TARGET_DOMAIN/kfs-app"
