@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use DateTimeInterface;
+use Illuminate\Support\Carbon;
 use Illuminate\Contracts\Encryption\DecryptException;
 
 class Registration extends Model
@@ -49,6 +51,17 @@ class Registration extends Model
         $idNumber = $this->decryptedIdNumber();
 
         return $idNumber !== null ? '••••••' . substr($idNumber, -4) : null;
+    }
+
+    public function ageOn(DateTimeInterface|string|null $date = null): ?int
+    {
+        if (! $this->birth_date) {
+            return null;
+        }
+
+        $asOf = $date instanceof DateTimeInterface ? Carbon::instance($date) : Carbon::parse($date ?? now());
+
+        return $this->birth_date->diff($asOf)->y;
     }
 
     public function race(): BelongsTo { return $this->belongsTo(Race::class); }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Api\Admin\TeamImportController;
 use App\Mail\RunnerQrMail;
+use App\Models\AgeGroup;
 use App\Models\AppSetting;
 use App\Models\Payment;
 use App\Models\PromoCode;
@@ -34,6 +35,7 @@ class AdminWebController
         $failed = Registration::query()->whereIn('payment_status', ['failed', 'refunded'])->count();
         $revenue = Registration::query()->where('payment_status', 'paid')->sum('amount');
         $recent = Registration::query()->with('race')->latest()->limit(8)->get();
+        $ageGroups = AgeGroup::query()->orderBy('min_age')->get();
         $raceBreakdown = Race::query()->withCount('registrations')->orderBy('sort_order')->get();
         $teamCount = Team::query()->count();
         $paymentCount = Payment::query()->count();
@@ -43,6 +45,12 @@ class AdminWebController
         });
 
         $raceDate = AppSetting::get('race_date', '2026-11-20');
+        $ageDate = Carbon::parse($raceDate);
+        $recent->each(function (Registration $registration) use ($ageGroups, $ageDate) {
+            $age = $registration->ageOn($ageDate);
+            $registration->setAttribute('age_on_race_day', $age);
+            $registration->setAttribute('age_group_name', $ageGroups->first(fn (AgeGroup $group) => $group->containsAge($age))?->name);
+        });
         $raceTime = AppSetting::get('race_time', '07:00');
         $countdownEnabled = (bool) AppSetting::get('countdown_enabled', true);
 
@@ -53,20 +61,31 @@ class AdminWebController
     {
         $registrations = $this->registrationQuery($request)->paginate(25)->withQueryString();
         $races = Race::query()->orderBy('sort_order')->get();
+        $ageGroups = AgeGroup::query()->orderBy('sort_order')->orderBy('min_age')->get();
+        $raceDate = Carbon::parse(AppSetting::get('race_date', '2026-11-20'));
+        $registrations->getCollection()->each(function (Registration $registration) use ($ageGroups, $raceDate) {
+            $age = $registration->ageOn($raceDate);
+            $registration->setAttribute('age_on_race_day', $age);
+            $registration->setAttribute('age_group_name', $ageGroups->first(fn (AgeGroup $group) => $group->containsAge($age))?->name);
+        });
 
-        return view('admin.registrations', compact('registrations', 'races'));
+        return view('admin.registrations', compact('registrations', 'races', 'ageGroups', 'raceDate'));
     }
 
     public function exportRegistrations(Request $request)
     {
         $rows = $this->registrationQuery($request)->cursor();
+        $ageGroups = AgeGroup::query()->orderBy('min_age')->get();
+        $raceDate = Carbon::parse(AppSetting::get('race_date', '2026-11-20'));
 
-        return response()->streamDownload(function () use ($rows) {
+        return response()->streamDownload(function () use ($rows, $ageGroups, $raceDate) {
             $output = fopen('php://output', 'w');
             fwrite($output, "\xEF\xBB\xBF");
-            fputcsv($output, ['reference', 'race_number', 'first_name', 'last_name', 'email', 'phone', 'race', 'kit_type', 'shirt_size', 'amount', 'currency', 'registration_status', 'payment_status', 'created_at']);
+            fputcsv($output, ['reference', 'race_number', 'age_on_race_day', 'age_group', 'first_name', 'last_name', 'email', 'phone', 'race', 'kit_type', 'shirt_size', 'amount', 'currency', 'registration_status', 'payment_status', 'created_at']);
             foreach ($rows as $registration) {
-                $values = [$registration->registration_code, $registration->bib_number, $registration->first_name, $registration->last_name, $registration->email, $registration->phone, $registration->race?->name, $registration->kit_type, $registration->shirt_size, $registration->amount, $registration->currency, $registration->status, $registration->payment_status, $registration->created_at?->toISOString()];
+                $age = $registration->ageOn($raceDate);
+                $ageGroup = $ageGroups->first(fn (AgeGroup $group) => $group->containsAge($age))?->name;
+                $values = [$registration->registration_code, $registration->bib_number, $age, $ageGroup, $registration->first_name, $registration->last_name, $registration->email, $registration->phone, $registration->race?->name, $registration->kit_type, $registration->shirt_size, $registration->amount, $registration->currency, $registration->status, $registration->payment_status, $registration->created_at?->toISOString()];
                 fputcsv($output, array_map(static fn ($value) => is_string($value) && preg_match('/\A[=+@-]/', $value) ? "'" . $value : $value, $values));
             }
             fclose($output);
@@ -141,6 +160,9 @@ class AdminWebController
     public function registration(Registration $registration)
     {
         $registration->load(['race', 'team', 'payments', 'team.payments']);
+        $raceDate = Carbon::parse(AppSetting::get('race_date', '2026-11-20'));
+        $runnerAge = $registration->ageOn($raceDate);
+        $ageGroupName = AgeGroup::query()->where('min_age', '<=', $runnerAge)->where('max_age', '>=', $runnerAge)->value('name');
         $payments = $registration->payments->merge($registration->team?->payments ?? collect())->unique('id')->sortByDesc('created_at');
         $idNumber = $registration->decryptedIdNumber();
         $idNumberDisplay = $idNumber ?? '—';
@@ -148,7 +170,7 @@ class AdminWebController
         $qrDataUri = QrCodeService::generateRunnerQr($registration, 260);
         $qrPayload = QrCodeService::buildRunnerPayload($registration);
 
-        return view('admin.registration', compact('registration', 'payments', 'idNumberDisplay', 'idNumberUnavailable', 'qrDataUri', 'qrPayload'));
+        return view('admin.registration', compact('registration', 'payments', 'idNumberDisplay', 'idNumberUnavailable', 'qrDataUri', 'qrPayload', 'raceDate', 'runnerAge', 'ageGroupName'));
     }
 
     public function sendRegistrationQr(Registration $registration)
@@ -660,9 +682,9 @@ class AdminWebController
         return view('admin.team-import', compact('races'));
     }
 
-    public function importTeam(Request $request, TeamImportController $importer, EasyKashCashApi $easyKash)
+    public function importTeam(Request $request, TeamImportController $importer, EasyKashCashApi $easyKash, \App\Services\BibNumberService $bibNumbers)
     {
-        $response = $importer->store($request, $easyKash);
+        $response = $importer->store($request, $easyKash, $bibNumbers);
 
         if ($response instanceof JsonResponse) {
             $payload = $response->getData(true);
@@ -683,6 +705,7 @@ class AdminWebController
         if ($search = trim((string) $request->query('search'))) {
             $query->where(fn ($builder) => $builder
                 ->where('registration_code', 'like', "%{$search}%")
+                ->orWhere('bib_number', 'like', "%{$search}%")
                 ->orWhere('first_name', 'like', "%{$search}%")
                 ->orWhere('last_name', 'like', "%{$search}%")
                 ->orWhere('email', 'like', "%{$search}%")
@@ -693,6 +716,12 @@ class AdminWebController
             $query->where('payment_status', $request->query('payment_status'));
         }
         if ($request->filled('race_id')) $query->where('race_id', $request->integer('race_id'));
+        if ($request->filled('age_group_id') && ($ageGroup = AgeGroup::query()->find($request->integer('age_group_id')))) {
+            $raceDate = Carbon::parse(AppSetting::get('race_date', '2026-11-20'));
+            $oldestBirthDate = $raceDate->copy()->subYears($ageGroup->max_age + 1)->toDateString();
+            $youngestBirthDate = $raceDate->copy()->subYears($ageGroup->min_age)->toDateString();
+            $query->whereDate('birth_date', '>', $oldestBirthDate)->whereDate('birth_date', '<=', $youngestBirthDate);
+        }
 
         return $query;
     }

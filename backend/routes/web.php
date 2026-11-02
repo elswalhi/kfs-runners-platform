@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\PublicPromoCodeController;
 use App\Http\Controllers\Web\AdminWebAuthController;
 use App\Http\Controllers\Web\AdminEventController;
+use App\Http\Controllers\Web\AdminAgeGroupController;
 use App\Http\Controllers\Web\AdminWebController;
 use App\Http\Controllers\Web\PublicEventController;
 use App\Http\Controllers\Web\PublicSiteMediaController;
@@ -49,6 +50,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/registrations/{registration}/document', [AdminWebController::class, 'registrationDocument'])->name('registrations.document');
         Route::get('/payments', [AdminWebController::class, 'payments'])->name('payments');
         Route::get('/races', [AdminWebController::class, 'races'])->name('races');
+        Route::get('/age-groups', [AdminAgeGroupController::class, 'index'])->name('age-groups');
+        Route::post('/age-groups', [AdminAgeGroupController::class, 'store'])->name('age-groups.store');
+        Route::put('/age-groups/{ageGroup}', [AdminAgeGroupController::class, 'update'])->name('age-groups.update');
+        Route::delete('/age-groups/{ageGroup}', [AdminAgeGroupController::class, 'destroy'])->name('age-groups.destroy');
         Route::post('/races', [AdminWebController::class, 'storeRace'])->name('races.store');
         Route::put('/races/{race}', [AdminWebController::class, 'updateRace'])->name('races.update');
         Route::delete('/races/{race}', [AdminWebController::class, 'deleteRace'])->name('races.destroy');

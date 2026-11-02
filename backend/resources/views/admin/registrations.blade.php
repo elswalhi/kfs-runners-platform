@@ -13,8 +13,14 @@
         </div>
         <h1 class="stitch-hero-title">Race <span>Registrations</span></h1>
         <p class="stitch-hero-desc">Search runners, filter payment statuses, download documents, and manage event rosters.</p>
+        <small style="display:block;margin-top:7px;color:var(--st-text-muted);">
+            {{ __('Age is calculated on race day (:date).', ['date' => $raceDate->format('d M Y')]) }}
+        </small>
     </div>
     <div class="stitch-hero-actions">
+        <a href="{{ route('admin.age-groups') }}" class="stitch-btn stitch-btn-secondary">
+            <span>{{ __('Manage age groups') }}</span>
+        </a>
         <a href="{{ route('admin.registrations.export', request()->query()) }}" class="stitch-btn stitch-btn-secondary">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
             <span>Export CSV</span>
@@ -49,12 +55,21 @@
             @endforeach
         </select>
 
+        <select name="age_group_id" class="stitch-select">
+            <option value="">{{ __('All age groups') }}</option>
+            @foreach($ageGroups as $ageGroup)
+                <option value="{{ $ageGroup->id }}" @selected((string) request('age_group_id') === (string) $ageGroup->id)>
+                    {{ $ageGroup->name }} · {{ $ageGroup->min_age }}–{{ $ageGroup->max_age }}
+                </option>
+            @endforeach
+        </select>
+
         <button type="submit" class="stitch-btn stitch-btn-secondary" style="height: 42px;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
             <span>Filter</span>
         </button>
 
-        @if(request()->hasAny(['search', 'payment_status', 'race_id']))
+        @if(request()->hasAny(['search', 'payment_status', 'race_id', 'age_group_id']))
             <a href="{{ route('admin.registrations') }}" class="stitch-btn stitch-btn-secondary" style="height: 42px; color: #ef4444;" title="Reset filters">
                 <span>Reset</span>
             </a>
@@ -67,6 +82,7 @@
             <thead>
                 <tr>
                     <th>Bib #</th>
+                    <th>{{ __('Age / Age group') }}</th>
                     <th>Reference</th>
                     <th>Runner</th>
                     <th>Distance & Category</th>
@@ -81,6 +97,15 @@
                 @forelse($registrations as $item)
                     <tr>
                         <td><span class="stitch-code-badge">#{{ $item->bib_number }}</span></td>
+                        <td>
+                            <strong>{{ $item->age_on_race_day ?? '—' }}</strong>
+                            @if($item->age_on_race_day !== null)
+                                <small style="display:block;color:var(--st-text-muted);">{{ __('years') }}</small>
+                                <span class="stitch-distance-chip" style="display:inline-flex;margin-top:4px;">
+                                    {{ $item->age_group_name ?? __('No age group') }}
+                                </span>
+                            @endif
+                        </td>
                         <td>
                             <a href="{{ route('admin.registrations.show', $item) }}" class="stitch-code-badge">
                                 {{ $item->registration_code }}
@@ -159,7 +184,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 48px 20px; color: var(--st-text-muted);">
+                        <td colspan="10" style="text-align: center; padding: 48px 20px; color: var(--st-text-muted);">
                             <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
                                 <span style="font-size: 14px; font-weight: 700; color: #475569;">No registrations found</span>

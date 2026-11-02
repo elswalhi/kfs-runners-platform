@@ -62,6 +62,16 @@
             </div>
 
             <div class="stitch-detail-item">
+                <span class="label">{{ __('Age on race day') }}</span>
+                <strong class="val">
+                    {{ $runnerAge ?? '—' }}@if($runnerAge !== null) {{ __('years') }}@endif
+                    @if($ageGroupName)
+                        <small style="display:block;color:var(--st-primary);">{{ $ageGroupName }}</small>
+                    @endif
+                </strong>
+            </div>
+
+            <div class="stitch-detail-item">
                 <span class="label">National ID / Passport</span>
                 <strong class="val" style="font-family: 'JetBrains Mono', monospace; overflow-wrap:anywhere;">{{ $idNumberDisplay }}</strong>
                 @if ($idNumberUnavailable)

@@ -263,6 +263,7 @@
             <thead>
                 <tr>
                     <th>Bib #</th>
+                    <th>{{ __('Age') }}</th>
                     <th>Reference</th>
                     <th>Runner</th>
                     <th>Distance</th>
@@ -277,6 +278,12 @@
                 @forelse($recent as $registration)
                     <tr>
                         <td><span class="stitch-code-badge">#{{ $registration->bib_number }}</span></td>
+                        <td>
+                            <strong>{{ $registration->age_on_race_day ?? '—' }}</strong>
+                            @if($registration->age_on_race_day !== null)
+                                <small style="display:block;color:var(--st-text-muted);">{{ $registration->age_group_name ?? __('No age group') }}</small>
+                            @endif
+                        </td>
                         <td>
                             <a href="{{ route('admin.registrations.show', $registration) }}" class="stitch-code-badge">
                                 {{ $registration->registration_code }}
@@ -335,7 +342,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" style="text-align: center; padding: 36px; color: var(--st-text-muted);">
+                        <td colspan="10" style="text-align: center; padding: 36px; color: var(--st-text-muted);">
                             No registrations recorded yet.
                         </td>
                     </tr>
