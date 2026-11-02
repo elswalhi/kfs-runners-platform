@@ -5,7 +5,7 @@ echo "🚀 [Deploy] Starting deployment on Hostinger..."
 
 # Prefer the current public URL, keeping the previous configured app as a fallback.
 TARGET_DOMAIN=""
-for CANDIDATE_DOMAIN in runners.elatiky.com kfsmarathon.elatiky.com; do
+for CANDIDATE_DOMAIN in kfsmarathon.elatiky.com runners.elatiky.com; do
   CANDIDATE_APP="$HOME/domains/$CANDIDATE_DOMAIN/kfs-app"
   if [ -f "$CANDIDATE_APP/.env" ] && [ -d "$CANDIDATE_APP/vendor" ]; then
     TARGET_DOMAIN="$CANDIDATE_DOMAIN"
@@ -14,7 +14,7 @@ for CANDIDATE_DOMAIN in runners.elatiky.com kfsmarathon.elatiky.com; do
 done
 
 if [ -z "$TARGET_DOMAIN" ]; then
-  echo "❌ [Deploy] No configured Laravel app found under ~/domains/runners.elatiky.com or ~/domains/kfsmarathon.elatiky.com."
+  echo "❌ [Deploy] No configured Laravel app found under ~/domains/kfsmarathon.elatiky.com or ~/domains/runners.elatiky.com."
   exit 1
 fi
 
