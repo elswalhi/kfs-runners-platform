@@ -43,6 +43,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/registrations', [AdminWebController::class, 'registrations'])->name('registrations');
         Route::get('/registrations/export', [AdminWebController::class, 'exportRegistrations'])->name('registrations.export');
         Route::get('/registrations/{registration}', [AdminWebController::class, 'registration'])->name('registrations.show');
+        Route::post('/registrations/{registration}/send-qr', [AdminWebController::class, 'sendRegistrationQr'])->middleware('throttle:5,1')->name('registrations.send-qr');
         Route::patch('/registrations/{registration}', [AdminWebController::class, 'updateRegistration'])->name('registrations.update');
         Route::get('/registrations/{registration}/document', [AdminWebController::class, 'registrationDocument'])->name('registrations.document');
         Route::get('/payments', [AdminWebController::class, 'payments'])->name('payments');

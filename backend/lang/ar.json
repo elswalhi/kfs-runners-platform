@@ -416,5 +416,18 @@
     "Pending payment": "بانتظار الدفع",
     "Runners in this team registration": "العداؤون في تسجيل الفريق",
     "Keep this reference and contact the race team before submitting another registration.": "احتفظ بهذا المرجع وتواصل مع فريق السباق قبل إرسال تسجيل آخر.",
-    "Thank you for joining KFS Runners.": "شكرًا لانضمامك إلى عدائي كفر الشيخ."
+    "Thank you for joining KFS Runners.": "شكرًا لانضمامك إلى عدائي كفر الشيخ.",
+    "Your KFS Runners kit pickup QR": "رمز QR لاستلام طقم KFS Runners",
+    "Your kit pickup QR": "رمز QR لاستلام الطقم",
+    "Your kit pickup QR is ready": "رمز QR لاستلام طقمك جاهز",
+    "Keep this email on your phone and show the QR at the KFS Runners kit pickup desk. The QR image is also attached as a PNG.": "احتفظ بهذه الرسالة على هاتفك وأظهر رمز QR عند نقطة استلام طقم KFS Runners. أرفقنا صورة الرمز أيضًا بصيغة PNG.",
+    "Runner kit pickup QR code": "رمز QR لاستلام طقم المتسابق",
+    "Email QR for kit pickup": "إرسال QR لاستلام الطقم بالبريد",
+    "Send the QR and kit pickup details to :email.": "سيتم إرسال رمز QR وتفاصيل استلام الطقم إلى :email.",
+    "The QR email can be sent after payment is confirmed.": "يمكن إرسال رمز QR بعد تأكيد الدفع.",
+    "This runner does not have a valid email address.": "لا يوجد عنوان بريد إلكتروني صالح لهذا المتسابق.",
+    "The kit pickup QR can only be emailed after payment is confirmed.": "يمكن إرسال رمز QR لاستلام الطقم بعد تأكيد الدفع فقط.",
+    "Email delivery is not configured. Set up SMTP before sending runner QR codes.": "إعداد إرسال البريد غير مكتمل. أعد إعداد SMTP قبل إرسال رموز QR للمتسابقين.",
+    "Could not send the runner QR email. Check the mail settings and try again.": "تعذر إرسال رمز QR للمتسابق. تحقق من إعدادات البريد وحاول مرة أخرى.",
+    "Runner QR sent to :email.": "تم إرسال رمز QR للمتسابق إلى :email."
 }

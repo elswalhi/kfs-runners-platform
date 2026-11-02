@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Api\Admin\TeamImportController;
+use App\Mail\RunnerQrMail;
 use App\Models\AppSetting;
 use App\Models\Payment;
 use App\Models\PromoCode;
@@ -15,9 +16,12 @@ use App\Support\SiteMedia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Throwable;
 
 class AdminWebController
 {
@@ -96,6 +100,52 @@ class AdminWebController
         $qrPayload = QrCodeService::buildRunnerPayload($registration);
 
         return view('admin.registration', compact('registration', 'payments', 'idNumberDisplay', 'idNumberUnavailable', 'qrDataUri', 'qrPayload'));
+    }
+
+    public function sendRegistrationQr(Registration $registration)
+    {
+        if (! filter_var($registration->email, FILTER_VALIDATE_EMAIL)) {
+            return back()->withErrors(__('This runner does not have a valid email address.'));
+        }
+
+        if ($registration->payment_status !== 'paid') {
+            return back()->withErrors(__('The kit pickup QR can only be emailed after payment is confirmed.'));
+        }
+
+        if (config('mail.default') === 'log') {
+            return back()->withErrors(__('Email delivery is not configured. Set up SMTP before sending runner QR codes.'));
+        }
+
+        try {
+            $registration->loadMissing('race', 'team');
+            $qrDataUri = QrCodeService::generateRunnerQr($registration, 360);
+            $qrBase64 = substr($qrDataUri, strlen('data:image/png;base64,'));
+            $qrPng = base64_decode($qrBase64, true);
+
+            if ($qrPng === false) {
+                throw new \RuntimeException('Could not decode the runner QR image.');
+            }
+
+            Mail::to($registration->email)->send(new RunnerQrMail([
+                'locale' => app()->getLocale(),
+                'reference' => $registration->registration_code,
+                'name' => trim($registration->first_name . ' ' . $registration->last_name),
+                'race' => $registration->race?->name ?? '—',
+                'distance' => $registration->race?->distance_label ?? '—',
+                'kit' => $registration->kit_type,
+                'shirt_size' => $registration->shirt_size,
+                'team' => $registration->team?->name ?? $registration->team_name,
+            ], $qrPng));
+        } catch (Throwable $exception) {
+            Log::warning('Could not email the runner kit pickup QR.', [
+                'registration_reference' => $registration->registration_code,
+                'exception' => $exception::class,
+            ]);
+
+            return back()->withErrors(__('Could not send the runner QR email. Check the mail settings and try again.'));
+        }
+
+        return back()->with('success', __('Runner QR sent to :email.', ['email' => $registration->email]));
     }
 
     public function updateRegistration(Request $request, Registration $registration)

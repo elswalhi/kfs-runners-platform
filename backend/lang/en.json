@@ -194,5 +194,18 @@
     "Pending payment": "Pending payment",
     "Runners in this team registration": "Runners in this team registration",
     "Keep this reference and contact the race team before submitting another registration.": "Keep this reference and contact the race team before submitting another registration.",
-    "Thank you for joining KFS Runners.": "Thank you for joining KFS Runners."
+    "Thank you for joining KFS Runners.": "Thank you for joining KFS Runners.",
+    "Your KFS Runners kit pickup QR": "Your KFS Runners kit pickup QR",
+    "Your kit pickup QR": "Your kit pickup QR",
+    "Your kit pickup QR is ready": "Your kit pickup QR is ready",
+    "Keep this email on your phone and show the QR at the KFS Runners kit pickup desk. The QR image is also attached as a PNG.": "Keep this email on your phone and show the QR at the KFS Runners kit pickup desk. The QR image is also attached as a PNG.",
+    "Runner kit pickup QR code": "Runner kit pickup QR code",
+    "Email QR for kit pickup": "Email QR for kit pickup",
+    "Send the QR and kit pickup details to :email.": "Send the QR and kit pickup details to :email.",
+    "The QR email can be sent after payment is confirmed.": "The QR email can be sent after payment is confirmed.",
+    "This runner does not have a valid email address.": "This runner does not have a valid email address.",
+    "The kit pickup QR can only be emailed after payment is confirmed.": "The kit pickup QR can only be emailed after payment is confirmed.",
+    "Email delivery is not configured. Set up SMTP before sending runner QR codes.": "Email delivery is not configured. Set up SMTP before sending runner QR codes.",
+    "Could not send the runner QR email. Check the mail settings and try again.": "Could not send the runner QR email. Check the mail settings and try again.",
+    "Runner QR sent to :email.": "Runner QR sent to :email."
 }

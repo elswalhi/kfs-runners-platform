@@ -178,6 +178,19 @@
                     </button>
                 </div>
 
+                <form method="POST" action="{{ route('admin.registrations.send-qr', $registration) }}" style="margin-top: 10px; width: 100%;">
+                    @csrf
+                    <button type="submit" class="stitch-btn stitch-btn-secondary" style="width: 100%; justify-content: center; gap: 8px;" @disabled($registration->payment_status !== 'paid')>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+                        <span>{{ __('Email QR for kit pickup') }}</span>
+                    </button>
+                    @if($registration->payment_status === 'paid')
+                        <small style="display:block; margin-top:6px; color:var(--st-text-muted); font-size:11px;">{{ __('Send the QR and kit pickup details to :email.', ['email' => $registration->email]) }}</small>
+                    @else
+                        <small style="display:block; margin-top:6px; color:#a77919; font-size:11px;">{{ __('The QR email can be sent after payment is confirmed.') }}</small>
+                    @endif
+                </form>
+
                 <!-- Decoded QR Text preview -->
                 <div style="margin-top: 14px; width: 100%; text-align: left; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;">
                     <span style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">{{ __('QR Scanned Content Preview:') }}</span>
