@@ -68,7 +68,7 @@
                     <button type="button" id="copy-voucher" class="kfs-copy-btn">{{ __('Copy') }}</button>
                 </div>
                 <div class="cash-voucher-meta"><span>Registration reference</span><b id="payment-reference"></b><span>Payment status</span><b id="payment-status">Confirming</b></div>
-                <small class="cash-voucher-note">Payment is confirmed only by EasyKash’s signed server callback. Do not submit another registration while this payment is being checked.</small>
+                <small class="cash-voucher-note">{{ __('Your payment status will update automatically after EasyKash confirms it. Keep your registration reference; do not submit another registration.') }}</small>
             </div>
 
             <form class="runner-form" method="POST" action="{{ route('register.store') }}" enctype="multipart/form-data" id="runner-form">
