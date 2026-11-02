@@ -58,7 +58,15 @@
             <div id="payment-return-message" class="form-alert alert-info" role="status" hidden></div>
             <div id="cash-voucher-panel" class="cash-voucher cash-voucher-pending" aria-live="polite" hidden>
                 <span class="cash-voucher-kicker">{{ __('EasyKash payment') }}</span><h3 id="payment-title">{{ __('Checking payment status') }}</h3><p id="payment-description">We are checking the signed EasyKash confirmation. Keep your registration reference.</p>
-                <div id="voucher-box" class="cash-voucher-code" hidden><strong id="voucher-value"></strong><button type="button" id="copy-voucher" class="kfs-copy-btn">Copy</button></div>
+                <div id="voucher-box" class="cash-voucher-code" hidden>
+                    <div class="cash-voucher-code-details">
+                        <span id="voucher-label" class="cash-voucher-code-label"></span>
+                        <strong id="voucher-value" dir="ltr"></strong>
+                        <small id="voucher-instructions"></small>
+                        <small id="voucher-expiry" hidden></small>
+                    </div>
+                    <button type="button" id="copy-voucher" class="kfs-copy-btn">{{ __('Copy') }}</button>
+                </div>
                 <div class="cash-voucher-meta"><span>Registration reference</span><b id="payment-reference"></b><span>Payment status</span><b id="payment-status">Confirming</b></div>
                 <small class="cash-voucher-note">Payment is confirmed only by EasyKash’s signed server callback. Do not submit another registration while this payment is being checked.</small>
             </div>
@@ -1142,6 +1150,18 @@
     const params = new URLSearchParams(window.location.search);
     const reference = params.get('customerReference') || params.get('reference') || @json($returnReference ?? session('payment_reference'));
     if (reference) {
+        const voucherText = {
+            fawryTitle: @js(__('Fawry payment number ready')),
+            fawryLabel: @js(__('Fawry payment number')),
+            fawryInstructions: @js(__('Use this number to complete your payment through Fawry. Your registration will update after EasyKash confirms the payment.')),
+            cashTitle: @js(__('Cash payment code ready')),
+            cashLabel: @js(__('Cash payment code')),
+            cashInstructions: @js(__('Use this code with the cash provider selected on EasyKash. Your registration will update after payment confirmation.')),
+            checkingTitle: @js(__('Checking payment status')),
+            pendingDescription: @js(__('Your registration is saved. If you selected Fawry, its payment number will appear here when EasyKash provides it. Keep your registration reference.')),
+            voucherReady: @js(__('Complete payment using the code below. Your registration status updates after EasyKash confirms payment.')),
+            expiry: @js(__('Voucher expires')),
+        };
         const form = document.getElementById('runner-form');
         form.hidden = true;
         const panel = document.getElementById('cash-voucher-panel');
@@ -1168,12 +1188,19 @@
                     setText('payment-description', 'Contact the race team with your reference if you need help.');
                     setText('payment-status', 'Not completed');
                 } else {
-                    setText('payment-title', payment.voucher ? 'Cash voucher ready' : 'Checking payment status');
-                    setText('payment-description', payment.voucher ? 'Use this voucher at the payment provider selected in EasyKash.' : 'Your registration is saved. We are waiting for EasyKash’s signed server confirmation. Keep your reference.');
+                    const method = `${payment.provider || ''} ${payment.payment_method || ''}`.toLowerCase();
+                    const isFawry = method.includes('fawry');
+                    setText('payment-title', payment.voucher ? (isFawry ? voucherText.fawryTitle : voucherText.cashTitle) : voucherText.checkingTitle);
+                    setText('payment-description', payment.voucher ? voucherText.voucherReady : voucherText.pendingDescription);
                     setText('payment-status', payment.voucher ? 'Waiting for payment' : 'Confirming');
                     if (payment.voucher) {
                         document.getElementById('voucher-box').hidden = false;
+                        setText('voucher-label', isFawry ? voucherText.fawryLabel : voucherText.cashLabel);
                         setText('voucher-value', payment.voucher);
+                        setText('voucher-instructions', isFawry ? voucherText.fawryInstructions : voucherText.cashInstructions);
+                        const expiry = document.getElementById('voucher-expiry');
+                        expiry.hidden = !payment.expiry_date;
+                        if (payment.expiry_date) setText('voucher-expiry', `${voucherText.expiry}: ${payment.expiry_date}`);
                     }
                 }
             } catch (error) {

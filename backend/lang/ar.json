@@ -386,5 +386,14 @@
     "Dark mode": "الوضع الليلي",
     "Light mode": "الوضع النهاري",
     "Switch to Light Mode": "تفعيل الوضع النهاري",
-    "Switch to Dark Mode": "تفعيل الوضع الليلي"
+    "Switch to Dark Mode": "تفعيل الوضع الليلي",
+    "Fawry payment number ready": "رقم الدفع عبر فوري جاهز",
+    "Fawry payment number": "رقم الدفع عبر فوري",
+    "Use this number to complete your payment through Fawry. Your registration will update after EasyKash confirms the payment.": "استخدم هذا الرقم لإتمام الدفع عبر فوري. سيتم تحديث حالة تسجيلك بعد تأكيد EasyKash للدفع.",
+    "Cash payment code ready": "كود الدفع النقدي جاهز",
+    "Cash payment code": "كود الدفع النقدي",
+    "Use this code with the cash provider selected on EasyKash. Your registration will update after payment confirmation.": "استخدم هذا الكود لدى مقدم الدفع النقدي الذي اخترته في EasyKash. سيتم تحديث التسجيل بعد تأكيد الدفع.",
+    "If you selected Fawry, its payment number will appear here when EasyKash provides it. Keep your registration reference.": "إذا اخترت فوري، سيظهر رقم الدفع هنا فور إرساله من EasyKash. احتفظ بمرجع التسجيل.",
+    "Complete payment using the code below. Your registration status updates after EasyKash confirms payment.": "أكمل الدفع باستخدام الرقم الموضح أدناه. سيتم تحديث حالة التسجيل بعد تأكيد EasyKash للدفع.",
+    "Voucher expires": "تنتهي صلاحية القسيمة"
 }

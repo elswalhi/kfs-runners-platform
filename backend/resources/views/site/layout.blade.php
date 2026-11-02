@@ -34,7 +34,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/kfs-public.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/kfs-payment.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/kfs-payment.css') }}?v=20261102-fawry-1">
     <link rel="stylesheet" href="{{ asset('css/kfs-blade.css') }}">
     <link rel="stylesheet" href="{{ asset('css/kfs-interactive.css') }}?v=20261027-mobile-1">
     <link rel="stylesheet" href="{{ asset('css/kfs-hero-video.css') }}">

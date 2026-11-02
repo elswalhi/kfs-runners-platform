@@ -71,16 +71,24 @@ class EasyKashCallbackController extends Controller
                 return;
             }
 
+            $paymentMethod = (string) $payload['PaymentMethod'];
+            $provider = stripos($paymentMethod, 'fawry') !== false
+                ? 'Fawry'
+                : (stripos($paymentMethod, 'aman') !== false ? 'Aman' : null);
+            $paymentDetails = array_filter([
+                'provider_status' => $providerStatus,
+                'payment_method' => $paymentMethod,
+                'provider' => $provider,
+                'product_code' => (string) $payload['ProductCode'],
+                'voucher' => isset($payload['voucher']) && is_scalar($payload['voucher']) ? (string) $payload['voucher'] : null,
+                'expiryDate' => isset($payload['expiryDate']) && is_scalar($payload['expiryDate']) ? (string) $payload['expiryDate'] : null,
+            ], static fn ($value) => $value !== null && $value !== '');
+
             $lockedPayment->update([
                 'status' => $paymentStatus,
                 'gateway_reference' => (string) $payload['easykashRef'],
                 'verified_at' => $paymentStatus === 'paid' ? now() : $lockedPayment->verified_at,
-                'payload' => array_merge($lockedPayment->payload ?? [], [
-                    'provider_status' => $providerStatus,
-                    'payment_method' => (string) $payload['PaymentMethod'],
-                    'product_code' => (string) $payload['ProductCode'],
-                    'voucher' => isset($payload['voucher']) && is_scalar($payload['voucher']) ? (string) $payload['voucher'] : null,
-                ]),
+                'payload' => array_merge($lockedPayment->payload ?? [], $paymentDetails),
             ]);
 
             if ($lockedPayment->registration_id) {

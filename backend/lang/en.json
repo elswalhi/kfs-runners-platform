@@ -164,5 +164,14 @@
     "photos": "photos",
     "events": "events",
     "More event information": "More event information",
-    "Remove photo": "Remove photo"
+    "Remove photo": "Remove photo",
+    "Fawry payment number ready": "Fawry payment number ready",
+    "Fawry payment number": "Fawry payment number",
+    "Use this number to complete your payment through Fawry. Your registration will update after EasyKash confirms the payment.": "Use this number to complete your payment through Fawry. Your registration will update after EasyKash confirms the payment.",
+    "Cash payment code ready": "Cash payment code ready",
+    "Cash payment code": "Cash payment code",
+    "Use this code with the cash provider selected on EasyKash. Your registration will update after payment confirmation.": "Use this code with the cash provider selected on EasyKash. Your registration will update after payment confirmation.",
+    "If you selected Fawry, its payment number will appear here when EasyKash provides it. Keep your registration reference.": "If you selected Fawry, its payment number will appear here when EasyKash provides it. Keep your registration reference.",
+    "Complete payment using the code below. Your registration status updates after EasyKash confirms payment.": "Complete payment using the code below. Your registration status updates after EasyKash confirms payment.",
+    "Voucher expires": "Voucher expires"
 }
