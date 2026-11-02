@@ -21,7 +21,7 @@ class RunnerQrMail extends Mailable
                 'details' => $this->details,
                 'qrPng' => $this->qrPng,
             ])
-            ->attachData($this->qrPng, 'kfs-runner-qr-' . $this->details['reference'] . '.png', [
+            ->attachData($this->qrPng, 'kfs-runner-qr-' . $this->details['race_number'] . '.png', [
                 'mime' => 'image/png',
             ]);
     }

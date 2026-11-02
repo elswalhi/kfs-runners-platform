@@ -40,6 +40,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/logout', [AdminWebAuthController::class, 'logout'])->name('logout');
         Route::get('/', [AdminWebController::class, 'dashboard'])->name('dashboard');
         Route::get('/export-overview', [AdminWebController::class, 'exportOverview'])->name('export-overview');
+        Route::post('/registrations/clear-all', [AdminWebController::class, 'clearAllRegistrations'])->middleware('throttle:1,1')->name('registrations.clear-all');
         Route::get('/registrations', [AdminWebController::class, 'registrations'])->name('registrations');
         Route::get('/registrations/export', [AdminWebController::class, 'exportRegistrations'])->name('registrations.export');
         Route::get('/registrations/{registration}', [AdminWebController::class, 'registration'])->name('registrations.show');

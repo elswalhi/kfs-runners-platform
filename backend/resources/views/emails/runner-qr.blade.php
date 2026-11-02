@@ -24,6 +24,7 @@
 
                 <div style="margin:20px auto 0;max-width:460px;padding:16px 18px;border-radius:10px;background:#f5f8f6;text-align:{{ $details['locale'] === 'ar' ? 'right' : 'left' }};font-size:14px;line-height:1.9;">
                     <div><span style="color:#718279;">{{ __('Runner') }}:</span> <strong>{{ $details['name'] }}</strong></div>
+                    <div><span style="color:#718279;">{{ __('Race number') }}:</span> <strong dir="ltr">#{{ $details['race_number'] }}</strong></div>
                     <div><span style="color:#718279;">{{ __('Registration reference') }}:</span> <strong dir="ltr">{{ $details['reference'] }}</strong></div>
                     <div><span style="color:#718279;">{{ __('Race') }}:</span> <strong>{{ $details['race'] }}</strong></div>
                     <div><span style="color:#718279;">{{ __('Distance') }}:</span> <strong>{{ $details['distance'] }}</strong></div>

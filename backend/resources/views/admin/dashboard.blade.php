@@ -73,6 +73,28 @@
     </form>
 </div>
 
+<div class="stitch-panel" style="margin-bottom:24px; border:1px solid #fecaca; background:#fffafa;">
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:24px; flex-wrap:wrap; padding:20px 22px;">
+        <div style="max-width:680px;">
+            <div class="stitch-eyebrow" style="color:#b91c1c;">{{ __('DANGER ZONE') }}</div>
+            <h2 style="margin:6px 0; color:#7f1d1d; font-size:18px;">{{ __('Remove all orders') }}</h2>
+            <p style="margin:0; color:#7f1d1d; font-size:12px; line-height:1.7;">
+                {{ __('This permanently deletes runner registrations, teams, payment records, and uploaded runner documents. It does not refund real payments. Races and settings remain, and bib sequences restart at their configured starting numbers.') }}
+            </p>
+            <small style="display:block; margin-top:9px; color:#7f1d1d; font-weight:700;">
+                {{ __('Current data: :runners runners, :teams teams, :payments payment records.', ['runners' => $total, 'teams' => $teamCount, 'payments' => $paymentCount]) }}
+            </small>
+        </div>
+        <form method="POST" action="{{ route('admin.registrations.clear-all') }}" onsubmit="return confirm('{{ __('Permanently remove all orders and payment history?') }}')" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:0;">
+            @csrf
+            <input name="confirmation_phrase" required pattern="DELETE ALL" autocomplete="off" class="stitch-input" style="height:40px; width:150px;" placeholder="{{ __('Type DELETE ALL') }}">
+            <button type="submit" class="stitch-btn stitch-btn-danger" style="height:40px;">
+                {{ __('Remove all orders') }}
+            </button>
+        </form>
+    </div>
+</div>
+
 <!-- 4 Modern Stitch KPI Cards -->
 <div class="stitch-kpi-grid">
     <!-- Card 1: Total Runners -->
@@ -240,6 +262,7 @@
         <table class="stitch-table">
             <thead>
                 <tr>
+                    <th>Bib #</th>
                     <th>Reference</th>
                     <th>Runner</th>
                     <th>Distance</th>
@@ -253,6 +276,7 @@
             <tbody>
                 @forelse($recent as $registration)
                     <tr>
+                        <td><span class="stitch-code-badge">#{{ $registration->bib_number }}</span></td>
                         <td>
                             <a href="{{ route('admin.registrations.show', $registration) }}" class="stitch-code-badge">
                                 {{ $registration->registration_code }}
@@ -311,7 +335,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" style="text-align: center; padding: 36px; color: var(--st-text-muted);">
+                        <td colspan="9" style="text-align: center; padding: 36px; color: var(--st-text-muted);">
                             No registrations recorded yet.
                         </td>
                     </tr>

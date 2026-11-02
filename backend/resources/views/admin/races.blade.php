@@ -18,7 +18,7 @@
         </div>
     </div>
     <div style="padding: 24px;">
-        <form method="POST" action="{{ route('admin.races.store') }}">
+        <form id="create-race-form" method="POST" action="{{ route('admin.races.store') }}">
             @csrf
             <div class="stitch-form-grid">
                 <div class="stitch-form-group">
@@ -31,11 +31,11 @@
                 </div>
                 <div class="stitch-form-group">
                     <label>Distance Label</label>
-                    <input required maxlength="40" name="distance_label" value="{{ old('distance_label') }}" placeholder="e.g. 21 KM" class="stitch-input">
+                    <input id="new-race-distance" required maxlength="40" name="distance_label" value="{{ old('distance_label') }}" placeholder="e.g. 21 KM" class="stitch-input">
                 </div>
                 <div class="stitch-form-group">
                     <label>Category Type</label>
-                    <select name="category_type" class="stitch-select" style="width:100%;">
+                    <select id="new-race-category" name="category_type" class="stitch-select" style="width:100%;">
                         <option value="individual">Individual</option>
                         <option value="family">Family</option>
                         <option value="para">Para</option>
@@ -44,6 +44,11 @@
                 <div class="stitch-form-group">
                     <label>Display Order</label>
                     <input required type="number" min="0" max="10000" name="sort_order" value="{{ old('sort_order', $races->count() + 1) }}" class="stitch-input">
+                </div>
+                <div class="stitch-form-group">
+                    <label>Starting Bib Number</label>
+                    <input id="new-race-bib-start" required type="number" min="1" max="999999999" name="bib_number_start" value="{{ old('bib_number_start', 100) }}" class="stitch-input" placeholder="e.g. 2121">
+                    <small style="color:var(--st-text-muted);">Examples: 21 KM starts at 2121; 5 KM starts at 500.</small>
                 </div>
                 <div class="stitch-form-group">
                     <label>Full Kit Price (EGP)</label>
@@ -85,6 +90,7 @@
                     <th style="min-width: 120px;">Category</th>
                     <th style="min-width: 180px;">Kit Prices</th>
                     <th style="min-width: 100px;">Entries</th>
+                    <th style="min-width: 120px;">Bib Numbers</th>
                     <th style="min-width: 100px;">Status</th>
                     <th style="min-width: 280px;">Quick Edit & Update</th>
                     <th style="text-align: right; width: 80px;">Action</th>
@@ -123,6 +129,12 @@
                             </span>
                         </td>
                         <td>
+                            <div style="display:flex; flex-direction:column; gap:4px; font-size:12px;">
+                                <span>Start: <strong>{{ $race->bib_number_start }}</strong></span>
+                                <span style="color:var(--st-text-muted);">Next: <strong>{{ $race->next_bib_number }}</strong></span>
+                            </div>
+                        </td>
+                        <td>
                             <span class="stitch-badge {{ $race->is_active ? 'status-active' : 'status-inactive' }}">
                                 <span style="width:6px; height:6px; border-radius:50%; background:currentColor;"></span>
                                 {{ $race->is_active ? 'Active' : 'Inactive' }}
@@ -136,6 +148,11 @@
                                     <input required name="name" value="{{ $race->name }}" class="stitch-input" style="height: 32px; font-size: 12px; padding: 0 8px;" placeholder="Name">
                                     <input required name="slug" value="{{ $race->slug }}" class="stitch-input" style="height: 32px; font-size: 12px; padding: 0 8px; width: 70px;" placeholder="Slug">
                                     <input required name="distance_label" value="{{ $race->distance_label }}" class="stitch-input" style="height: 32px; font-size: 12px; padding: 0 8px; width: 70px;" placeholder="Dist">
+                                </div>
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <label for="bib-start-{{ $race->id }}" style="font-size:10px; color:var(--st-text-muted); white-space:nowrap;">Start number</label>
+                                    <input id="bib-start-{{ $race->id }}" required type="number" min="1" max="999999999" name="bib_number_start" value="{{ $race->bib_number_start }}" class="stitch-input" style="height:30px; width:95px; font-size:11px; padding:0 6px;">
+                                    <small style="color:var(--st-text-muted); white-space:nowrap;">Next issued: {{ $race->next_bib_number }}</small>
                                 </div>
                                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
                                     <select name="category_type" class="stitch-select" style="height: 30px; font-size: 11px; padding: 0 6px; min-width: 90px;">
@@ -166,7 +183,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 36px; color: var(--st-text-muted);">
+                        <td colspan="8" style="text-align: center; padding: 36px; color: var(--st-text-muted);">
                             No race categories have been configured yet.
                         </td>
                     </tr>
@@ -176,3 +193,30 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+(() => {
+    const distance = document.getElementById('new-race-distance');
+    const category = document.getElementById('new-race-category');
+    const bibStart = document.getElementById('new-race-bib-start');
+    if (!distance || !category || !bibStart) return;
+
+    let manuallyChanged = @json(old('bib_number_start') !== null);
+    bibStart.addEventListener('input', () => { manuallyChanged = true; });
+
+    const suggestStart = () => {
+        if (manuallyChanged) return;
+        const parsedDistance = Number.parseInt((distance.value.match(/\d+/) || ['0'])[0], 10);
+        const suggested = parsedDistance === 2 && category.value === 'para'
+            ? 250
+            : (parsedDistance >= 10 ? parsedDistance * 101 : Math.max(100, parsedDistance * 100));
+        bibStart.value = String(suggested);
+    };
+
+    distance.addEventListener('input', suggestStart);
+    category.addEventListener('change', suggestStart);
+    suggestStart();
+})();
+</script>
+@endpush

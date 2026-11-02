@@ -31,12 +31,14 @@ class RaceController extends Controller
             'category_type' => ['required', Rule::in(['individual', 'family', 'para'])],
             'sort_order' => ['sometimes', 'integer', 'min:0', 'max:10000'],
             'is_active' => ['sometimes', 'boolean'],
+            'bib_number_start' => ['sometimes', 'integer', 'min:1', 'max:999999999'],
             'full_price' => ['required', 'numeric', 'gt:1', 'max:1000000'],
             'basic_price' => ['required', 'numeric', 'gt:1', 'max:1000000'],
             'currency' => ['sometimes', 'string', 'size:3'],
         ]);
 
         $race = DB::transaction(function () use ($data) {
+            $bibStart = $data['bib_number_start'] ?? Race::suggestedBibNumberStart($data['distance_label'], $data['category_type']);
             $race = Race::query()->create([
                 'name' => trim($data['name']),
                 'slug' => strtolower($data['slug']),
@@ -44,6 +46,8 @@ class RaceController extends Controller
                 'category_type' => $data['category_type'],
                 'sort_order' => $data['sort_order'] ?? 0,
                 'is_active' => $data['is_active'] ?? true,
+                'bib_number_start' => $bibStart,
+                'next_bib_number' => $bibStart,
             ]);
 
             foreach (['full' => $data['full_price'], 'basic' => $data['basic_price']] as $kitType => $price) {
@@ -75,13 +79,22 @@ class RaceController extends Controller
             'category_type' => ['required', Rule::in(['individual', 'family', 'para'])],
             'sort_order' => ['required', 'integer', 'min:0', 'max:10000'],
             'is_active' => ['required', 'boolean'],
+            'bib_number_start' => ['sometimes', 'integer', 'min:1', 'max:999999999'],
         ]);
 
         if ($data['is_active'] && ! $this->hasActiveKitPrices($race)) {
             return response()->json(['message' => 'Add an active Full and Basic kit price before activating this race.'], 422);
         }
 
-        $race->update([...$data, 'name' => trim($data['name']), 'slug' => strtolower($data['slug']), 'distance_label' => trim($data['distance_label'])]);
+        $updates = [...$data, 'name' => trim($data['name']), 'slug' => strtolower($data['slug']), 'distance_label' => trim($data['distance_label'])];
+        if (isset($data['bib_number_start'])) {
+            $updates['next_bib_number'] = max(
+                (int) $race->next_bib_number,
+                (int) $data['bib_number_start'],
+                ((int) $race->registrations()->max('bib_number')) + 1,
+            );
+        }
+        $race->update($updates);
 
         return response()->json(['data' => $this->serialize($race->fresh()->load('kitPrices')->loadCount('registrations'))]);
     }
@@ -107,6 +120,8 @@ class RaceController extends Controller
             'category_type' => $race->category_type,
             'sort_order' => $race->sort_order,
             'is_active' => $race->is_active,
+            'bib_number_start' => $race->bib_number_start,
+            'next_bib_number' => $race->next_bib_number,
             'registrations_count' => $race->registrations_count ?? 0,
             'prices' => $race->kitPrices?->map(fn (RaceKitPrice $price) => [
                 'id' => $price->id,

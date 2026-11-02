@@ -10,6 +10,7 @@ use App\Models\PromoCode;
 use App\Models\Race;
 use App\Models\RaceKitPrice;
 use App\Models\Registration;
+use App\Models\Team;
 use App\Services\EasyKashCashApi;
 use App\Services\QrCodeService;
 use App\Support\SiteMedia;
@@ -34,6 +35,8 @@ class AdminWebController
         $revenue = Registration::query()->where('payment_status', 'paid')->sum('amount');
         $recent = Registration::query()->with('race')->latest()->limit(8)->get();
         $raceBreakdown = Race::query()->withCount('registrations')->orderBy('sort_order')->get();
+        $teamCount = Team::query()->count();
+        $paymentCount = Payment::query()->count();
         $trend = collect(range(6, 0))->map(function (int $daysAgo) {
             $day = Carbon::today()->subDays($daysAgo);
             return ['label' => $day->format('D'), 'value' => (float) Registration::query()->where('payment_status', 'paid')->whereDate('created_at', $day)->sum('amount')];
@@ -43,7 +46,7 @@ class AdminWebController
         $raceTime = AppSetting::get('race_time', '07:00');
         $countdownEnabled = (bool) AppSetting::get('countdown_enabled', true);
 
-        return view('admin.dashboard', compact('total', 'paid', 'pending', 'failed', 'revenue', 'recent', 'raceBreakdown', 'trend', 'raceDate', 'raceTime', 'countdownEnabled'));
+        return view('admin.dashboard', compact('total', 'paid', 'pending', 'failed', 'revenue', 'recent', 'raceBreakdown', 'trend', 'raceDate', 'raceTime', 'countdownEnabled', 'teamCount', 'paymentCount'));
     }
 
     public function registrations(Request $request)
@@ -61,9 +64,9 @@ class AdminWebController
         return response()->streamDownload(function () use ($rows) {
             $output = fopen('php://output', 'w');
             fwrite($output, "\xEF\xBB\xBF");
-            fputcsv($output, ['reference', 'first_name', 'last_name', 'email', 'phone', 'race', 'kit_type', 'shirt_size', 'amount', 'currency', 'registration_status', 'payment_status', 'created_at']);
+            fputcsv($output, ['reference', 'race_number', 'first_name', 'last_name', 'email', 'phone', 'race', 'kit_type', 'shirt_size', 'amount', 'currency', 'registration_status', 'payment_status', 'created_at']);
             foreach ($rows as $registration) {
-                $values = [$registration->registration_code, $registration->first_name, $registration->last_name, $registration->email, $registration->phone, $registration->race?->name, $registration->kit_type, $registration->shirt_size, $registration->amount, $registration->currency, $registration->status, $registration->payment_status, $registration->created_at?->toISOString()];
+                $values = [$registration->registration_code, $registration->bib_number, $registration->first_name, $registration->last_name, $registration->email, $registration->phone, $registration->race?->name, $registration->kit_type, $registration->shirt_size, $registration->amount, $registration->currency, $registration->status, $registration->payment_status, $registration->created_at?->toISOString()];
                 fputcsv($output, array_map(static fn ($value) => is_string($value) && preg_match('/\A[=+@-]/', $value) ? "'" . $value : $value, $values));
             }
             fclose($output);
@@ -87,6 +90,52 @@ class AdminWebController
             foreach ($rows as $row) fputcsv($output, $row);
             fclose($output);
         }, 'kfs-dashboard-overview.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    public function clearAllRegistrations(Request $request)
+    {
+        $request->validate([
+            'confirmation_phrase' => ['required', Rule::in(['DELETE ALL'])],
+        ]);
+
+        $cleared = DB::transaction(function () {
+            $races = Race::query()->orderBy('id')->lockForUpdate()->get();
+            $documentPaths = Registration::query()->whereNotNull('document_path')->pluck('document_path')->all();
+            $registrationCount = Registration::query()->count();
+            $teamCount = Team::query()->count();
+            $paymentCount = Payment::query()->count();
+
+            Payment::query()->delete();
+            Registration::query()->delete();
+            Team::query()->delete();
+            PromoCode::query()->update(['times_used' => 0]);
+
+            foreach ($races as $race) {
+                $race->update(['next_bib_number' => $race->bib_number_start]);
+            }
+
+            return [
+                'documents' => $documentPaths,
+                'registrations' => $registrationCount,
+                'teams' => $teamCount,
+                'payments' => $paymentCount,
+            ];
+        }, 3);
+
+        Storage::disk('local')->delete($cleared['documents']);
+
+        Log::warning('Admin cleared all KFS registration data.', [
+            'admin_id' => $request->user()->id,
+            'registrations' => $cleared['registrations'],
+            'teams' => $cleared['teams'],
+            'payments' => $cleared['payments'],
+        ]);
+
+        return back()->with('success', __('Removed :registrations registrations, :teams teams, and :payments payment records. Bib sequences reset.', [
+            'registrations' => $cleared['registrations'],
+            'teams' => $cleared['teams'],
+            'payments' => $cleared['payments'],
+        ]));
     }
 
     public function registration(Registration $registration)
@@ -129,6 +178,7 @@ class AdminWebController
             Mail::to($registration->email)->send(new RunnerQrMail([
                 'locale' => app()->getLocale(),
                 'reference' => $registration->registration_code,
+                'race_number' => $registration->bib_number,
                 'name' => trim($registration->first_name . ' ' . $registration->last_name),
                 'race' => $registration->race?->name ?? '—',
                 'distance' => $registration->race?->distance_label ?? '—',
@@ -150,8 +200,27 @@ class AdminWebController
 
     public function updateRegistration(Request $request, Registration $registration)
     {
-        $data = $request->validate(['status' => ['required', Rule::in(['pending', 'confirmed', 'cancelled'])]]);
-        $registration->update($data);
+        $data = $request->validate([
+            'status' => ['required', Rule::in(['pending', 'confirmed', 'cancelled'])],
+            'bib_number' => [
+                'required',
+                'integer',
+                'min:1',
+                'max:999999999',
+                Rule::unique('registrations', 'bib_number')
+                    ->where(fn ($query) => $query->where('race_id', $registration->race_id))
+                    ->ignore($registration->id),
+            ],
+        ]);
+
+        DB::transaction(function () use ($data, $registration) {
+            $race = Race::query()->whereKey($registration->race_id)->lockForUpdate()->firstOrFail();
+            $registration->update($data);
+
+            if ((int) $registration->bib_number >= (int) $race->next_bib_number) {
+                $race->update(['next_bib_number' => (int) $registration->bib_number + 1]);
+            }
+        });
 
         return back()->with('success', 'Registration status saved. Payment status remains controlled by EasyKash callback.');
     }
@@ -187,6 +256,7 @@ class AdminWebController
             'distance_label' => ['required', 'string', 'max:40'],
             'category_type' => ['required', Rule::in(['individual', 'family', 'para'])],
             'sort_order' => ['required', 'integer', 'min:0', 'max:10000'],
+            'bib_number_start' => ['required', 'integer', 'min:1', 'max:999999999'],
             'full_price' => ['required', 'numeric', 'gt:1', 'max:1000000'],
             'basic_price' => ['required', 'numeric', 'gt:1', 'max:1000000'],
         ]);
@@ -197,6 +267,8 @@ class AdminWebController
                 'name' => trim($data['name']), 'slug' => strtolower($data['slug']),
                 'distance_label' => trim($data['distance_label']), 'category_type' => $data['category_type'],
                 'sort_order' => $data['sort_order'], 'is_active' => $isActive,
+                'bib_number_start' => $data['bib_number_start'],
+                'next_bib_number' => $data['bib_number_start'],
             ]);
             foreach (['full' => $data['full_price'], 'basic' => $data['basic_price']] as $kit => $price) {
                 $race->kitPrices()->create(['kit_type' => $kit, 'price' => $price, 'currency' => 'EGP', 'is_active' => true]);
@@ -214,6 +286,7 @@ class AdminWebController
             'distance_label' => ['required', 'string', 'max:40'],
             'category_type' => ['required', Rule::in(['individual', 'family', 'para'])],
             'sort_order' => ['required', 'integer', 'min:0', 'max:10000'],
+            'bib_number_start' => ['required', 'integer', 'min:1', 'max:999999999'],
         ]);
         $isActive = $request->boolean('is_active');
         if ($isActive) {
@@ -222,7 +295,19 @@ class AdminWebController
                 return back()->withErrors(['is_active' => 'Add an active Full and Basic price before activating this race.'])->withInput();
             }
         }
-        $race->update([...$data, 'name' => trim($data['name']), 'slug' => strtolower($data['slug']), 'distance_label' => trim($data['distance_label']), 'is_active' => $isActive]);
+        $nextBibNumber = max(
+            (int) $race->next_bib_number,
+            (int) $data['bib_number_start'],
+            ((int) $race->registrations()->max('bib_number')) + 1,
+        );
+        $race->update([
+            ...$data,
+            'name' => trim($data['name']),
+            'slug' => strtolower($data['slug']),
+            'distance_label' => trim($data['distance_label']),
+            'is_active' => $isActive,
+            'next_bib_number' => $nextBibNumber,
+        ]);
 
         return back()->with('success', 'Race details saved.');
     }

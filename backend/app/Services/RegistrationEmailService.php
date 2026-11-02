@@ -18,6 +18,7 @@ class RegistrationEmailService
         $this->deliver($registration->email, [
             'locale' => app()->getLocale(),
             'reference' => $registration->registration_code,
+            'race_number' => $registration->bib_number,
             'name' => trim($registration->first_name . ' ' . $registration->last_name),
             'race_name' => $registration->race?->name ?? '—',
             'distance' => $registration->race?->distance_label ?? '—',
@@ -43,6 +44,7 @@ class RegistrationEmailService
 
         $runners = $team->registrations->map(fn (Registration $registration) => [
             'reference' => $registration->registration_code,
+            'race_number' => $registration->bib_number,
             'name' => trim($registration->first_name . ' ' . $registration->last_name),
             'race_name' => $registration->race?->name ?? '—',
             'distance' => $registration->race?->distance_label ?? '—',

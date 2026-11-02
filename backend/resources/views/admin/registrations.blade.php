@@ -66,6 +66,7 @@
         <table class="stitch-table">
             <thead>
                 <tr>
+                    <th>Bib #</th>
                     <th>Reference</th>
                     <th>Runner</th>
                     <th>Distance & Category</th>
@@ -79,6 +80,7 @@
             <tbody>
                 @forelse($registrations as $item)
                     <tr>
+                        <td><span class="stitch-code-badge">#{{ $item->bib_number }}</span></td>
                         <td>
                             <a href="{{ route('admin.registrations.show', $item) }}" class="stitch-code-badge">
                                 {{ $item->registration_code }}

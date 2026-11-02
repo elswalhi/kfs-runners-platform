@@ -114,7 +114,7 @@
         @endif
 
         <!-- Status Form -->
-        <form method="POST" action="{{ route('admin.registrations.update', $registration) }}" style="display: flex; gap: 12px; align-items: flex-end;">
+        <form method="POST" action="{{ route('admin.registrations.update', $registration) }}" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
             @csrf
             @method('PATCH')
             <div style="flex: 1; display: flex; flex-direction: column; gap: 6px;">
@@ -127,8 +127,14 @@
                     @endforeach
                 </select>
             </div>
+            <div style="width: 150px; display: flex; flex-direction: column; gap: 6px;">
+                <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--st-text-muted);">
+                    {{ __('Race Number (BIB)') }}
+                </label>
+                <input required type="number" min="1" max="999999999" name="bib_number" value="{{ $registration->bib_number }}" class="stitch-input" style="width: 100%;">
+            </div>
             <button type="submit" class="stitch-btn stitch-btn-primary" style="height: 42px;">
-                <span>Update Status</span>
+                <span>Save Runner</span>
             </button>
         </form>
     </div>
@@ -140,7 +146,7 @@
             <div class="stitch-panel-header" style="justify-content: center; border-bottom: 1px dashed var(--st-border);">
                 <div style="text-align: center;">
                     <span class="stitch-code-badge" style="font-size: 13px; font-weight: 800; padding: 4px 10px; background: #fee2e2; color: #991b1b;">
-                        BIB # {{ $registration->registration_code }}
+                        BIB # {{ $registration->bib_number }}
                     </span>
                     <h3 style="margin-top: 6px;">{{ __('Runner QR & Kit Pickup Code') }}</h3>
                     <p style="font-size: 12px; color: var(--st-text-muted);">{{ __('Scannable at race expo & kit collection booth') }}</p>
@@ -168,7 +174,7 @@
                 </div>
 
                 <div style="margin-top: 18px; width: 100%; display: flex; gap: 8px;">
-                    <a href="{{ $qrDataUri }}" download="runner-qr-{{ $registration->registration_code }}.png" class="stitch-btn stitch-btn-secondary" style="flex: 1; font-size: 12px; justify-content: center; gap: 6px;">
+                    <a href="{{ $qrDataUri }}" download="runner-qr-{{ $registration->bib_number }}.png" class="stitch-btn stitch-btn-secondary" style="flex: 1; font-size: 12px; justify-content: center; gap: 6px;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
                         <span>{{ __('Download QR') }}</span>
                     </a>

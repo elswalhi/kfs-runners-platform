@@ -50,6 +50,7 @@ class DashboardController extends Controller
     {
         return [
             'id' => $r->id, 'reference' => $r->registration_code,
+            'race_number' => $r->bib_number,
             'first_name' => $r->first_name, 'last_name' => $r->last_name,
             'email' => $r->email, 'phone' => $r->phone,
             'race' => $r->race ? ['name' => $r->race->name, 'distance_label' => $r->race->distance_label] : null,

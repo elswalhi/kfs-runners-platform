@@ -27,7 +27,7 @@ class PublicPaymentStatusController extends Controller
                 $payment->refresh();
             }
 
-            return response()->json(['data' => $this->paymentData($registration->registration_code, $registration->payment_status, $payment)]);
+            return response()->json(['data' => $this->paymentData($registration->registration_code, $registration->payment_status, $payment, $registration->bib_number)]);
         }
 
         $team = Team::query()->where('registration_code', $registrationCode)->firstOrFail();
@@ -43,6 +43,13 @@ class PublicPaymentStatusController extends Controller
         return response()->json(['data' => [
             ...$this->paymentData($team->registration_code, $payment->status, $payment),
             'team' => ['name' => $team->name, 'member_count' => $team->registrations()->count()],
+            'runners' => $team->registrations()->with('race')->orderBy('race_id')->orderBy('bib_number')->get()->map(fn (Registration $runner) => [
+                'reference' => $runner->registration_code,
+                'race_number' => $runner->bib_number,
+                'name' => trim($runner->first_name . ' ' . $runner->last_name),
+                'race' => $runner->race?->name,
+                'distance' => $runner->race?->distance_label,
+            ])->values(),
         ]]);
     }
 
@@ -131,12 +138,13 @@ class PublicPaymentStatusController extends Controller
         });
     }
 
-    private function paymentData(string $reference, string $status, $payment): array
+    private function paymentData(string $reference, string $status, $payment, ?int $raceNumber = null): array
     {
         $details = $payment->payload ?? [];
 
         return [
             'reference' => $reference,
+            'race_number' => $raceNumber,
             'status' => $status,
             'voucher' => $details['voucher'] ?? null,
             'provider' => $details['provider'] ?? null,

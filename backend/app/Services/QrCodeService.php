@@ -12,7 +12,8 @@ class QrCodeService
      */
     public static function buildRunnerPayload(Registration $registration): string
     {
-        $code = $registration->registration_code;
+        $bibNumber = $registration->bib_number ?? 'UNASSIGNED';
+        $reference = $registration->registration_code;
         $name = trim($registration->first_name . ' ' . $registration->last_name);
         $distance = $registration->race?->distance_label ?? '—';
         $raceName = $registration->race?->name ?? 'Race';
@@ -22,7 +23,8 @@ class QrCodeService
 
         $lines = [
             'KFS RUNNERS MARATHON',
-            "RACE NUMBER: {$code}",
+            "RACE NUMBER: {$bibNumber}",
+            "REGISTRATION REF: {$reference}",
             "RUNNER: {$name}",
             "DISTANCE: {$distance}" . ($raceName ? " ({$raceName})" : ""),
             "KIT: {$kitLabel}",

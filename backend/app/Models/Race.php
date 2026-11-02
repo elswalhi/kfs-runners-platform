@@ -10,11 +10,30 @@ class Race extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'slug', 'distance_label', 'category_type', 'sort_order', 'is_active'];
+    protected $fillable = ['name', 'slug', 'distance_label', 'category_type', 'sort_order', 'is_active', 'bib_number_start', 'next_bib_number'];
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean', 'sort_order' => 'integer'];
+        return [
+            'is_active' => 'boolean',
+            'sort_order' => 'integer',
+            'bib_number_start' => 'integer',
+            'next_bib_number' => 'integer',
+        ];
+    }
+
+    public static function suggestedBibNumberStart(?string $distanceLabel, ?string $categoryType = null): int
+    {
+        preg_match('/\d+/', (string) $distanceLabel, $matches);
+        $distance = (int) ($matches[0] ?? 0);
+
+        if ($distance === 2 && $categoryType === 'para') {
+            return 250;
+        }
+
+        return $distance >= 10
+            ? $distance * 101
+            : max(100, $distance * 100);
     }
 
     public function kitPrices(): HasMany

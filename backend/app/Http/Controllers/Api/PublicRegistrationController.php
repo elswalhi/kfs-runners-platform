@@ -9,6 +9,7 @@ use App\Models\Race;
 use App\Models\RaceKitPrice;
 use App\Models\Registration;
 use App\Models\Team;
+use App\Services\BibNumberService;
 use App\Services\EasyKashCashApi;
 use App\Services\RegistrationEmailService;
 use Illuminate\Http\Request;
@@ -21,11 +22,11 @@ use Illuminate\Validation\Rule;
 
 class PublicRegistrationController extends Controller
 {
-    public function store(Request $request, EasyKashCashApi $easyKash, RegistrationEmailService $registrationEmails)
+    public function store(Request $request, EasyKashCashApi $easyKash, RegistrationEmailService $registrationEmails, BibNumberService $bibNumbers)
     {
         // Handle Group / Multi-Runner Registration (EasyKash cart cycle)
         if ($request->has('runners') && is_array($request->input('runners')) && count($request->input('runners')) > 1) {
-            return $this->storeGroup($request, $easyKash, $registrationEmails);
+            return $this->storeGroup($request, $easyKash, $registrationEmails, $bibNumbers);
         }
 
         // If single runner is sent inside runners array, extract to root
@@ -120,9 +121,10 @@ class PublicRegistrationController extends Controller
 
         // Handle 100% Free Registration (discount reduces price to 0)
         if ($finalAmount == 0.00) {
-            $registration = DB::transaction(function () use ($validated, $race, $price, $documentPath, $promo, $originalAmount, $discountAmount) {
+            $registration = DB::transaction(function () use ($validated, $race, $price, $documentPath, $promo, $originalAmount, $discountAmount, $bibNumbers) {
                 $registration = Registration::query()->create([
                     'registration_code' => $this->newCode(),
+                    'bib_number' => $bibNumbers->next($race->id),
                     'race_id' => $race->id,
                     'promo_code_id' => $promo?->id,
                     'promo_code' => $promo?->code,
@@ -174,6 +176,7 @@ class PublicRegistrationController extends Controller
                 'data' => [
                     'id' => $registration->id,
                     'reference' => $registration->registration_code,
+                    'race_number' => $registration->bib_number,
                     'amount' => 0.00,
                     'currency' => $registration->currency,
                     'payment_status' => 'paid',
@@ -201,9 +204,10 @@ class PublicRegistrationController extends Controller
             return response()->json(['message' => 'EasyKash cash checkout expiry is not configured correctly.'], 503);
         }
 
-        $registration = DB::transaction(function () use ($validated, $race, $price, $documentPath, $promo, $originalAmount, $discountAmount, $finalAmount) {
+        $registration = DB::transaction(function () use ($validated, $race, $price, $documentPath, $promo, $originalAmount, $discountAmount, $finalAmount, $bibNumbers) {
             $registration = Registration::query()->create([
                 'registration_code' => $this->newCode(),
+                'bib_number' => $bibNumbers->next($race->id),
                 'race_id' => $race->id,
                 'promo_code_id' => $promo?->id,
                 'promo_code' => $promo?->code,
@@ -275,6 +279,7 @@ class PublicRegistrationController extends Controller
             'data' => [
                 'id' => $registration->id,
                 'reference' => $registration->registration_code,
+                'race_number' => $registration->bib_number,
                 'amount' => (float) $registration->amount,
                 'discount_amount' => (float) $registration->discount_amount,
                 'original_amount' => (float) $registration->original_amount,
@@ -290,7 +295,7 @@ class PublicRegistrationController extends Controller
         ], 201);
     }
 
-    public function storeGroup(Request $request, EasyKashCashApi $easyKash, RegistrationEmailService $registrationEmails)
+    public function storeGroup(Request $request, EasyKashCashApi $easyKash, RegistrationEmailService $registrationEmails, BibNumberService $bibNumbers)
     {
         // Fallback buyer info from runner #1 / root inputs
         if (! $request->filled('buyerFirstName')) {
@@ -393,7 +398,7 @@ class PublicRegistrationController extends Controller
         }
 
         // Database transaction: Create Team, Registrations, Payment
-        $team = DB::transaction(function () use ($request, $validated, $buyerName, $runnerItems, $originalAmount, $discountAmount, $finalAmount, $promo) {
+        $team = DB::transaction(function () use ($request, $validated, $buyerName, $runnerItems, $originalAmount, $discountAmount, $finalAmount, $promo, $bibNumbers) {
             $isPaid = ($finalAmount == 0.00);
 
             $team = Team::query()->create([
@@ -405,6 +410,7 @@ class PublicRegistrationController extends Controller
                 'status' => $isPaid ? 'confirmed' : 'pending',
             ]);
 
+            $bibNumbers->lockRaces(collect($runnerItems)->map(fn ($item) => $item['race']->id));
             $discountPerRunner = count($runnerItems) > 0 ? round($discountAmount / count($runnerItems), 2) : 0.00;
 
             foreach ($runnerItems as $index => $item) {
@@ -419,6 +425,7 @@ class PublicRegistrationController extends Controller
 
                 Registration::query()->create([
                     'registration_code' => $this->newCode(),
+                    'bib_number' => $bibNumbers->next($item['race']->id),
                     'team_id' => $team->id,
                     'race_id' => $item['race']->id,
                     'promo_code_id' => $promo?->id,

@@ -207,5 +207,19 @@
     "The kit pickup QR can only be emailed after payment is confirmed.": "The kit pickup QR can only be emailed after payment is confirmed.",
     "Email delivery is not configured. Set up SMTP before sending runner QR codes.": "Email delivery is not configured. Set up SMTP before sending runner QR codes.",
     "Could not send the runner QR email. Check the mail settings and try again.": "Could not send the runner QR email. Check the mail settings and try again.",
-    "Runner QR sent to :email.": "Runner QR sent to :email."
+    "Runner QR sent to :email.": "Runner QR sent to :email.",
+    "Race number": "Race number",
+    "Race Number (BIB)": "Race Number (BIB)",
+    "DANGER ZONE": "DANGER ZONE",
+    "Remove all orders": "Remove all orders",
+    "This permanently deletes runner registrations, teams, payment records, and uploaded runner documents. It does not refund real payments. Races and settings remain, and bib sequences restart at their configured starting numbers.": "This permanently deletes runner registrations, teams, payment records, and uploaded runner documents. It does not refund real payments. Races and settings remain, and bib sequences restart at their configured starting numbers.",
+    "Current data: :runners runners, :teams teams, :payments payment records.": "Current data: :runners runners, :teams teams, :payments payment records.",
+    "Permanently remove all orders and payment history?": "Permanently remove all orders and payment history?",
+    "Type DELETE ALL": "Type DELETE ALL",
+    "Removed :registrations registrations, :teams teams, and :payments payment records. Bib sequences reset.": "Removed :registrations registrations, :teams teams, and :payments payment records. Bib sequences reset.",
+    "Starting Bib Number": "Starting Bib Number",
+    "Examples: 21 KM starts at 2121; 5 KM starts at 500.": "Examples: 21 KM starts at 2121; 5 KM starts at 500.",
+    "Bib Numbers": "Bib Numbers",
+    "Start number": "Start number",
+    "Next issued: :number": "Next issued: :number"
 }

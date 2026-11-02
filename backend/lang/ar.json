@@ -429,5 +429,19 @@
     "The kit pickup QR can only be emailed after payment is confirmed.": "يمكن إرسال رمز QR لاستلام الطقم بعد تأكيد الدفع فقط.",
     "Email delivery is not configured. Set up SMTP before sending runner QR codes.": "إعداد إرسال البريد غير مكتمل. أعد إعداد SMTP قبل إرسال رموز QR للمتسابقين.",
     "Could not send the runner QR email. Check the mail settings and try again.": "تعذر إرسال رمز QR للمتسابق. تحقق من إعدادات البريد وحاول مرة أخرى.",
-    "Runner QR sent to :email.": "تم إرسال رمز QR للمتسابق إلى :email."
+    "Runner QR sent to :email.": "تم إرسال رمز QR للمتسابق إلى :email.",
+    "Race number": "رقم السباق",
+    "Race Number (BIB)": "رقم السباق (BIB)",
+    "DANGER ZONE": "منطقة خطرة",
+    "Remove all orders": "حذف كل الطلبات",
+    "This permanently deletes runner registrations, teams, payment records, and uploaded runner documents. It does not refund real payments. Races and settings remain, and bib sequences restart at their configured starting numbers.": "سيحذف هذا نهائيًا تسجيلات العدائين والفرق وسجلات الدفع والمستندات المرفوعة. لن ينفذ أي عمليات استرداد مالية. ستظل السباقات والإعدادات موجودة، وستبدأ أرقام السباق من أرقام البداية المحددة.",
+    "Current data: :runners runners, :teams teams, :payments payment records.": "البيانات الحالية: :runners متسابق، :teams فريق، :payments سجل دفع.",
+    "Permanently remove all orders and payment history?": "هل تريد حذف جميع الطلبات وسجل الدفع نهائيًا؟",
+    "Type DELETE ALL": "اكتب DELETE ALL",
+    "Removed :registrations registrations, :teams teams, and :payments payment records. Bib sequences reset.": "تم حذف :registrations تسجيل و:teams فريق و:payments سجل دفع، وإعادة تسلسل أرقام السباق إلى البداية.",
+    "Starting Bib Number": "رقم بداية أرقام السباق",
+    "Examples: 21 KM starts at 2121; 5 KM starts at 500.": "أمثلة: يبدأ سباق 21 كم من 2121 وسباق 5 كم من 500.",
+    "Bib Numbers": "أرقام السباق",
+    "Start number": "رقم البداية",
+    "Next issued: :number": "الرقم التالي: :number"
 }

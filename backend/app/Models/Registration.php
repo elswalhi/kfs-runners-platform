@@ -13,7 +13,7 @@ class Registration extends Model
     use HasFactory;
 
     protected $fillable = [
-        'registration_code', 'race_id', 'promo_code_id', 'promo_code', 'team_id', 'kit_type',
+        'registration_code', 'bib_number', 'race_id', 'promo_code_id', 'promo_code', 'team_id', 'kit_type',
         'first_name', 'last_name', 'email', 'phone', 'birth_date', 'gender', 'id_number',
         'shirt_size', 'team_name', 'document_path', 'status', 'payment_status',
         'amount', 'discount_amount', 'original_amount', 'currency', 'notes',
@@ -23,6 +23,7 @@ class Registration extends Model
     {
         return [
             'birth_date' => 'date',
+            'bib_number' => 'integer',
             'id_number' => 'encrypted',
             'amount' => 'decimal:2',
             'discount_amount' => 'decimal:2',
