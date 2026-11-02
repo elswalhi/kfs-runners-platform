@@ -10,6 +10,7 @@ use App\Models\RaceKitPrice;
 use App\Models\Registration;
 use App\Models\Team;
 use App\Services\EasyKashCashApi;
+use App\Services\RegistrationEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
@@ -20,11 +21,11 @@ use Illuminate\Validation\Rule;
 
 class PublicRegistrationController extends Controller
 {
-    public function store(Request $request, EasyKashCashApi $easyKash)
+    public function store(Request $request, EasyKashCashApi $easyKash, RegistrationEmailService $registrationEmails)
     {
         // Handle Group / Multi-Runner Registration (EasyKash cart cycle)
         if ($request->has('runners') && is_array($request->input('runners')) && count($request->input('runners')) > 1) {
-            return $this->storeGroup($request, $easyKash);
+            return $this->storeGroup($request, $easyKash, $registrationEmails);
         }
 
         // If single runner is sent inside runners array, extract to root
@@ -166,6 +167,8 @@ class PublicRegistrationController extends Controller
                 return $registration;
             });
 
+            $registrationEmails->sendRegistration($registration);
+
             return response()->json([
                 'message' => 'Registration complete! 100% discount applied via promo code.',
                 'data' => [
@@ -246,6 +249,7 @@ class PublicRegistrationController extends Controller
             Log::warning('EasyKash payment initiation connection failed.', [
                 'registration_reference' => $registration->registration_code,
             ]);
+            $registrationEmails->sendRegistration($registration);
 
             return response()->json([
                 'message' => 'We could not confirm whether EasyKash created a checkout link. Please contact support with your registration reference before trying again.',
@@ -255,6 +259,7 @@ class PublicRegistrationController extends Controller
             Log::warning('EasyKash rejected or returned an invalid payment response.', [
                 'registration_reference' => $registration->registration_code,
             ]);
+            $registrationEmails->sendRegistration($registration);
 
             return response()->json([
                 'message' => 'We could not confirm whether EasyKash created a checkout link. Your registration is saved. Please contact support with your reference before trying again.',
@@ -263,6 +268,7 @@ class PublicRegistrationController extends Controller
         }
 
         $payment->update(['payload' => ['checkout_url_created' => true]]);
+        $registrationEmails->sendRegistration($registration, $gatewayPayment['redirectUrl']);
 
         return response()->json([
             'message' => 'Registration saved. Continue to EasyKash to choose a payment method.',
@@ -284,7 +290,7 @@ class PublicRegistrationController extends Controller
         ], 201);
     }
 
-    public function storeGroup(Request $request, EasyKashCashApi $easyKash)
+    public function storeGroup(Request $request, EasyKashCashApi $easyKash, RegistrationEmailService $registrationEmails)
     {
         // Fallback buyer info from runner #1 / root inputs
         if (! $request->filled('buyerFirstName')) {
@@ -463,6 +469,8 @@ class PublicRegistrationController extends Controller
 
         // 100% Free Group Entry
         if ($finalAmount == 0.00) {
+            $registrationEmails->sendTeam($team);
+
             return response()->json([
                 'message' => 'Group registration complete! 100% discount applied.',
                 'data' => [
@@ -483,6 +491,8 @@ class PublicRegistrationController extends Controller
 
         // Gateway checkout for group
         if (! $easyKash->configured()) {
+            $registrationEmails->sendTeam($team);
+
             return response()->json(['message' => 'EasyKash payment credentials are not configured on the Laravel server.'], 503);
         }
 
@@ -493,12 +503,15 @@ class PublicRegistrationController extends Controller
                 'team_reference' => $team->registration_code,
                 'error' => $exception->getMessage(),
             ]);
+            $registrationEmails->sendTeam($team);
 
             return response()->json([
                 'message' => 'We could not create an EasyKash payment link. Please contact support.',
                 'data' => ['reference' => $team->registration_code, 'payment_status' => 'pending'],
             ], 502);
         }
+
+        $registrationEmails->sendTeam($team, $gatewayPayment['redirectUrl']);
 
         return response()->json([
             'message' => 'Group registration saved. Continue to EasyKash to pay.',

@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\PublicRegistrationController;
 use App\Models\AppSetting;
 use App\Models\Race;
 use App\Services\EasyKashCashApi;
+use App\Services\RegistrationEmailService;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -49,9 +50,9 @@ class PublicSiteController
         return view('site.register', compact('races', 'returnReference'));
     }
 
-    public function storeRegistration(Request $request, PublicRegistrationController $registrations, EasyKashCashApi $easyKash)
+    public function storeRegistration(Request $request, PublicRegistrationController $registrations, EasyKashCashApi $easyKash, RegistrationEmailService $registrationEmails)
     {
-        $response = $registrations->store($request, $easyKash);
+        $response = $registrations->store($request, $easyKash, $registrationEmails);
 
         if (! $response instanceof JsonResponse) {
             return back()->withInput()->with('payment_error', 'We could not start the registration. Please try again.');
