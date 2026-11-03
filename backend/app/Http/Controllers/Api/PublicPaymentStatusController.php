@@ -118,10 +118,15 @@ class PublicPaymentStatusController extends Controller
             }
 
             if ($registration) {
-                $registration->update([
+                $registrationChanges = [
                     'payment_status' => $paymentStatus,
                     'updated_at' => now(),
-                ]);
+                ];
+                if ($paymentStatus === 'paid') {
+                    $registrationChanges['status'] = 'confirmed';
+                }
+
+                $registration->update($registrationChanges);
             }
 
             if ($team) {

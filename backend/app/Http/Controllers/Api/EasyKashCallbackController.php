@@ -94,10 +94,15 @@ class EasyKashCallbackController extends Controller
             ]);
 
             if ($lockedPayment->registration_id) {
-                Registration::query()->whereKey($lockedPayment->registration_id)->update([
+                $registrationChanges = [
                     'payment_status' => $paymentStatus,
                     'updated_at' => now(),
-                ]);
+                ];
+                if ($paymentStatus === 'paid') {
+                    $registrationChanges['status'] = 'confirmed';
+                }
+
+                Registration::query()->whereKey($lockedPayment->registration_id)->update($registrationChanges);
             }
             if ($lockedPayment->team_id) {
                 $teamRegistrationChanges = [
