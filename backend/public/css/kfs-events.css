@@ -253,11 +253,6 @@
 .kfs-event-info-row { display: flex; flex-direction: column; gap: 5px; padding: 16px 0 13px; border-bottom: 1px solid var(--events-line); }
 .kfs-event-info-row span,.kfs-event-resource-heading { color: #819188; font-size: 9px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .kfs-event-info-row strong { color: #26483d; font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; }
-.kfs-event-resource-list { display: flex; flex-direction: column; gap: 8px; padding-top: 17px; }
-.kfs-event-resource-heading { margin-bottom: 2px; }
-.kfs-event-resource-list a { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 41px; padding: 9px 11px; border: 1px solid var(--events-line); border-radius: 7px; color: #365b4c; background: #fff; font-size: 10px; font-weight: 800; transition: color .18s ease, border-color .18s ease, background .18s ease; }
-.kfs-event-resource-list a:hover { border-color: #bed5c8; color: var(--events-green); background: #f0f7f2; }
-.kfs-event-resource-list a span { color: var(--events-green); font-size: 14px; }
 
 .kfs-event-gallery { padding: 70px 0 86px; background: #f4f8f5; }
 .kfs-event-gallery-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 25px; }
@@ -313,12 +308,10 @@ html.dark .kfs-featured-event-copy > p,html.dark .kfs-events-list-subtitle,html.
 html.dark .kfs-event-detail-content { background: #101c17; }
 html.dark .kfs-event-story > h2,html.dark .kfs-event-aside-heading h2,html.dark .kfs-event-info-row strong { color: #e4eee8; }
 html.dark .kfs-event-lead { color: #c8dad0; }
-html.dark .kfs-event-description,html.dark .kfs-event-info-row span,html.dark .kfs-event-resource-heading,html.dark .kfs-event-gallery-empty p,html.dark .kfs-event-drive-callout p { color: #9caf9f; }
+html.dark .kfs-event-description,html.dark .kfs-event-info-row span,html.dark .kfs-event-gallery-empty p,html.dark .kfs-event-drive-callout p { color: #9caf9f; }
 html.dark .kfs-event-detail-aside { border-color: #263c33; background: #14231d; }
 html.dark .kfs-event-aside-heading,html.dark .kfs-event-info-row { border-color: #263c33; }
-html.dark .kfs-event-resource-list a { border-color: #30483d; color: #cde0d5; background: #192b23; }
-html.dark .kfs-event-resource-list a:hover { background: #20372c; }
-html.dark .kfs-event-resource-list a span,html.dark .kfs-event-return-link,html.dark .kfs-event-drive-callout a { color: #8dd0ae; }
+html.dark .kfs-event-return-link,html.dark .kfs-event-drive-callout a { color: #8dd0ae; }
 
 @media (max-width: 940px) {
     .kfs-events-hero-grid { grid-template-columns: minmax(0, 1fr) minmax(270px, .8fr); gap: 30px; }

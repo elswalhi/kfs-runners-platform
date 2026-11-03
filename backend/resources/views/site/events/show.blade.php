@@ -3,7 +3,7 @@
 @section('title', $event->translated('title') . ' · KFS Runners')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/kfs-events.css') }}?v=20261103-events-retouch-1">
+    <link rel="stylesheet" href="{{ asset('css/kfs-events.css') }}?v=20261103-events-retouch-2">
 @endpush
 
 @section('content')
@@ -65,20 +65,6 @@
                     <div class="kfs-event-info-row"><span>{{ __('Location') }}</span><strong>{{ $event->translated('location') }}</strong></div>
                 @endif
 
-                @if ($event->source_url || $event->registration_url || $event->drive_url)
-                    <div class="kfs-event-resource-list">
-                        <span class="kfs-event-resource-heading">{{ __('More information') }}</span>
-                        @if ($event->source_url)
-                            <a href="{{ $event->source_url }}" target="_blank" rel="noopener noreferrer">{{ __('Original event page') }} <span aria-hidden="true">↗</span></a>
-                        @endif
-                        @if ($event->registration_url)
-                            <a href="{{ $event->registration_url }}" target="_blank" rel="noopener noreferrer">{{ __('Event information') }} <span aria-hidden="true">↗</span></a>
-                        @endif
-                        @if ($event->drive_url)
-                            <a href="{{ $event->drive_url }}" target="_blank" rel="noopener noreferrer">{{ __('Google Drive album') }} <span aria-hidden="true">↗</span></a>
-                        @endif
-                    </div>
-                @endif
             </aside>
         </div>
     </section>
