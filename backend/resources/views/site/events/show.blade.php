@@ -3,83 +3,175 @@
 @section('title', $event->translated('title') . ' · KFS Runners')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/kfs-events.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/kfs-events.css') }}?v=20261103-events-retouch-1">
 @endpush
 
 @section('content')
-<main class="kfs-events-page kfs-event-detail-page">
-    @php($cover = $event->coverPhoto)
+@php
+    $cover = $event->coverPhoto;
+    $galleryPhotos = $event->photos->reject(fn ($photo) => $photo->is_cover)->values();
+
+    if ($galleryPhotos->isEmpty() && $cover) {
+        $galleryPhotos = collect([$cover]);
+    }
+@endphp
+
+<main class="kfs-events-page kfs-event-detail-page" data-event-detail>
+    <div class="wrap kfs-event-breadcrumbs">
+        <a class="kfs-event-back" href="{{ route('events.index') }}"><span aria-hidden="true">←</span>{{ __('All events') }}</a>
+        <nav aria-label="{{ __('Breadcrumb') }}">
+            <a href="{{ route('home') }}">{{ __('Home') }}</a><span aria-hidden="true">/</span>
+            <a href="{{ route('events.index') }}">{{ __('Events') }}</a><span aria-hidden="true">/</span>
+            <span aria-current="page">{{ $event->translated('title') }}</span>
+        </nav>
+    </div>
+
     <section class="kfs-event-detail-hero">
-        <img src="{{ $cover?->publicUrl() ?? asset('images/kfs-runners-hero.png') }}" alt="{{ $cover?->alt ?: $event->translated('title') }}">
-        <div class="kfs-event-detail-shade"></div>
+        <img class="kfs-event-cover" src="{{ $cover?->publicUrl() ?? asset('images/kfs-runners-hero.png') }}" alt="{{ $cover?->alt ?: $event->translated('title') }}" fetchpriority="high">
+        <div class="kfs-event-detail-shade" aria-hidden="true"></div>
         <div class="wrap kfs-event-detail-hero-content">
-            <a class="kfs-event-back" href="{{ route('events.index') }}">← {{ __('All events') }}</a>
-            <p class="kfs-events-eyebrow"><span></span>{{ __('KFS RUNNERS · EVENT ARCHIVE') }} · {{ $event->event_year }}</p>
+            <div class="kfs-event-hero-meta">
+                @if ($event->event_year)<span>{{ $event->event_year }}</span>@endif
+                @if ($event->translated('location'))<span><i aria-hidden="true">⌖</i>{{ $event->translated('location') }}</span>@endif
+            </div>
             <h1>{{ $event->translated('title') }}</h1>
-            @if ($event->translated('location')) <p class="kfs-event-detail-location">⌖ {{ $event->translated('location') }}</p> @endif
+            @if ($event->translated('summary'))<p class="kfs-event-detail-summary">{{ $event->translated('summary') }}</p>@endif
         </div>
     </section>
 
     <section class="kfs-event-detail-content">
         <div class="wrap kfs-event-detail-layout">
             <article class="kfs-event-story">
-                <p class="kfs-event-detail-kicker">{{ __('THE STORY') }}</p>
-                @if ($event->translated('summary')) <p class="kfs-event-lead">{{ $event->translated('summary') }}</p> @endif
-                @if ($event->translated('description')) <div class="kfs-event-description">{{ $event->translated('description') }}</div> @endif
-                @if ($event->source_url)
-                    <a class="kfs-event-source-link" href="{{ $event->source_url }}" target="_blank" rel="noopener noreferrer">{{ __('View the original event page') }} ↗</a>
+                <p class="kfs-event-detail-kicker"><span></span>{{ __('EVENT STORY') }}</p>
+                <h2>{{ $event->translated('title') }}</h2>
+                @if ($event->translated('summary'))<p class="kfs-event-lead">{{ $event->translated('summary') }}</p>@endif
+                @if ($event->translated('description'))
+                    <div class="kfs-event-description">{{ $event->translated('description') }}</div>
+                @elseif (! $event->translated('summary'))
+                    <p class="kfs-event-story-empty">{{ __('Details for this event will be added soon.') }}</p>
                 @endif
+                <a class="kfs-event-return-link" href="{{ route('events.index') }}"><span aria-hidden="true">←</span>{{ __('Back to all events') }}</a>
             </article>
-            <aside class="kfs-event-detail-aside">
-                <span>{{ __('EVENT YEAR') }}</span><strong>{{ $event->event_year }}</strong>
-                @if ($event->translated('location')) <span>{{ __('LOCATION') }}</span><strong>{{ $event->translated('location') }}</strong> @endif
-                @if ($event->registration_url)<a href="{{ $event->registration_url }}" target="_blank" rel="noopener noreferrer" class="kfs-event-register-link">{{ __('More event information') }} ↗</a>@endif
-                @if ($event->drive_url)
-                    <a href="{{ $event->drive_url }}" target="_blank" rel="noopener noreferrer" class="kfs-event-drive-aside-link">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
-                        <span>{{ __('Google Drive Album') }}</span> ↗
-                    </a>
+
+            <aside class="kfs-event-detail-aside" aria-labelledby="kfs-event-information-title">
+                <div class="kfs-event-aside-heading">
+                    <span class="kfs-event-aside-icon" aria-hidden="true">i</span>
+                    <h2 id="kfs-event-information-title">{{ __('Event information') }}</h2>
+                </div>
+                @if ($event->event_year)
+                    <div class="kfs-event-info-row"><span>{{ __('Year') }}</span><strong>{{ $event->event_year }}</strong></div>
+                @endif
+                @if ($event->translated('location'))
+                    <div class="kfs-event-info-row"><span>{{ __('Location') }}</span><strong>{{ $event->translated('location') }}</strong></div>
+                @endif
+
+                @if ($event->source_url || $event->registration_url || $event->drive_url)
+                    <div class="kfs-event-resource-list">
+                        <span class="kfs-event-resource-heading">{{ __('More information') }}</span>
+                        @if ($event->source_url)
+                            <a href="{{ $event->source_url }}" target="_blank" rel="noopener noreferrer">{{ __('Original event page') }} <span aria-hidden="true">↗</span></a>
+                        @endif
+                        @if ($event->registration_url)
+                            <a href="{{ $event->registration_url }}" target="_blank" rel="noopener noreferrer">{{ __('Event information') }} <span aria-hidden="true">↗</span></a>
+                        @endif
+                        @if ($event->drive_url)
+                            <a href="{{ $event->drive_url }}" target="_blank" rel="noopener noreferrer">{{ __('Google Drive album') }} <span aria-hidden="true">↗</span></a>
+                        @endif
+                    </div>
                 @endif
             </aside>
         </div>
     </section>
 
-    @php($galleryPhotos = $event->photos->reject(fn ($photo) => $photo->is_cover))
-    @if ($galleryPhotos->isNotEmpty() || $event->drive_url)
-        <section class="kfs-event-gallery" aria-labelledby="kfs-event-gallery-title">
-            <div class="wrap">
-                <div class="kfs-events-list-heading">
-                    <div>
-                        <span>{{ __('RACE DAY, REMEMBERED') }}</span>
-                        <h2 id="kfs-event-gallery-title">{{ __('Photo gallery') }}</h2>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-                        <p style="margin:0;">{{ $event->photos->count() }} {{ __('photos') }}</p>
-                        @if ($event->drive_url)
-                            <a href="{{ $event->drive_url }}" target="_blank" rel="noopener noreferrer" class="kfs-event-drive-pill">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
-                                <span>{{ __('Open on Google Drive') }}</span> ↗
-                            </a>
-                        @endif
-                    </div>
+    <section class="kfs-event-gallery" aria-labelledby="kfs-event-gallery-title">
+        <div class="wrap">
+            <div class="kfs-event-gallery-heading">
+                <div>
+                    <p class="kfs-event-detail-kicker"><span></span>{{ __('MEMORIES IN MOTION') }}</p>
+                    <h2 id="kfs-event-gallery-title">{{ __('Photo gallery') }}</h2>
+                    <p>{{ __('Moments from this KFS Runners event.') }}</p>
                 </div>
                 @if ($galleryPhotos->isNotEmpty())
-                    <div class="kfs-event-gallery-grid">
-                        @foreach ($galleryPhotos as $photo)
-                            <a href="{{ $photo->publicUrl() }}" target="_blank" rel="noopener noreferrer" aria-label="{{ __('Open event photo') }}">
-                                <img src="{{ $photo->publicUrl() }}" alt="{{ $photo->alt ?: $event->translated('title') }}" loading="lazy">
-                            </a>
-                        @endforeach
-                    </div>
-                @elseif ($event->drive_url)
-                    <div class="kfs-events-empty" style="margin-top: 1rem;">
-                        <h2>{{ __('View event photos on Google Drive') }}</h2>
-                        <p>{{ __('All photos for this event are available in our public Google Drive album.') }}</p>
-                        <a href="{{ $event->drive_url }}" target="_blank" rel="noopener noreferrer" class="kfs-event-register-link" style="display:inline-flex; width:auto; margin:1rem auto 0; padding:10px 24px;">{{ __('Open Google Drive Album') }} ↗</a>
-                    </div>
+                    <span class="kfs-event-gallery-count"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3l2-2h6l2 2h3v12H4z"/><circle cx="12" cy="13" r="3"/></svg>{{ $galleryPhotos->count() }} {{ __('photos') }}</span>
                 @endif
             </div>
-        </section>
+
+            @if ($galleryPhotos->isNotEmpty())
+                <div class="kfs-event-gallery-grid">
+                    @foreach ($galleryPhotos as $photo)
+                        <a class="kfs-event-gallery-item" href="{{ $photo->publicUrl() }}" data-event-photo data-photo-src="{{ $photo->publicUrl() }}" data-photo-alt="{{ $photo->alt ?: $event->translated('title') }}" aria-label="{{ __('Open event photo') }}: {{ $photo->alt ?: $event->translated('title') }}" @if ($loop->first) data-gallery-first @endif>
+                            <img src="{{ $photo->publicUrl() }}" alt="{{ $photo->alt ?: $event->translated('title') }}" loading="lazy">
+                            <span aria-hidden="true">↗</span>
+                        </a>
+                    @endforeach
+                </div>
+            @else
+                <div class="kfs-event-gallery-empty">
+                    <span class="kfs-event-gallery-empty-icon" aria-hidden="true">▧</span>
+                    <div><h3>{{ __('Photos are not available yet.') }}</h3><p>{{ __('Please check back later for this event gallery.') }}</p></div>
+                    @if ($event->drive_url)<a class="kfs-events-button primary" href="{{ $event->drive_url }}" target="_blank" rel="noopener noreferrer">{{ __('Open photo album') }} <span aria-hidden="true">↗</span></a>@endif
+                </div>
+            @endif
+
+            @if ($galleryPhotos->isNotEmpty() && $event->drive_url)
+                <div class="kfs-event-drive-callout">
+                    <p>{{ __('Want to view the full album?') }}</p>
+                    <a href="{{ $event->drive_url }}" target="_blank" rel="noopener noreferrer">{{ __('Open Google Drive album') }} <span aria-hidden="true">↗</span></a>
+                </div>
+            @endif
+        </div>
+    </section>
+
+    @if ($galleryPhotos->isNotEmpty())
+        <dialog class="kfs-event-lightbox" aria-label="{{ __('Photo viewer') }}" data-event-lightbox>
+            <button class="kfs-lightbox-close" type="button" data-lightbox-close aria-label="{{ __('Close photo viewer') }}">×</button>
+            <button class="kfs-lightbox-nav previous" type="button" data-lightbox-previous aria-label="{{ __('Previous photo') }}">←</button>
+            <figure><img data-lightbox-image src="" alt=""><figcaption data-lightbox-caption></figcaption></figure>
+            <button class="kfs-lightbox-nav next" type="button" data-lightbox-next aria-label="{{ __('Next photo') }}">→</button>
+            <p class="kfs-lightbox-count" data-lightbox-count aria-live="polite"></p>
+        </dialog>
     @endif
 </main>
 @endsection
+
+@push('scripts')
+@if ($galleryPhotos->isNotEmpty())
+<script>
+    (() => {
+        const page = document.querySelector('[data-event-detail]');
+        const dialog = page?.querySelector('[data-event-lightbox]');
+        if (!page || !dialog || typeof dialog.showModal !== 'function') return;
+
+        const photos = [...page.querySelectorAll('[data-event-photo]')];
+        const image = dialog.querySelector('[data-lightbox-image]');
+        const caption = dialog.querySelector('[data-lightbox-caption]');
+        const counter = dialog.querySelector('[data-lightbox-count]');
+        let activeIndex = 0;
+
+        const showPhoto = (index) => {
+            activeIndex = (index + photos.length) % photos.length;
+            const photo = photos[activeIndex];
+            image.src = photo.dataset.photoSrc;
+            image.alt = photo.dataset.photoAlt || '';
+            caption.textContent = photo.dataset.photoAlt || '';
+            counter.textContent = `${activeIndex + 1} / ${photos.length}`;
+        };
+
+        photos.forEach((photo, index) => photo.addEventListener('click', (event) => {
+            event.preventDefault();
+            showPhoto(index);
+            dialog.showModal();
+        }));
+
+        dialog.querySelector('[data-lightbox-close]')?.addEventListener('click', () => dialog.close());
+        dialog.querySelector('[data-lightbox-previous]')?.addEventListener('click', () => showPhoto(activeIndex - 1));
+        dialog.querySelector('[data-lightbox-next]')?.addEventListener('click', () => showPhoto(activeIndex + 1));
+        dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+        dialog.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowLeft') showPhoto(activeIndex - 1);
+            if (event.key === 'ArrowRight') showPhoto(activeIndex + 1);
+        });
+    })();
+</script>
+@endif
+@endpush

@@ -73,6 +73,22 @@ class HistoricalEventsSeeder extends Seeder
                     ['path' => 'images/events/half-marathon-archive-photo-3.jpg', 'alt' => 'Race day activities with local runners'],
                 ],
             ],
+            [
+                'title' => 'Kafr El-Sheikh Half Marathon 2024',
+                'title_ar' => 'نصف ماراثون كفر الشيخ 2024',
+                'slug' => 'half-marathon-2024',
+                'event_year' => 2024,
+                'location' => 'Kafr El-Sheikh, Egypt',
+                'location_ar' => 'كفر الشيخ، مصر',
+                'summary' => 'The fourth edition welcomed runners to Kafr El-Sheikh for race distances from 2K to 21K.',
+                'summary_ar' => 'استقبلت النسخة الرابعة العدّائين في كفر الشيخ لمسافات سباق من 2 إلى 21 كم.',
+                'description' => 'The fourth Kafr El-Sheikh Half Marathon included 2K, 5K, 10K, and 21K race distances.',
+                'description_ar' => 'تضمنت النسخة الرابعة من نصف ماراثون كفر الشيخ مسافات 2 و5 و10 و21 كيلومترًا.',
+                'source_url' => 'https://elatiky.com/marathon2024/',
+                'sort_order' => 4,
+                'is_published' => true,
+                'photos' => [],
+            ],
         ];
 
         foreach ($events as $item) {
