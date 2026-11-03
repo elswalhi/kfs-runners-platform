@@ -25,7 +25,9 @@
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-size:14px;">
                     <tr><td style="padding:10px 0;border-bottom:1px solid #e7eee9;color:#718279;">{{ __('Registration reference') }}</td><td dir="ltr" style="padding:10px 0;border-bottom:1px solid #e7eee9;text-align:{{ $details['locale'] === 'ar' ? 'left' : 'right' }};font-weight:800;">{{ $details['reference'] }}</td></tr>
                     @if (! $details['is_group'])
-                        <tr><td style="padding:10px 0;border-bottom:1px solid #e7eee9;color:#718279;">{{ __('Race number') }}</td><td dir="ltr" style="padding:10px 0;border-bottom:1px solid #e7eee9;text-align:{{ $details['locale'] === 'ar' ? 'left' : 'right' }};font-weight:800;">{{ $details['race_number'] }}</td></tr>
+                        @if ($details['race_number'])
+                            <tr><td style="padding:10px 0;border-bottom:1px solid #e7eee9;color:#718279;">{{ __('Race number') }}</td><td dir="ltr" style="padding:10px 0;border-bottom:1px solid #e7eee9;text-align:{{ $details['locale'] === 'ar' ? 'left' : 'right' }};font-weight:800;">{{ $details['race_number'] }}</td></tr>
+                        @endif
                     @endif
                     <tr><td style="padding:10px 0;border-bottom:1px solid #e7eee9;color:#718279;">{{ __('Name') }}</td><td style="padding:10px 0;border-bottom:1px solid #e7eee9;text-align:{{ $details['locale'] === 'ar' ? 'left' : 'right' }};font-weight:700;">{{ $details['name'] }}</td></tr>
                     @if ($details['is_group'])
@@ -49,7 +51,12 @@
                         <div style="padding:12px 14px;margin-top:8px;background:#f5f8f6;border-radius:8px;font-size:13px;line-height:1.7;">
                             <strong>{{ $runner['name'] }}</strong> · {{ $runner['race_name'] }} ({{ $runner['distance'] }})<br>
                             {{ $runner['kit'] === 'full' ? __('Full Kit') : __('Basic Kit') }}@if($runner['shirt_size']) · {{ __('Size') }}: {{ $runner['shirt_size'] }}@endif<br>
-                            {{ __('Race number') }}: <strong dir="ltr">#{{ $runner['race_number'] }}</strong> · <span dir="ltr">{{ $runner['reference'] }}</span>
+                            @if ($runner['race_number'])
+                                {{ __('Race number') }}: <strong dir="ltr">#{{ $runner['race_number'] }}</strong>
+                            @else
+                                {{ __('Race number will be assigned after payment is confirmed.') }}
+                            @endif
+                            · <span dir="ltr">{{ $runner['reference'] }}</span>
                         </div>
                     @endforeach
                 @endif

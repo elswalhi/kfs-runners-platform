@@ -6,12 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\Registration;
 use App\Models\Team;
+use App\Services\BibNumberService;
 use App\Services\EasyKashCashApi;
 use Illuminate\Support\Facades\DB;
 
 class PublicPaymentStatusController extends Controller
 {
-    public function show(string $registrationCode, EasyKashCashApi $easyKash)
+    public function show(string $registrationCode, EasyKashCashApi $easyKash, BibNumberService $bibNumbers)
     {
         $registration = Registration::query()
             ->where('registration_code', $registrationCode)
@@ -22,7 +23,7 @@ class PublicPaymentStatusController extends Controller
             abort_unless($payment, 404);
 
             if ($payment->status === 'pending') {
-                $this->syncWithEasyKash($payment, $registration, null, $easyKash);
+                $this->syncWithEasyKash($payment, $registration, null, $easyKash, $bibNumbers);
                 $registration->refresh();
                 $payment->refresh();
             }
@@ -35,7 +36,7 @@ class PublicPaymentStatusController extends Controller
         abort_unless($payment, 404);
 
         if ($payment->status === 'pending') {
-            $this->syncWithEasyKash($payment, null, $team, $easyKash);
+            $this->syncWithEasyKash($payment, null, $team, $easyKash, $bibNumbers);
             $team->refresh();
             $payment->refresh();
         }
@@ -53,7 +54,7 @@ class PublicPaymentStatusController extends Controller
         ]]);
     }
 
-    private function syncWithEasyKash(Payment $payment, ?Registration $registration, ?Team $team, EasyKashCashApi $easyKash): void
+    private function syncWithEasyKash(Payment $payment, ?Registration $registration, ?Team $team, EasyKashCashApi $easyKash, BibNumberService $bibNumbers): void
     {
         $reference = $registration ? $registration->registration_code : $team?->registration_code;
         if (! $reference) {
@@ -90,7 +91,7 @@ class PublicPaymentStatusController extends Controller
             return;
         }
 
-        DB::transaction(function () use ($payment, $paymentStatus, $providerStatus, $inquiry, $details, $registration, $team) {
+        DB::transaction(function () use ($payment, $paymentStatus, $providerStatus, $inquiry, $details, $registration, $team, $bibNumbers) {
             $lockedPayment = Payment::query()->lockForUpdate()->find($payment->id);
             if (! $lockedPayment) {
                 return;
@@ -134,6 +135,10 @@ class PublicPaymentStatusController extends Controller
                 if ($paymentStatus === 'paid') {
                     $team->update(['status' => 'confirmed', 'updated_at' => now()]);
                 }
+            }
+
+            if ($paymentStatus === 'paid') {
+                $bibNumbers->assignForPaidPayment($lockedPayment);
             }
         });
     }

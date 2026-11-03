@@ -81,6 +81,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/localization/translations', [AdminWebController::class, 'updateTranslations'])->name('localization.translations');
         Route::get('/event-settings', [AdminWebController::class, 'eventSettings'])->name('event-settings');
         Route::post('/event-settings', [AdminWebController::class, 'updateEventSettings'])->name('event-settings.update');
+        Route::get('/qr-settings', [AdminWebController::class, 'qrSettings'])->name('qr-settings');
+        Route::post('/qr-settings', [AdminWebController::class, 'updateQrSettings'])->name('qr-settings.update');
         Route::get('/site-media', [AdminWebController::class, 'siteMedia'])->name('site-media');
         Route::post('/site-media/{page}/{slot}', [AdminWebController::class, 'updateSiteMedia'])->name('site-media.update');
         Route::delete('/site-media/{page}/{slot}', [AdminWebController::class, 'deleteSiteMedia'])->name('site-media.destroy');

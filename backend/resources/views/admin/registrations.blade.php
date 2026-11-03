@@ -96,7 +96,7 @@
             <tbody>
                 @forelse($registrations as $item)
                     <tr>
-                        <td><span class="stitch-code-badge">#{{ $item->bib_number }}</span></td>
+                        <td><span class="stitch-code-badge">{{ $item->bib_number ? '#'.$item->bib_number : '—' }}</span></td>
                         <td>
                             <strong>{{ $item->age_on_race_day ?? '—' }}</strong>
                             @if($item->age_on_race_day !== null)

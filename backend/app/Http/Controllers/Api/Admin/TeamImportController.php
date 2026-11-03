@@ -8,7 +8,6 @@ use App\Models\Race;
 use App\Models\RaceKitPrice;
 use App\Models\Registration;
 use App\Models\Team;
-use App\Services\BibNumberService;
 use App\Services\EasyKashCashApi;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
@@ -20,7 +19,7 @@ use RuntimeException;
 
 class TeamImportController extends Controller
 {
-    public function store(Request $request, EasyKashCashApi $easyKash, BibNumberService $bibNumbers)
+    public function store(Request $request, EasyKashCashApi $easyKash)
     {
         $data = $request->validate([
             'request_key' => ['required', 'string', 'regex:/\A[a-f0-9]{64}\z/i'],
@@ -132,7 +131,7 @@ class TeamImportController extends Controller
             ], 409);
         }
 
-        $team = DB::transaction(function () use ($data, $prepared, $registrationCode, $teamPhone, $totalCents, $currencies, $bibNumbers) {
+        $team = DB::transaction(function () use ($data, $prepared, $registrationCode, $teamPhone, $totalCents, $currencies) {
             $team = Team::query()->create([
                 'name' => trim($data['team']['name']),
                 'contact_name' => trim($data['team']['contact_name']),
@@ -142,12 +141,11 @@ class TeamImportController extends Controller
                 'status' => 'pending',
             ]);
 
-            $bibNumbers->lockRaces(collect($prepared)->map(fn ($entry) => $entry['race']->id));
             foreach ($prepared as $entry) {
                 $member = $entry['member'];
                 $registration = Registration::query()->create([
                     'registration_code' => $this->newRegistrationCode(),
-                    'bib_number' => $bibNumbers->next($entry['race']->id),
+                    'bib_number' => null,
                     'race_id' => $entry['race']->id,
                     'team_id' => $team->id,
                     'kit_type' => $member['kit_type'],

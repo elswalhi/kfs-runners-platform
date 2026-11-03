@@ -141,7 +141,8 @@
                 <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--st-text-muted);">
                     {{ __('Race Number (BIB)') }}
                 </label>
-                <input required type="number" min="1" max="999999999" name="bib_number" value="{{ $registration->bib_number }}" class="stitch-input" style="width: 100%;">
+                <input @required($registration->payment_status === 'paid') @disabled($registration->payment_status !== 'paid') type="number" min="1" max="999999999" name="bib_number" value="{{ $registration->bib_number }}" class="stitch-input" style="width: 100%;">
+                @if($registration->payment_status !== 'paid')<small style="color:#a77919; font-size:10px;">{{ __('Assigned after payment confirmation.') }}</small>@endif
             </div>
             <button type="submit" class="stitch-btn stitch-btn-primary" style="height: 42px;">
                 <span>Save Runner</span>
@@ -156,7 +157,7 @@
             <div class="stitch-panel-header" style="justify-content: center; border-bottom: 1px dashed var(--st-border);">
                 <div style="text-align: center;">
                     <span class="stitch-code-badge" style="font-size: 13px; font-weight: 800; padding: 4px 10px; background: #fee2e2; color: #991b1b;">
-                        BIB # {{ $registration->bib_number }}
+                        @if($registration->bib_number) BIB # {{ $registration->bib_number }} @else {{ __('Race number assigned after payment') }} @endif
                     </span>
                     <h3 style="margin-top: 6px;">{{ __('Runner QR & Kit Pickup Code') }}</h3>
                     <p style="font-size: 12px; color: var(--st-text-muted);">{{ __('Scannable at race expo & kit collection booth') }}</p>
@@ -164,6 +165,7 @@
             </div>
 
             <div style="padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                @if ($qrDataUri && $qrPayload)
                 <div style="background: #ffffff; padding: 12px; border-radius: 12px; border: 2px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.06); display: inline-block;">
                     <img src="{{ $qrDataUri }}" alt="Runner QR Code" width="220" height="220" style="display: block; border-radius: 6px;">
                 </div>
@@ -196,11 +198,11 @@
 
                 <form method="POST" action="{{ route('admin.registrations.send-qr', $registration) }}" style="margin-top: 10px; width: 100%;">
                     @csrf
-                    <button type="submit" class="stitch-btn stitch-btn-secondary" style="width: 100%; justify-content: center; gap: 8px;" @disabled($registration->payment_status !== 'paid')>
+                    <button type="submit" class="stitch-btn stitch-btn-secondary" style="width: 100%; justify-content: center; gap: 8px;" @disabled($registration->payment_status !== 'paid' || ! $registration->bib_number)>
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
                         <span>{{ __('Email QR for kit pickup') }}</span>
                     </button>
-                    @if($registration->payment_status === 'paid')
+                    @if($registration->payment_status === 'paid' && $registration->bib_number)
                         <small style="display:block; margin-top:6px; color:var(--st-text-muted); font-size:11px;">{{ __('Send the QR and kit pickup details to :email.', ['email' => $registration->email]) }}</small>
                     @else
                         <small style="display:block; margin-top:6px; color:#a77919; font-size:11px;">{{ __('The QR email can be sent after payment is confirmed.') }}</small>
@@ -212,6 +214,15 @@
                     <span style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px;">{{ __('QR Scanned Content Preview:') }}</span>
                     <pre style="font-family: monospace; font-size: 11px; color: #1e293b; margin: 0; white-space: pre-wrap; line-height: 1.4;">{{ $qrPayload }}</pre>
                 </div>
+                @else
+                    <div style="width:100%; padding:20px; border:1px dashed #d7e2dc; border-radius:10px; background:#f8faf9; color:#62766d; font-size:13px; line-height:1.6;">
+                        @if($registration->payment_status !== 'paid')
+                            {{ __('A race number and pickup QR are created after payment is confirmed.') }}
+                        @else
+                            {{ __('The pickup QR is unavailable until a race number is assigned and at least one QR field is enabled.') }}
+                        @endif
+                    </div>
+                @endif
             </div>
         </div>
 

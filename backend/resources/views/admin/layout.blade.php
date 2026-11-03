@@ -127,6 +127,11 @@
                 <span>{{ __('Race Date & Countdown') }}</span>
             </a>
 
+            <a class="stitch-nav-item {{ request()->routeIs('admin.qr-settings*') ? 'active' : '' }}" href="{{ route('admin.qr-settings') }}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v2M17 20h4M20 18v3"/></svg>
+                <span>{{ __('Runner QR Settings') }}</span>
+            </a>
+
             <a class="stitch-nav-item {{ request()->routeIs('admin.site-media*') ? 'active' : '' }}" href="{{ route('admin.site-media') }}">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
                 <span>{{ __('Website Images') }}</span>

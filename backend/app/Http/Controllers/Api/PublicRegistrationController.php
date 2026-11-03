@@ -204,10 +204,10 @@ class PublicRegistrationController extends Controller
             return response()->json(['message' => 'EasyKash cash checkout expiry is not configured correctly.'], 503);
         }
 
-        $registration = DB::transaction(function () use ($validated, $race, $price, $documentPath, $promo, $originalAmount, $discountAmount, $finalAmount, $bibNumbers) {
+        $registration = DB::transaction(function () use ($validated, $race, $price, $documentPath, $promo, $originalAmount, $discountAmount, $finalAmount) {
             $registration = Registration::query()->create([
                 'registration_code' => $this->newCode(),
-                'bib_number' => $bibNumbers->next($race->id),
+                'bib_number' => null,
                 'race_id' => $race->id,
                 'promo_code_id' => $promo?->id,
                 'promo_code' => $promo?->code,
@@ -410,7 +410,9 @@ class PublicRegistrationController extends Controller
                 'status' => $isPaid ? 'confirmed' : 'pending',
             ]);
 
-            $bibNumbers->lockRaces(collect($runnerItems)->map(fn ($item) => $item['race']->id));
+            if ($isPaid) {
+                $bibNumbers->lockRaces(collect($runnerItems)->map(fn ($item) => $item['race']->id));
+            }
             $discountPerRunner = count($runnerItems) > 0 ? round($discountAmount / count($runnerItems), 2) : 0.00;
 
             foreach ($runnerItems as $index => $item) {
@@ -425,7 +427,7 @@ class PublicRegistrationController extends Controller
 
                 Registration::query()->create([
                     'registration_code' => $this->newCode(),
-                    'bib_number' => $bibNumbers->next($item['race']->id),
+                    'bib_number' => $isPaid ? $bibNumbers->next($item['race']->id) : null,
                     'team_id' => $team->id,
                     'race_id' => $item['race']->id,
                     'promo_code_id' => $promo?->id,

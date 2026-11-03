@@ -167,8 +167,12 @@ class AdminWebController
         $idNumber = $registration->decryptedIdNumber();
         $idNumberDisplay = $idNumber ?? '—';
         $idNumberUnavailable = $idNumber === null && filled($registration->getRawOriginal('id_number'));
-        $qrDataUri = QrCodeService::generateRunnerQr($registration, 260);
-        $qrPayload = QrCodeService::buildRunnerPayload($registration);
+        $qrDataUri = null;
+        $qrPayload = null;
+        if ($registration->payment_status === 'paid' && $registration->bib_number) {
+            $qrDataUri = QrCodeService::generateRunnerQr($registration, 260);
+            $qrPayload = QrCodeService::buildRunnerPayload($registration);
+        }
 
         return view('admin.registration', compact('registration', 'payments', 'idNumberDisplay', 'idNumberUnavailable', 'qrDataUri', 'qrPayload', 'raceDate', 'runnerAge', 'ageGroupName'));
     }
@@ -179,7 +183,7 @@ class AdminWebController
             return back()->withErrors(__('This runner does not have a valid email address.'));
         }
 
-        if ($registration->payment_status !== 'paid') {
+        if ($registration->payment_status !== 'paid' || ! $registration->bib_number) {
             return back()->withErrors(__('The kit pickup QR can only be emailed after payment is confirmed.'));
         }
 
@@ -190,6 +194,9 @@ class AdminWebController
         try {
             $registration->loadMissing('race', 'team');
             $qrDataUri = QrCodeService::generateRunnerQr($registration, 360);
+            if ($qrDataUri === null) {
+                return back()->withErrors(__('No QR fields are enabled. Select at least one field in Runner QR Settings first.'));
+            }
             $qrBase64 = substr($qrDataUri, strlen('data:image/png;base64,'));
             $qrPng = base64_decode($qrBase64, true);
 
@@ -225,7 +232,9 @@ class AdminWebController
         $data = $request->validate([
             'status' => ['required', Rule::in(['pending', 'confirmed', 'cancelled'])],
             'bib_number' => [
-                'required',
+                Rule::prohibitedIf($registration->payment_status !== 'paid'),
+                Rule::requiredIf($registration->payment_status === 'paid'),
+                'nullable',
                 'integer',
                 'min:1',
                 'max:999999999',
@@ -555,6 +564,31 @@ class AdminWebController
         return back()->with('success', __('Race date and countdown updated successfully!'));
     }
 
+    public function qrSettings()
+    {
+        $qrFields = QrCodeService::runnerFields();
+        $selectedQrFields = AppSetting::get('runner_qr_fields', QrCodeService::defaultRunnerFields());
+        if (! is_array($selectedQrFields)) {
+            $selectedQrFields = QrCodeService::defaultRunnerFields();
+        }
+        $selectedQrFields = array_values(array_intersect(array_keys($qrFields), $selectedQrFields));
+
+        return view('admin.qr-settings', compact('qrFields', 'selectedQrFields'));
+    }
+
+    public function updateQrSettings(Request $request)
+    {
+        $qrFields = QrCodeService::runnerFields();
+        $data = $request->validate([
+            'qr_fields' => ['required', 'array', 'min:1'],
+            'qr_fields.*' => ['required', 'string', Rule::in(array_keys($qrFields))],
+        ]);
+
+        AppSetting::set('runner_qr_fields', array_values(array_unique($data['qr_fields'])));
+
+        return back()->with('success', __('Runner QR settings saved successfully.'));
+    }
+
     public function siteMedia()
     {
         $pages = SiteMedia::pages(Race::query()->orderBy('sort_order')->get());
@@ -682,9 +716,9 @@ class AdminWebController
         return view('admin.team-import', compact('races'));
     }
 
-    public function importTeam(Request $request, TeamImportController $importer, EasyKashCashApi $easyKash, \App\Services\BibNumberService $bibNumbers)
+    public function importTeam(Request $request, TeamImportController $importer, EasyKashCashApi $easyKash)
     {
-        $response = $importer->store($request, $easyKash, $bibNumbers);
+        $response = $importer->store($request, $easyKash);
 
         if ($response instanceof JsonResponse) {
             $payload = $response->getData(true);

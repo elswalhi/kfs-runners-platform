@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\Registration;
 use App\Models\Team;
+use App\Services\BibNumberService;
 use App\Services\EasyKashCashApi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 
 class EasyKashCallbackController extends Controller
 {
-    public function __invoke(Request $request, EasyKashCashApi $easyKash)
+    public function __invoke(Request $request, EasyKashCashApi $easyKash, BibNumberService $bibNumbers)
     {
         if (! filled(config('easykash.hmac_secret'))) {
             return response()->json(['message' => 'EasyKash callback verification is not configured.'], 503);
@@ -60,7 +61,7 @@ class EasyKashCallbackController extends Controller
             default => 'pending',
         };
 
-        DB::transaction(function () use ($payment, $paymentStatus, $providerStatus, $payload) {
+        DB::transaction(function () use ($payment, $paymentStatus, $providerStatus, $payload, $bibNumbers) {
             $lockedPayment = Payment::query()->lockForUpdate()->find($payment->id);
             if (! $lockedPayment) {
                 return;
@@ -107,6 +108,10 @@ class EasyKashCallbackController extends Controller
                 if ($paymentStatus === 'paid') {
                     Team::query()->whereKey($lockedPayment->team_id)->update(['status' => 'confirmed', 'updated_at' => now()]);
                 }
+            }
+
+            if ($paymentStatus === 'paid') {
+                $bibNumbers->assignForPaidPayment($lockedPayment);
             }
         });
 
