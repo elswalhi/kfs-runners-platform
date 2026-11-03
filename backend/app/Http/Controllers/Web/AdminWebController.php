@@ -404,7 +404,7 @@ class AdminWebController
     public function promoCodes()
     {
         $promoCodes = PromoCode::query()->with('race')->withCount('registrations')->latest()->get();
-        $races = Race::query()->where('is_active', true)->orderBy('sort_order')->get();
+        $races = Race::query()->orderBy('sort_order')->get();
 
         $totalCodes = $promoCodes->count();
         $activeCodes = $promoCodes->filter->isUsable()->count();
@@ -442,6 +442,42 @@ class AdminWebController
         ]);
 
         return back()->with('success', 'Promo code created successfully.');
+    }
+
+    public function updatePromoCode(Request $request, PromoCode $promoCode)
+    {
+        $request->merge(['code' => strtoupper(trim((string) $request->input('code', '')))]);
+
+        $data = $request->validate([
+            'code' => ['required', 'string', 'max:64', 'alpha_dash', Rule::unique('promo_codes', 'code')->ignore($promoCode->id)],
+            'discount_type' => ['required', Rule::in(['percentage', 'fixed'])],
+            'discount_value' => ['required', 'numeric', 'gt:0', 'max:100000'],
+            'max_uses' => ['nullable', 'integer', 'min:1', 'max:1000000'],
+            'valid_from' => ['nullable', 'date'],
+            'valid_until' => ['nullable', 'date', 'after_or_equal:valid_from'],
+            'race_id' => ['nullable', 'integer', 'exists:races,id'],
+        ]);
+
+        if ($data['discount_type'] === 'percentage' && (float) $data['discount_value'] > 100) {
+            return back()->withErrors(['discount_value' => 'Percentage discount cannot exceed 100%.'])->withInput();
+        }
+
+        if (isset($data['max_uses']) && (int) $data['max_uses'] < $promoCode->times_used) {
+            return back()->withErrors(['max_uses' => 'The redemption limit cannot be lower than the number of times this code has already been used.'])->withInput();
+        }
+
+        $promoCode->update([
+            'code' => $data['code'],
+            'discount_type' => $data['discount_type'],
+            'discount_value' => $data['discount_value'],
+            'max_uses' => $data['max_uses'] ?: null,
+            'valid_from' => $data['valid_from'] ?: null,
+            'valid_until' => $data['valid_until'] ?: null,
+            'race_id' => $data['race_id'] ?: null,
+            'is_active' => $request->boolean('is_active'),
+        ]);
+
+        return back()->with('success', 'Promo code updated successfully.');
     }
 
     public function togglePromoCode(PromoCode $promoCode)

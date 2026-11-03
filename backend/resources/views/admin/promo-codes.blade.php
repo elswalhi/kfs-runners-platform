@@ -207,7 +207,22 @@
                             </span>
                         </td>
                         <td style="text-align: right;">
-                            <div style="display: inline-flex; align-items: center; gap: 8px;">
+                            <div style="display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; flex-wrap: wrap;">
+                                <button
+                                    class="stitch-btn stitch-btn-secondary promo-edit-button"
+                                    style="height: 30px; padding: 0 10px; font-size: 11px;"
+                                    type="button"
+                                    data-id="{{ $code->id }}"
+                                    data-code="{{ $code->code }}"
+                                    data-discount-type="{{ $code->discount_type }}"
+                                    data-discount-value="{{ $code->discount_value }}"
+                                    data-race-id="{{ $code->race_id }}"
+                                    data-max-uses="{{ $code->max_uses }}"
+                                    data-times-used="{{ $code->times_used }}"
+                                    data-valid-from="{{ $code->valid_from?->format('Y-m-d') }}"
+                                    data-valid-until="{{ $code->valid_until?->format('Y-m-d') }}"
+                                    data-is-active="{{ $code->is_active ? '1' : '0' }}"
+                                >Edit</button>
                                 <form method="POST" action="{{ route('admin.promo-codes.toggle', $code) }}">
                                     @csrf
                                     @method('PATCH')
@@ -236,4 +251,103 @@
         </table>
     </div>
 </div>
+
+<div id="promo-edit-modal" style="display:none; position:fixed; inset:0; z-index:1000; align-items:center; justify-content:center; padding:20px; background:rgba(12,35,31,.58);">
+    <section role="dialog" aria-modal="true" aria-labelledby="promo-edit-title" style="width:min(760px,100%); max-height:90vh; overflow:auto; background:var(--st-surface,#fff); border:1px solid var(--st-border); border-radius:16px; box-shadow:0 24px 80px rgba(0,0,0,.22);">
+        <div class="stitch-panel-header" style="position:sticky; top:0; z-index:1; background:var(--st-surface,#fff);">
+            <div>
+                <h2 id="promo-edit-title" class="stitch-panel-title">Edit Promo Code</h2>
+                <p class="stitch-panel-subtitle">Update the discount settings. Existing redemptions are preserved.</p>
+            </div>
+            <button type="button" id="promo-edit-close" class="stitch-btn stitch-btn-secondary" aria-label="Close edit dialog">Close</button>
+        </div>
+        <form id="promo-edit-form" method="POST" style="padding:24px;">
+            @csrf
+            @method('PATCH')
+            <div class="stitch-form-grid">
+                <div class="stitch-form-group">
+                    <label for="edit-promo-code">Voucher Code</label>
+                    <input id="edit-promo-code" required maxlength="64" name="code" class="stitch-input" style="text-transform:uppercase;font-family:monospace;font-weight:700;">
+                </div>
+                <div class="stitch-form-group">
+                    <label for="edit-promo-type">Discount Type</label>
+                    <select id="edit-promo-type" name="discount_type" class="stitch-select" style="width:100%;">
+                        <option value="fixed">Fixed Amount (EGP)</option>
+                        <option value="percentage">Percentage (%)</option>
+                    </select>
+                </div>
+                <div class="stitch-form-group">
+                    <label for="edit-promo-value">Discount Value</label>
+                    <input id="edit-promo-value" required type="number" min="0.01" step="0.01" max="100000" name="discount_value" class="stitch-input">
+                </div>
+                <div class="stitch-form-group">
+                    <label for="edit-promo-race">Applicable Race</label>
+                    <select id="edit-promo-race" name="race_id" class="stitch-select" style="width:100%;">
+                        <option value="">All Races & Distances</option>
+                        @foreach($races as $race)
+                            <option value="{{ $race->id }}">{{ $race->name }} ({{ $race->distance_label }})</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="stitch-form-group">
+                    <label for="edit-promo-max-uses">Max Redemptions <small style="color:var(--st-text-muted);">(Optional)</small></label>
+                    <input id="edit-promo-max-uses" type="number" min="1" max="1000000" name="max_uses" class="stitch-input">
+                    <small id="edit-promo-usage-note" style="color:var(--st-text-muted);"></small>
+                </div>
+                <div class="stitch-form-group">
+                    <label for="edit-promo-valid-from">Valid From <small style="color:var(--st-text-muted);">(Optional)</small></label>
+                    <input id="edit-promo-valid-from" type="date" name="valid_from" class="stitch-input">
+                </div>
+                <div class="stitch-form-group">
+                    <label for="edit-promo-valid-until">Valid Until <small style="color:var(--st-text-muted);">(Optional)</small></label>
+                    <input id="edit-promo-valid-until" type="date" name="valid_until" class="stitch-input">
+                </div>
+                <div class="stitch-form-group" style="justify-content:center;padding-top:18px;">
+                    <label class="stitch-checkbox-label">
+                        <input id="edit-promo-active" type="checkbox" name="is_active" value="1">
+                        Active
+                    </label>
+                </div>
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:24px;">
+                <button type="button" id="promo-edit-cancel" class="stitch-btn stitch-btn-secondary">Cancel</button>
+                <button type="submit" class="stitch-btn stitch-btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </section>
+</div>
+
+<script>
+(() => {
+    const modal = document.getElementById('promo-edit-modal');
+    const form = document.getElementById('promo-edit-form');
+    const updateUrl = @json(route('admin.promo-codes.update', ['promoCode' => '__PROMO_ID__']));
+    const close = () => { modal.style.display = 'none'; document.body.style.overflow = ''; };
+
+    document.querySelectorAll('.promo-edit-button').forEach((button) => {
+        button.addEventListener('click', () => {
+            const data = button.dataset;
+            form.action = updateUrl.replace('__PROMO_ID__', encodeURIComponent(data.id));
+            document.getElementById('edit-promo-code').value = data.code;
+            document.getElementById('edit-promo-type').value = data.discountType;
+            document.getElementById('edit-promo-value').value = data.discountValue;
+            document.getElementById('edit-promo-race').value = data.raceId;
+            document.getElementById('edit-promo-max-uses').value = data.maxUses;
+            document.getElementById('edit-promo-max-uses').min = Math.max(1, Number(data.timesUsed || 0));
+            document.getElementById('edit-promo-valid-from').value = data.validFrom;
+            document.getElementById('edit-promo-valid-until').value = data.validUntil;
+            document.getElementById('edit-promo-active').checked = data.isActive === '1';
+            document.getElementById('edit-promo-usage-note').textContent = `${data.timesUsed || 0} redemption(s) already used; this count is preserved.`;
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            document.getElementById('edit-promo-code').focus();
+        });
+    });
+
+    document.getElementById('promo-edit-close').addEventListener('click', close);
+    document.getElementById('promo-edit-cancel').addEventListener('click', close);
+    modal.addEventListener('click', (event) => { if (event.target === modal) close(); });
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && modal.style.display !== 'none') close(); });
+})();
+</script>
 @endsection

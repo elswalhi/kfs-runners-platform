@@ -74,6 +74,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/pricing/{raceKitPrice}', [AdminWebController::class, 'deletePrice'])->name('pricing.destroy');
         Route::get('/promo-codes', [AdminWebController::class, 'promoCodes'])->name('promo-codes');
         Route::post('/promo-codes', [AdminWebController::class, 'storePromoCode'])->name('promo-codes.store');
+        Route::patch('/promo-codes/{promoCode}', [AdminWebController::class, 'updatePromoCode'])->name('promo-codes.update');
         Route::patch('/promo-codes/{promoCode}/toggle', [AdminWebController::class, 'togglePromoCode'])->name('promo-codes.toggle');
         Route::delete('/promo-codes/{promoCode}', [AdminWebController::class, 'deletePromoCode'])->name('promo-codes.destroy');
         Route::get('/localization', [AdminWebController::class, 'localization'])->name('localization');
