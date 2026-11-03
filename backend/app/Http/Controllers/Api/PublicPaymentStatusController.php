@@ -8,11 +8,12 @@ use App\Models\Registration;
 use App\Models\Team;
 use App\Services\BibNumberService;
 use App\Services\EasyKashCashApi;
+use App\Services\RegistrationEmailService;
 use Illuminate\Support\Facades\DB;
 
 class PublicPaymentStatusController extends Controller
 {
-    public function show(string $registrationCode, EasyKashCashApi $easyKash, BibNumberService $bibNumbers)
+    public function show(string $registrationCode, EasyKashCashApi $easyKash, BibNumberService $bibNumbers, RegistrationEmailService $registrationEmails)
     {
         $registration = Registration::query()
             ->where('registration_code', $registrationCode)
@@ -23,7 +24,7 @@ class PublicPaymentStatusController extends Controller
             abort_unless($payment, 404);
 
             if ($payment->status === 'pending') {
-                $this->syncWithEasyKash($payment, $registration, null, $easyKash, $bibNumbers);
+                $this->syncWithEasyKash($payment, $registration, null, $easyKash, $bibNumbers, $registrationEmails);
                 $registration->refresh();
                 $payment->refresh();
             }
@@ -36,7 +37,7 @@ class PublicPaymentStatusController extends Controller
         abort_unless($payment, 404);
 
         if ($payment->status === 'pending') {
-            $this->syncWithEasyKash($payment, null, $team, $easyKash, $bibNumbers);
+            $this->syncWithEasyKash($payment, null, $team, $easyKash, $bibNumbers, $registrationEmails);
             $team->refresh();
             $payment->refresh();
         }
@@ -54,7 +55,7 @@ class PublicPaymentStatusController extends Controller
         ]]);
     }
 
-    private function syncWithEasyKash(Payment $payment, ?Registration $registration, ?Team $team, EasyKashCashApi $easyKash, BibNumberService $bibNumbers): void
+    private function syncWithEasyKash(Payment $payment, ?Registration $registration, ?Team $team, EasyKashCashApi $easyKash, BibNumberService $bibNumbers, RegistrationEmailService $registrationEmails): void
     {
         $reference = $registration ? $registration->registration_code : $team?->registration_code;
         if (! $reference) {
@@ -141,6 +142,10 @@ class PublicPaymentStatusController extends Controller
                 $bibNumbers->assignForPaidPayment($lockedPayment);
             }
         });
+
+        if ($paymentStatus === 'paid') {
+            $registrationEmails->sendPaidPaymentConfirmation($payment);
+        }
     }
 
     private function paymentData(string $reference, string $status, $payment, ?int $raceNumber = null): array

@@ -8,13 +8,14 @@ use App\Models\Registration;
 use App\Models\Team;
 use App\Services\BibNumberService;
 use App\Services\EasyKashCashApi;
+use App\Services\RegistrationEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class EasyKashCallbackController extends Controller
 {
-    public function __invoke(Request $request, EasyKashCashApi $easyKash, BibNumberService $bibNumbers)
+    public function __invoke(Request $request, EasyKashCashApi $easyKash, BibNumberService $bibNumbers, RegistrationEmailService $registrationEmails)
     {
         if (! filled(config('easykash.hmac_secret'))) {
             return response()->json(['message' => 'EasyKash callback verification is not configured.'], 503);
@@ -114,6 +115,10 @@ class EasyKashCallbackController extends Controller
                 $bibNumbers->assignForPaidPayment($lockedPayment);
             }
         });
+
+        if ($paymentStatus === 'paid') {
+            $registrationEmails->sendPaidPaymentConfirmation($payment);
+        }
 
         Log::info('EasyKash callback processed.', [
             'easykash_reference' => $reference,
