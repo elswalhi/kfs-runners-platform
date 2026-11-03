@@ -3,23 +3,14 @@ set -e
 
 echo "🚀 [Deploy] Starting deployment on Hostinger..."
 
-# Prefer the current public URL, keeping the previous configured app as a fallback.
-TARGET_DOMAIN=""
-for CANDIDATE_DOMAIN in kfsmarathon.elatiky.com runners.elatiky.com; do
-  CANDIDATE_APP="$HOME/domains/$CANDIDATE_DOMAIN/kfs-app"
-  if [ -f "$CANDIDATE_APP/.env" ] && [ -d "$CANDIDATE_APP/vendor" ]; then
-    TARGET_DOMAIN="$CANDIDATE_DOMAIN"
-    break
-  fi
-done
-
-if [ -z "$TARGET_DOMAIN" ]; then
-  echo "❌ [Deploy] No configured Laravel app found under ~/domains/kfsmarathon.elatiky.com or ~/domains/runners.elatiky.com."
-  exit 1
-fi
-
+TARGET_DOMAIN="kfsmarathon.elatiky.com"
 APP_DIR="$HOME/domains/$TARGET_DOMAIN/kfs-app"
 WEB_DIR="$HOME/domains/$TARGET_DOMAIN/public_html"
+
+if [ ! -f "$APP_DIR/.env" ] || [ ! -d "$APP_DIR/vendor" ]; then
+  echo "❌ [Deploy] Laravel app is not configured under ~/domains/$TARGET_DOMAIN/kfs-app."
+  exit 1
+fi
 
 echo "🎯 [Deploy] Target Domain: $TARGET_DOMAIN"
 echo "📁 [Deploy] App directory: $APP_DIR"
@@ -54,6 +45,22 @@ fi
 if [ -f "deploy/hostinger/laravel-index.php" ]; then
   cp -f deploy/hostinger/laravel-index.php "$WEB_DIR/index.php"
 fi
+
+# Keep Laravel and EasyKash return links on the active public domain.
+set_env_value() {
+  local key="$1"
+  local value="$2"
+  local env_file="$APP_DIR/.env"
+
+  if grep -q "^${key}=" "$env_file"; then
+    sed -i "s|^${key}=.*|${key}=${value}|" "$env_file"
+  else
+    printf '\n%s=%s\n' "$key" "$value" >> "$env_file"
+  fi
+}
+
+set_env_value APP_URL "https://$TARGET_DOMAIN"
+set_env_value EASYKASH_REDIRECT_URL "https://$TARGET_DOMAIN/register"
 
 # Locate PHP 8.3 CLI
 PHP_BIN="php"
