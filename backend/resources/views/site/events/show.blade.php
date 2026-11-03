@@ -3,7 +3,7 @@
 @section('title', $event->translated('title') . ' · KFS Runners')
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/kfs-events.css') }}?v=20261103-events-retouch-2">
+    <link rel="stylesheet" href="{{ asset('css/kfs-events.css') }}?v=20261103-events-retouch-3">
 @endpush
 
 @section('content')
