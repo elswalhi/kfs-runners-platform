@@ -190,16 +190,9 @@
 .kfs-events-result-count { flex: 0 0 auto; margin: 0 0 4px; color: #7b8c84; font-size: 11px; }
 .kfs-events-result-count strong { color: var(--events-pine); font-variant-numeric: tabular-nums; }
 
-.kfs-events-filter-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: 0 0 23px; padding: 13px 0; border-top: 1px solid var(--events-line); border-bottom: 1px solid var(--events-line); }
-.kfs-events-filter-row > span { color: #70817b; font-size: 10px; font-weight: 800; }
-.kfs-events-year-filter { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }
-.kfs-events-year-filter button { min-height: 36px; padding: 8px 14px; border: 1px solid transparent; border-radius: 7px; color: #62766d; background: transparent; cursor: pointer; font-size: 10px; font-weight: 800; transition: color .18s ease, background .18s ease, border-color .18s ease; }
-.kfs-events-year-filter button:hover { color: var(--events-green); background: #eaf4ef; }
-.kfs-events-year-filter button.is-active { border-color: var(--events-pine); color: #fff; background: var(--events-pine); }
 
 .kfs-events-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: stretch; }
 .kfs-events-card { display: flex; min-width: 0; flex-direction: column; overflow: hidden; border: 1px solid var(--events-line); border-radius: 12px; background: #fff; box-shadow: 0 8px 24px rgba(5, 47, 41, .045); transition: transform .22s ease, box-shadow .22s ease; }
-.kfs-events-card[hidden] { display: none; }
 .kfs-events-card:hover { transform: translateY(-4px); box-shadow: 0 17px 34px rgba(5, 47, 41, .11); }
 .kfs-events-card-image { position: relative; display: block; height: 220px; overflow: hidden; background: #dce7df; }
 .kfs-events-card-image::after { position: absolute; inset: 55% 0 0; content: ''; background: linear-gradient(transparent, rgba(2, 30, 26, .28)); pointer-events: none; }
@@ -218,11 +211,11 @@
 .kfs-events-card-footer > a span { transition: transform .18s ease; }
 .kfs-events-card-footer > a:hover span { transform: translateX(3px); }
 
-.kfs-events-filter-empty,.kfs-events-empty { padding: 43px 20px; border: 1px dashed #c9dbd0; border-radius: 13px; text-align: center; background: #fff; }
-.kfs-events-filter-empty h3,.kfs-events-empty h3 { margin: 0 0 8px; color: var(--events-pine); font-family: 'Barlow Condensed', 'Cairo', sans-serif; font-size: 30px; }
-.kfs-events-filter-empty button,.kfs-events-empty a { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 10px 14px; border: 1px solid var(--events-line); border-radius: 7px; color: var(--events-green); background: #fff; cursor: pointer; font-size: 11px; font-weight: 800; }
+.kfs-events-empty { padding: 43px 20px; border: 1px dashed #c9dbd0; border-radius: 13px; text-align: center; background: #fff; }
+.kfs-events-empty h3 { margin: 0 0 8px; color: var(--events-pine); font-family: 'Barlow Condensed', 'Cairo', sans-serif; font-size: 30px; }
+.kfs-events-empty a { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 10px 14px; border: 1px solid var(--events-line); border-radius: 7px; color: var(--events-green); background: #fff; cursor: pointer; font-size: 11px; font-weight: 800; }
 .kfs-events-empty-icon { display: grid; width: 40px; height: 40px; place-items: center; margin: 0 auto 12px; border-radius: 11px; color: var(--events-green); background: #eaf4ef; font-size: 20px; }
-.kfs-events-empty p,.kfs-events-filter-empty p { margin: 0; color: var(--events-muted); font-size: 12px; }
+.kfs-events-empty p { margin: 0; color: var(--events-muted); font-size: 12px; }
 
 .kfs-event-breadcrumbs { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 17px; }
 .kfs-event-back { display: inline-flex; align-items: center; gap: 9px; color: #5f766c; font-size: 11px; font-weight: 800; }
@@ -314,12 +307,9 @@
 
 html.dark .kfs-events-page { color: #e4eee8; background: #0e1915; }
 html.dark .kfs-events-list,html.dark .kfs-event-gallery { background: #0e1915; }
-html.dark .kfs-featured-event,html.dark .kfs-events-card,html.dark .kfs-events-filter-empty,html.dark .kfs-events-empty,html.dark .kfs-event-gallery-empty,html.dark .kfs-event-drive-callout { border-color: #263c33; background: #14231d; }
-html.dark .kfs-featured-event h2,html.dark .kfs-events-list-heading h2,html.dark .kfs-event-gallery-heading h2,html.dark .kfs-events-card h3,html.dark .kfs-events-filter-empty h3,html.dark .kfs-events-empty h3,html.dark .kfs-event-gallery-empty h3 { color: #e7f1eb; }
+html.dark .kfs-featured-event,html.dark .kfs-events-card,html.dark .kfs-events-empty,html.dark .kfs-event-gallery-empty,html.dark .kfs-event-drive-callout { border-color: #263c33; background: #14231d; }
+html.dark .kfs-featured-event h2,html.dark .kfs-events-list-heading h2,html.dark .kfs-event-gallery-heading h2,html.dark .kfs-events-card h3,html.dark .kfs-events-empty h3,html.dark .kfs-event-gallery-empty h3 { color: #e7f1eb; }
 html.dark .kfs-featured-event-copy > p,html.dark .kfs-events-list-subtitle,html.dark .kfs-events-card-location,html.dark .kfs-events-summary,html.dark .kfs-event-gallery-heading > div > p:last-child { color: #9caf9f; }
-html.dark .kfs-events-filter-row { border-color: #263c33; }
-html.dark .kfs-events-year-filter button { color: #b3c4b8; }
-html.dark .kfs-events-year-filter button.is-active { color: #fff; }
 html.dark .kfs-event-detail-content { background: #101c17; }
 html.dark .kfs-event-story > h2,html.dark .kfs-event-aside-heading h2,html.dark .kfs-event-info-row strong { color: #e4eee8; }
 html.dark .kfs-event-lead { color: #c8dad0; }
@@ -356,9 +346,6 @@ html.dark .kfs-event-resource-list a span,html.dark .kfs-event-return-link,html.
     .kfs-events-list-heading h2 { font-size: 44px; }
     .kfs-events-list-subtitle { max-width: 440px; }
     .kfs-events-result-count { margin-top: 24px; white-space: nowrap; }
-    .kfs-events-filter-row { align-items: flex-start; flex-direction: column; gap: 10px; }
-    .kfs-events-year-filter { width: 100%; overflow-x: auto; flex-wrap: nowrap; padding: 0 0 3px; scrollbar-width: thin; }
-    .kfs-events-year-filter button { flex: 0 0 auto; }
     .kfs-events-grid { grid-template-columns: 1fr; gap: 15px; }
     .kfs-events-card-image { height: clamp(205px, 57vw, 300px); }
     .kfs-events-card-content { padding: 17px; }

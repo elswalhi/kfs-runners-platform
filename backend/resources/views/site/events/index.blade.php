@@ -3,17 +3,16 @@
 @section('title', __('KFS Runners Events'))
 
 @push('styles')
-    <link rel="stylesheet" href="{{ asset('css/kfs-events.css') }}?v=20261103-events-retouch-1">
+    <link rel="stylesheet" href="{{ asset('css/kfs-events.css') }}?v=20261103-events-retouch-2">
 @endpush
 
 @section('content')
 @php
     $featuredEvent = $events->first();
     $archiveEvents = $events->skip(1);
-    $eventYears = $events->pluck('event_year')->filter()->unique()->sortDesc()->values();
 @endphp
 
-<main class="kfs-events-page" data-event-archive>
+<main class="kfs-events-page">
     <section class="kfs-events-hero">
         <div class="wrap kfs-events-hero-grid">
             <div class="kfs-events-hero-copy">
@@ -33,7 +32,7 @@
     </section>
 
     @if ($featuredEvent)
-        <section class="kfs-featured-event wrap" data-event-year="{{ $featuredEvent->event_year }}">
+        <section class="kfs-featured-event wrap">
             <a class="kfs-featured-event-image" href="{{ route('events.show', $featuredEvent->slug) }}" aria-label="{{ __('View event') }}: {{ $featuredEvent->translated('title') }}">
                 <img src="{{ $featuredEvent->coverPhoto?->publicUrl() ?? asset('images/kfs-runners-hero.png') }}" alt="{{ $featuredEvent->coverPhoto?->alt ?: $featuredEvent->translated('title') }}" loading="lazy">
                 <span class="kfs-featured-label">{{ __('Latest event story') }}</span>
@@ -65,20 +64,10 @@
             </div>
 
             @if ($events->isNotEmpty())
-                <div class="kfs-events-filter-row">
-                    <span>{{ __('Filter by year') }}</span>
-                    <div class="kfs-events-year-filter" role="group" aria-label="{{ __('Filter events by year') }}">
-                        <button type="button" class="is-active" data-event-year-filter="all" aria-pressed="true">{{ __('All years') }}</button>
-                        @foreach ($eventYears as $year)
-                            <button type="button" data-event-year-filter="{{ $year }}" aria-pressed="false">{{ $year }}</button>
-                        @endforeach
-                    </div>
-                </div>
-
                 @if ($archiveEvents->isNotEmpty())
-                    <div class="kfs-events-grid" data-event-grid>
+                    <div class="kfs-events-grid">
                         @foreach ($archiveEvents as $event)
-                            <article class="kfs-events-card" data-event-year="{{ $event->event_year }}">
+                            <article class="kfs-events-card">
                                 <a class="kfs-events-card-image" href="{{ route('events.show', $event->slug) }}" aria-label="{{ __('View event') }}: {{ $event->translated('title') }}">
                                     <img src="{{ $event->coverPhoto?->publicUrl() ?? asset('images/kfs-runners-hero.png') }}" alt="{{ $event->coverPhoto?->alt ?: $event->translated('title') }}" loading="lazy">
                                     @if ($event->event_year)<span class="kfs-events-year-badge">{{ $event->event_year }}</span>@endif
@@ -96,14 +85,10 @@
                         @endforeach
                     </div>
                 @else
-                    <div class="kfs-events-filter-empty">
+                    <div class="kfs-events-empty">
                         <h3>{{ __('More event stories will appear here.') }}</h3>
                     </div>
                 @endif
-                <div class="kfs-events-filter-empty" data-event-filter-empty hidden>
-                    <h3>{{ __('No events found for this year.') }}</h3>
-                    <button type="button" data-reset-event-filter>{{ __('Show all events') }}</button>
-                </div>
             @else
                 <div class="kfs-events-empty">
                     <span class="kfs-events-empty-icon" aria-hidden="true">↗</span>
@@ -116,36 +101,3 @@
     </section>
 </main>
 @endsection
-
-@push('scripts')
-<script>
-    (() => {
-        const archive = document.querySelector('[data-event-archive]');
-        if (!archive) return;
-
-        const filters = [...archive.querySelectorAll('[data-event-year-filter]')];
-        const items = [...archive.querySelectorAll('[data-event-year]')];
-        const count = archive.querySelector('[data-event-count]');
-        const empty = archive.querySelector('[data-event-filter-empty]');
-
-        const applyFilter = (year) => {
-            let visible = 0;
-            items.forEach((item) => {
-                const matches = year === 'all' || item.dataset.eventYear === year;
-                item.hidden = !matches;
-                if (matches) visible += 1;
-            });
-            if (count) count.textContent = String(visible);
-            if (empty) empty.hidden = visible > 0;
-            filters.forEach((button) => {
-                const active = button.dataset.eventYearFilter === year;
-                button.classList.toggle('is-active', active);
-                button.setAttribute('aria-pressed', String(active));
-            });
-        };
-
-        filters.forEach((button) => button.addEventListener('click', () => applyFilter(button.dataset.eventYearFilter)));
-        archive.querySelector('[data-reset-event-filter]')?.addEventListener('click', () => applyFilter('all'));
-    })();
-</script>
-@endpush
