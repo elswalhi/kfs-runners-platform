@@ -25,7 +25,8 @@ class RegistrationEmailService
             return false;
         }
 
-        $registration->loadMissing('race');
+        $registration->loadMissing('race', 'team');
+        $qrCode = $this->qrCodeFor($registration);
 
         return $this->deliver($registration->email, [
             'locale' => app()->getLocale(),
@@ -45,6 +46,7 @@ class RegistrationEmailService
             'checkout_url' => $checkoutUrl,
             'is_group' => false,
             'runners' => [],
+            'qr_codes' => $qrCode ? [$qrCode] : [],
         ]);
     }
 
@@ -74,6 +76,11 @@ class RegistrationEmailService
             'shirt_size' => $registration->shirt_size,
             'amount' => (float) $registration->amount,
         ])->all();
+        $qrCodes = $team->registrations
+            ->map(fn (Registration $registration) => $this->qrCodeFor($registration))
+            ->filter()
+            ->values()
+            ->all();
 
         return $this->deliver($team->email, [
             'locale' => app()->getLocale(),
@@ -92,6 +99,7 @@ class RegistrationEmailService
             'checkout_url' => $checkoutUrl,
             'is_group' => true,
             'runners' => $runners,
+            'qr_codes' => $qrCodes,
         ]);
     }
 
@@ -190,5 +198,20 @@ class RegistrationEmailService
 
             return false;
         }
+    }
+
+    private function qrCodeFor(Registration $registration): ?array
+    {
+        $png = QrCodeService::generateRunnerQrPng($registration, 360);
+        if ($png === null) {
+            return null;
+        }
+
+        return [
+            'reference' => $registration->registration_code,
+            'name' => trim($registration->first_name . ' ' . $registration->last_name),
+            'race_number' => $registration->bib_number,
+            'png' => $png,
+        ];
     }
 }

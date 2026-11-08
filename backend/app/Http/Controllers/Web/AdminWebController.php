@@ -224,7 +224,7 @@ class AdminWebController
             return back()->withErrors(__('Could not send the runner QR email. Check the mail settings and try again.'));
         }
 
-        return back()->with('success', __('Runner QR sent to :email.', ['email' => $registration->email]));
+        return back()->with('success', __('Runner QR reminder sent to :email.', ['email' => $registration->email]));
     }
 
     public function updateRegistration(Request $request, Registration $registration)

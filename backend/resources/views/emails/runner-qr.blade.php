@@ -15,8 +15,8 @@
         </tr>
         <tr>
             <td style="padding:28px;text-align:center;">
-                <h1 style="margin:0 0 10px;font-size:25px;line-height:1.25;color:#123f35;">{{ __('Your kit pickup QR is ready') }}</h1>
-                <p style="margin:0 auto 22px;max-width:500px;color:#62746b;font-size:14px;line-height:1.7;">{{ __('Keep this email on your phone and show the QR at the KFS Runners kit pickup desk. The QR image is also attached as a PNG.') }}</p>
+                <h1 style="margin:0 0 10px;font-size:25px;line-height:1.25;color:#123f35;">{{ __('Your kit pickup QR reminder') }}</h1>
+                <p style="margin:0 auto 22px;max-width:500px;color:#62746b;font-size:14px;line-height:1.7;">{{ __('Here is your kit pickup QR again. Keep it on your phone and show it at the KFS Runners kit pickup desk. The QR image is also attached as a PNG.') }}</p>
 
                 <div style="display:inline-block;padding:14px;border:1px solid #dce8e1;border-radius:12px;background:#fff;">
                     <img src="{{ $message->embedData($qrPng, 'runner-qr-' . $details['reference'] . '.png', 'image/png') }}" width="240" height="240" alt="{{ __('Runner kit pickup QR code') }}" style="display:block;width:240px;height:240px;">

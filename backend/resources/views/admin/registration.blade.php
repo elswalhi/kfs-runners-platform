@@ -200,10 +200,10 @@
                     @csrf
                     <button type="submit" class="stitch-btn stitch-btn-secondary" style="width: 100%; justify-content: center; gap: 8px;" @disabled($registration->payment_status !== 'paid' || ! $registration->bib_number)>
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
-                        <span>{{ __('Email QR for kit pickup') }}</span>
+                        <span>{{ __('Send QR reminder') }}</span>
                     </button>
                     @if($registration->payment_status === 'paid' && $registration->bib_number)
-                        <small style="display:block; margin-top:6px; color:var(--st-text-muted); font-size:11px;">{{ __('Send the QR and kit pickup details to :email.', ['email' => $registration->email]) }}</small>
+                        <small style="display:block; margin-top:6px; color:var(--st-text-muted); font-size:11px;">{{ __('Resend only the QR and kit pickup details to :email. The successful payment email already includes the QR.', ['email' => $registration->email]) }}</small>
                     @else
                         <small style="display:block; margin-top:6px; color:#a77919; font-size:11px;">{{ __('The QR email can be sent after payment is confirmed.') }}</small>
                     @endif

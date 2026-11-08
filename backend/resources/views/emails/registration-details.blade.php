@@ -45,6 +45,22 @@
                     <tr><td style="padding:10px 0;color:#718279;">{{ __('Payment status') }}</td><td style="padding:10px 0;text-align:{{ $details['locale'] === 'ar' ? 'left' : 'right' }};font-weight:800;color:{{ $details['payment_status'] === 'paid' ? '#17835f' : '#a77919' }};">{{ $details['payment_status'] === 'paid' ? __('Paid') : __('Pending payment') }}</td></tr>
                 </table>
 
+                @if ($details['payment_status'] === 'paid' && ! empty($details['qr_codes']))
+                    <div style="margin-top:26px;padding:18px;border:1px solid #dce8e1;border-radius:12px;background:#f8faf9;text-align:center;">
+                        <h2 style="margin:0 0 8px;font-size:19px;color:#123f35;">{{ __('Your kit pickup QR') }}</h2>
+                        <p style="margin:0 0 18px;color:#62746b;font-size:13px;line-height:1.6;">{{ __('Keep this QR code on your phone and show it at the KFS Runners kit pickup desk. A PNG copy is attached to this email.') }}</p>
+                        @foreach ($details['qr_codes'] as $qrCode)
+                            <div style="display:inline-block;vertical-align:top;margin:8px;padding:12px;border:1px solid #dce8e1;border-radius:10px;background:#fff;">
+                                <img src="{{ $message->embedData($qrCode['png'], 'runner-qr-' . $qrCode['reference'] . '.png', 'image/png') }}" width="210" height="210" alt="{{ __('Runner kit pickup QR code') }}" style="display:block;width:210px;height:210px;">
+                                <div style="margin-top:10px;font-size:12px;line-height:1.6;color:#62746b;">
+                                    <strong style="color:#123f35;">{{ $qrCode['name'] }}</strong><br>
+                                    {{ __('Race number') }}: <strong dir="ltr">#{{ $qrCode['race_number'] }}</strong>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
                 @if ($details['is_group'] && count($details['runners']))
                     <h2 style="margin:26px 0 10px;font-size:18px;color:#123f35;">{{ __('Runners in this team registration') }}</h2>
                     @foreach ($details['runners'] as $runner)

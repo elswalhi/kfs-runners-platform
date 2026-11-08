@@ -110,4 +110,22 @@ class QrCodeService
 
         return self::generateDataUri($payload, $size);
     }
+
+    /** Generates the configured QR image as raw PNG bytes for email attachments. */
+    public static function generateRunnerQrPng(Registration $registration, int $size = 280): ?string
+    {
+        $dataUri = self::generateRunnerQr($registration, $size);
+        if ($dataUri === null) {
+            return null;
+        }
+
+        $prefix = 'data:image/png;base64,';
+        if (! str_starts_with($dataUri, $prefix)) {
+            return null;
+        }
+
+        $png = base64_decode(substr($dataUri, strlen($prefix)), true);
+
+        return $png === false ? null : $png;
+    }
 }

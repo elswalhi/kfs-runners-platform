@@ -15,7 +15,7 @@ class RunnerQrMail extends Mailable
 
     public function build()
     {
-        return $this->subject(__('Your KFS Runners kit pickup QR'))
+        return $this->subject(__('KFS Runners kit pickup QR reminder'))
             ->view('emails.runner-qr')
             ->with([
                 'details' => $this->details,

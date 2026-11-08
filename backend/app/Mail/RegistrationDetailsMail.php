@@ -19,8 +19,16 @@ class RegistrationDetailsMail extends Mailable
             ? __('Your KFS Runners registration is confirmed')
             : __('Your KFS Runners registration details');
 
-        return $this->subject($subject)
+        $mail = $this->subject($subject)
             ->view('emails.registration-details')
             ->with(['details' => $this->details]);
+
+        foreach ($this->details['qr_codes'] ?? [] as $qrCode) {
+            $mail->attachData($qrCode['png'], 'kfs-runner-qr-' . $qrCode['reference'] . '.png', [
+                'mime' => 'image/png',
+            ]);
+        }
+
+        return $mail;
     }
 }
