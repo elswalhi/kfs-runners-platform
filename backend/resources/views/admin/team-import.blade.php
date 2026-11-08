@@ -86,6 +86,15 @@
         <div style="padding: 24px;">
             <div class="stitch-form-grid">
                 <div class="stitch-form-group">
+                    <label for="team-event">Event</label>
+                    <select id="team-event" class="stitch-input" required @disabled($events->isEmpty())>
+                        @foreach ($events as $event)
+                            <option value="{{ $event->id }}" @selected($selectedEvent?->id === $event->id)>{{ $event->title }}{{ $event->starts_at ? ' · '.$event->starts_at->format('d M Y') : '' }}</option>
+                        @endforeach
+                    </select>
+                    @if ($events->isEmpty())<small>No event is currently accepting paid registrations.</small>@endif
+                </div>
+                <div class="stitch-form-group">
                     <label>Team / Club Name</label>
                     <input required maxlength="150" name="team_name" placeholder="e.g. Kafr El-Sheikh Runners" class="stitch-input">
                 </div>
@@ -124,7 +133,7 @@
 
             <p style="font-size: 12px; color: var(--st-text-muted); line-height: 1.5; margin-top: 14px;">
                 <b>Required headers:</b> <code>first_name, last_name, email, phone, birth_date, gender, id_number, race_slug, kit_type, shirt_size</code>.<br>
-                Active race slugs: <b>{{ $races->pluck('slug')->join(', ') ?: 'None configured' }}</b>.
+                Active race slugs for this event: <b>{{ $races->pluck('slug')->join(', ') ?: 'None configured' }}</b>.
             </p>
 
             <div id="roster-preview" style="margin-top: 20px;" hidden>
@@ -171,18 +180,22 @@
     const headers = ['first_name','last_name','email','phone','birth_date','gender','id_number','race_slug','kit_type','shirt_size'];
     const races = @json($races->map(fn($race) => ['slug' => $race->slug, 'is_active' => $race->is_active])->values());
     const form = document.getElementById('team-import-form');
+    const eventSelect = document.getElementById('team-event');
     const fileInput = document.getElementById('roster-file');
     const submitButton = document.getElementById('submit-team');
     const errorBox = document.getElementById('team-error');
     let members = [], selectedFile = null, busy = false;
     const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
+    eventSelect?.addEventListener('change', () => {
+        window.location.assign(window.location.pathname + '?event=' + encodeURIComponent(eventSelect.value));
+    });
     const teamData = () => ({ name: form.elements.team_name.value.trim(), contact_name: form.elements.contact_name.value.trim(), email: form.elements.email.value.trim().toLowerCase(), phone: form.elements.phone.value.trim() });
     function showError(message, rowErrors = []) {
         errorBox.hidden = false;
         errorBox.innerHTML = `<b>${esc(message)}</b>` + (rowErrors.length ? `<ul>${rowErrors.map(item => `<li>Row ${esc(item.row)}: ${esc(item.message)}</li>`).join('')}</ul>` : '');
     }
     function hideError() { errorBox.hidden = true; errorBox.textContent = ''; }
-    function updateSubmit() { submitButton.disabled = busy || members.length < 2 || !form.checkValidity(); }
+    function updateSubmit() { submitButton.disabled = busy || members.length < 2 || !eventSelect?.value || !form.checkValidity(); }
     function excelDate(value) {
         let date = value;
         if (typeof value === 'number' && Number.isFinite(value)) date = new Date(Date.UTC(1899, 11, 30) + Math.round(value * 86400000));
@@ -237,7 +250,7 @@
     document.getElementById('download-template').addEventListener('click', async () => {
         const workbook = new ExcelJS.Workbook(); workbook.creator = 'KFS Runners'; workbook.created = new Date();
         const instructions = workbook.addWorksheet('Instructions'); instructions.columns = [{width:25},{width:105}];
-        [['KFS RUNNERS TEAM ROSTER','Fill the Roster sheet, one participant per row. Do not enter a row for the team contact.'],['Required columns',headers.join(', ')],['Date format','Use YYYY-MM-DD. Birth date must be before today.'],['Phone and ID','Format phone and ID cells as Text so leading zeros are preserved. Do not include formulas.'],['Gender values','male, female, prefer_not_to_say'],['Kit values','full or basic. Full Kit requires shirt_size: S, M, L, XL, or XXL.'],['Race slugs',races.map(race => race.slug).join(', ') || 'No active races configured.'],['Dropdowns','Use the dropdown lists in gender, race_slug, kit_type, and shirt_size.'],['Import limit','2 to 200 participants. All participants are checked before anything is saved.']].forEach(row => instructions.addRow(row));
+        [['KFS RUNNERS TEAM ROSTER','Fill the Roster sheet, one participant per row. Do not enter a row for the team contact.'],['Event',@json($selectedEvent?->title ?? '')],['Required columns',headers.join(', ')],['Date format','Use YYYY-MM-DD. Birth date must be before today.'],['Phone and ID','Format phone and ID cells as Text so leading zeros are preserved. Do not include formulas.'],['Gender values','male, female, prefer_not_to_say'],['Kit values','full or basic. Full Kit requires shirt_size: S, M, L, XL, or XXL.'],['Race slugs',races.map(race => race.slug).join(', ') || 'No active races configured.'],['Dropdowns','Use the dropdown lists in gender, race_slug, kit_type, and shirt_size.'],['Import limit','2 to 200 participants. All participants are checked before anything is saved.']].forEach(row => instructions.addRow(row));
         instructions.getRow(1).font = {bold:true,color:{argb:'FFFFFFFF'}}; instructions.getRow(1).fill = {type:'pattern',pattern:'solid',fgColor:{argb:'FF064B3E'}}; instructions.eachRow(row => row.height = 23);
         const sheet = workbook.addWorksheet('Roster'); sheet.columns = headers.map(header => ({header,key:header,width:header === 'id_number' ? 24 : header === 'email' ? 30 : 18}));
         sheet.getRow(1).height = 25; sheet.getRow(1).font = {bold:true,color:{argb:'FFFFFFFF'}}; sheet.getRow(1).fill = {type:'pattern',pattern:'solid',fgColor:{argb:'FF064B3E'}}; sheet.views = [{state:'frozen',ySplit:1}]; sheet.autoFilter = {from:'A1',to:'J1'}; sheet.getColumn(4).numFmt='@'; sheet.getColumn(7).numFmt='@'; sheet.getColumn(5).numFmt='yyyy-mm-dd';
@@ -265,10 +278,11 @@
             const team = teamData();
             const normalizedMembers = members.map(member => Object.fromEntries(headers.map(header => [header, header === 'email' ? String(member[header]).trim().toLowerCase() : String(member[header]).trim()])));
             const canonicalTeam = {...team, phone: team.phone.trim()};
-            const canonical = JSON.stringify({team:canonicalTeam,members:normalizedMembers.slice().sort((left,right)=>JSON.stringify(left).localeCompare(JSON.stringify(right)))});
+            const eventId = Number(eventSelect.value);
+            const canonical = JSON.stringify({event_id:eventId,team:canonicalTeam,members:normalizedMembers.slice().sort((left,right)=>JSON.stringify(left).localeCompare(JSON.stringify(right)))});
             const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonical));
             const requestKey = Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2,'0')).join('');
-            const response = await fetch('{{ route('admin.team-import.store') }}', {method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content},body:JSON.stringify({request_key:requestKey,team,members,terms:document.getElementById('team-terms').checked})});
+            const response = await fetch('{{ route('admin.team-import.store') }}', {method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content},body:JSON.stringify({request_key:requestKey,event_id:eventId,team,members,terms:document.getElementById('team-terms').checked})});
             const payload = await response.json().catch(() => ({}));
             if (!response.ok) {
                 if (payload.data?.reference) {
@@ -279,7 +293,7 @@
             }
             showResult({...payload.data,checkout_url:payload.payment?.redirect_url || '',uncertain:!payload.payment?.redirect_url});
         } catch (error) { showError(error.message, error.rowErrors || []); }
-        finally { busy = false; submitButton.textContent = 'Validate roster & create checkout →'; submitButton.disabled = members.length < 2; }
+        finally { busy = false; submitButton.textContent = 'Validate roster & create checkout →'; updateSubmit(); }
     });
     function showResult(result) {
         document.getElementById('team-result').hidden = false; form.hidden = true;

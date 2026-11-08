@@ -4,29 +4,46 @@ namespace App\Http\Controllers\Web;
 
 use App\Models\Event;
 use App\Models\EventPhoto;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 class PublicEventController
 {
     public function index()
     {
+        $upcomingEvents = Event::query()
+            ->where('is_published', true)
+            ->where('is_current', true)
+            ->with(['coverPhoto'])
+            ->withCount(['photos', 'races'])
+            ->orderBy('starts_at')
+            ->get();
+
         $events = Event::query()
             ->where('is_published', true)
+            ->where('is_current', false)
             ->with(['coverPhoto'])
             ->withCount('photos')
             ->orderByDesc('event_year')
             ->orderBy('sort_order')
             ->get();
 
-        return view('site.events.index', compact('events'));
+        return view('site.events.index', compact('events', 'upcomingEvents'));
     }
 
     public function show(Event $event)
     {
         abort_unless($event->is_published, 404);
-        $event->load(['photos' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'), 'coverPhoto']);
+        $event->load([
+            'photos' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+            'coverPhoto',
+            'races' => fn ($query) => $query->where('is_active', true)->with(['kitPrices' => fn ($prices) => $prices->where('is_active', true)])->orderBy('sort_order'),
+        ]);
+        $raceDateTime = $event->starts_at
+            ? Carbon::parse($event->starts_at->format('Y-m-d H:i:s'), 'Africa/Cairo')->toIso8601String()
+            : null;
 
-        return view('site.events.show', compact('event'));
+        return view('site.events.show', compact('event', 'raceDateTime'));
     }
 
     public function photo(EventPhoto $photo)

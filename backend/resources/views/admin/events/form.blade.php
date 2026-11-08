@@ -28,6 +28,7 @@
             <label><span>{{ __('Event title (Arabic)') }}</span><input type="text" name="title_ar" value="{{ old('title_ar', $event->title_ar) }}" maxlength="180" dir="rtl"></label>
             <label><span>{{ __('Page slug') }} <b>*</b></span><input type="text" name="slug" value="{{ old('slug', $event->slug) }}" maxlength="200" required data-event-slug><small>{{ __('Used in the public event page URL.') }}</small></label>
             <label><span>{{ __('Event year') }} <b>*</b></span><input type="number" name="event_year" min="1900" max="2200" value="{{ old('event_year', $event->event_year ?: now()->year) }}" required></label>
+            <label><span>{{ __('Race date and start time') }}</span><input type="datetime-local" name="starts_at" value="{{ old('starts_at', $event->starts_at?->format('Y-m-d\\TH:i')) }}"><small>{{ __('Used for this event’s countdown and registration page.') }}</small></label>
             <label><span>{{ __('Location (English)') }}</span><input type="text" name="location" value="{{ old('location', $event->location) }}" maxlength="180"></label>
             <label><span>{{ __('Location (Arabic)') }}</span><input type="text" name="location_ar" value="{{ old('location_ar', $event->location_ar) }}" maxlength="180" dir="rtl"></label>
             <label class="wide"><span>{{ __('Short description (English)') }}</span><input type="text" name="summary" value="{{ old('summary', $event->summary) }}" maxlength="280"></label>
@@ -45,7 +46,11 @@
         @if ($isCreating)
             <label class="event-admin-upload"><span>{{ __('Event photos') }}</span><input type="file" name="photos[]" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" multiple><small>{{ __('Select up to 20 JPG, PNG, or WebP images. The first image becomes the cover. Max 5 MB each.') }}</small></label>
         @endif
-        <label class="event-admin-publish"><input type="checkbox" name="is_published" value="1" {{ old('is_published', $event->is_published) ? 'checked' : '' }}><span><b>{{ __('Publish this event') }}</b><small>{{ __('Published events appear on the public Events page.') }}</small></span></label>
+        <div class="event-admin-status-grid">
+            @foreach ([['is_current', __('Show as a current event'), $event->is_current], ['registration_enabled', __('Accept registrations'), $event->registration_enabled], ['payments_enabled', __('Accept EasyKash payments'), $event->payments_enabled ?? true], ['countdown_enabled', __('Show event countdown'), $event->countdown_enabled ?? true], ['is_published', __('Publish public event page'), $event->is_published], ['is_default', __('Use as default event'), $event->is_default]] as [$settingName, $settingLabel, $settingChecked])
+                <label><input type="hidden" name="{{ $settingName }}" value="0"><input type="checkbox" name="{{ $settingName }}" value="1" {{ old($settingName, $settingChecked) ? 'checked' : '' }}><span>{{ $settingLabel }}</span></label>
+            @endforeach
+        </div>
         <div class="event-admin-form-actions"><button class="stitch-btn stitch-btn-primary" type="submit">{{ $isCreating ? __('Create event') : __('Save event') }}</button><a href="{{ route('admin.events.index') }}">{{ __('Cancel') }}</a></div>
     </section>
 </form>

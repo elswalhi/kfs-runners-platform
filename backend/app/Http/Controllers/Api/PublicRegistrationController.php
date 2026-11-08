@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
+use App\Models\Event;
 use App\Models\PromoCode;
 use App\Models\Race;
 use App\Models\RaceKitPrice;
@@ -69,6 +70,7 @@ class PublicRegistrationController extends Controller
             'gender' => ['required', Rule::in(['male', 'female'])],
             'idNumber' => ['required', 'string', 'max:100'],
             'race' => ['required', 'string', 'exists:races,slug'],
+            'event' => ['nullable', 'string', 'exists:events,slug'],
             'kit' => ['required', Rule::in(['full', 'basic'])],
             'shirtSize' => ['nullable', Rule::requiredIf($request->input('kit') === 'full'), Rule::in(['S', 'M', 'L', 'XL', 'XXL'])],
             'teamName' => ['nullable', 'string', 'max:150'],
@@ -92,7 +94,16 @@ class PublicRegistrationController extends Controller
             ], 422);
         }
 
-        $race = Race::query()->where('slug', $validated['race'])->where('is_active', true)->firstOrFail();
+        $event = $this->resolveRegistrationEvent($validated['event'] ?? null);
+        if ($event && ! $event->registration_enabled) {
+            return response()->json(['message' => 'Registration for this event is currently closed.'], 422);
+        }
+
+        $raceQuery = Race::query()->where('slug', $validated['race'])->where('is_active', true);
+        if ($event) {
+            $raceQuery->where('event_id', $event->id);
+        }
+        $race = $raceQuery->firstOrFail();
         $price = RaceKitPrice::query()->where('race_id', $race->id)->where('kit_type', $validated['kit'])->where('is_active', true)->first();
         if (! $price) {
             return response()->json(['message' => 'This race and kit option is currently unavailable.'], 422);
@@ -195,6 +206,10 @@ class PublicRegistrationController extends Controller
             return response()->json([
                 'message' => 'After discount, payable amount must be either 0 EGP or at least 1.01 EGP for payment gateway processing.',
             ], 422);
+        }
+
+        if ($event && ! $event->payments_enabled) {
+            return response()->json(['message' => 'Online payments are currently disabled for this event.'], 422);
         }
 
         if (! $easyKash->configured()) {
@@ -329,7 +344,13 @@ class PublicRegistrationController extends Controller
             'teamName' => ['nullable', 'string', 'max:150'],
             'promoCode' => ['nullable', 'string', 'max:64'],
             'terms' => ['accepted'],
+            'event' => ['nullable', 'string', 'exists:events,slug'],
         ]);
+
+        $event = $this->resolveRegistrationEvent($validated['event'] ?? null);
+        if ($event && ! $event->registration_enabled) {
+            return response()->json(['message' => 'Registration for this event is currently closed.'], 422);
+        }
 
         $normalizedPhone = $this->normalizeEgyptianMobile($validated['buyerPhone']);
         if ($normalizedPhone === null) {
@@ -351,7 +372,11 @@ class PublicRegistrationController extends Controller
         $runnerItems = [];
 
         foreach ($validated['runners'] as $index => $runner) {
-            $race = Race::query()->where('slug', $runner['race'])->where('is_active', true)->first();
+            $raceQuery = Race::query()->where('slug', $runner['race'])->where('is_active', true);
+            if ($event) {
+                $raceQuery->where('event_id', $event->id);
+            }
+            $race = $raceQuery->first();
             if (! $race) {
                 return response()->json(['message' => "Race for runner #" . ($index + 1) . " is unavailable."], 422);
             }
@@ -392,6 +417,10 @@ class PublicRegistrationController extends Controller
 
             $discountAmount = $promo->calculateDiscount($originalAmount);
             $finalAmount = max(0.00, round($originalAmount - $discountAmount, 2));
+        }
+
+        if ($event && $finalAmount > 0 && ! $event->payments_enabled) {
+            return response()->json(['message' => 'Online payments are currently disabled for this event.'], 422);
         }
 
         // Database transaction: Create Team, Registrations, Payment
@@ -541,6 +570,16 @@ class PublicRegistrationController extends Controller
             $code = 'KFS-' . strtoupper(Str::random(8));
         } while (Registration::query()->where('registration_code', $code)->exists());
         return $code;
+    }
+
+    private function resolveRegistrationEvent(?string $slug): ?Event
+    {
+        if (filled($slug)) {
+            return Event::query()->where('slug', $slug)->firstOrFail();
+        }
+
+        return Event::query()->where('is_default', true)->first()
+            ?? Event::query()->where('is_current', true)->where('registration_enabled', true)->orderByDesc('starts_at')->first();
     }
 
     private function normalizeEgyptianMobile(string $phone): ?string

@@ -4,12 +4,14 @@ namespace Database\Seeders;
 
 use App\Models\Race;
 use App\Models\RaceKitPrice;
+use App\Models\Event;
 use Illuminate\Database\Seeder;
 
 class RaceSeeder extends Seeder
 {
     public function run(): void
     {
+        $defaultEventId = Event::query()->where('is_default', true)->value('id');
         $races = [
             ['name' => 'Half Marathon', 'slug' => '21k', 'distance_label' => '21 KM', 'category_type' => 'individual', 'sort_order' => 1, 'bib_number_start' => 2121, 'prices' => ['full' => 650, 'basic' => 450]],
             ['name' => '10K Run', 'slug' => '10k', 'distance_label' => '10 KM', 'category_type' => 'individual', 'sort_order' => 2, 'bib_number_start' => 1010, 'prices' => ['full' => 650, 'basic' => 450]],
@@ -22,6 +24,7 @@ class RaceSeeder extends Seeder
             $isNew = ! $race->exists;
             $attributes = collect($item)->except(['prices', 'bib_number_start'])->all();
             if ($isNew) {
+                $attributes['event_id'] = $defaultEventId;
                 $attributes['bib_number_start'] = $item['bib_number_start'];
                 $attributes['next_bib_number'] = $item['bib_number_start'];
             }

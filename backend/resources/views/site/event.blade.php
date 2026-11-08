@@ -47,7 +47,7 @@
         <div class="wrap kfs-event-facts-grid">
             <div><span>{{ __('RACE DAY') }}</span><strong>{{ $raceDateFormatted }}</strong></div>
             <div><span>{{ __('START TIME') }}</span><strong>{{ $raceTime }}</strong></div>
-            <div><span>{{ __('LOCATION') }}</span><strong>{{ __('Kafr El-Sheikh, Egypt') }}</strong></div>
+            <div><span>{{ __('LOCATION') }}</span><strong>{{ $eventLocation }}</strong></div>
         </div>
     </section>
 

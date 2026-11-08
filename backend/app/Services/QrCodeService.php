@@ -48,7 +48,9 @@ class QrCodeService
             return null;
         }
 
-        $selectedFields = AppSetting::get('runner_qr_fields', self::DEFAULT_RUNNER_FIELDS);
+        $registration->loadMissing('race.event');
+        $event = $registration->race?->event;
+        $selectedFields = $event?->qr_fields ?? AppSetting::get('runner_qr_fields', self::DEFAULT_RUNNER_FIELDS);
         if (! is_array($selectedFields)) {
             $selectedFields = self::DEFAULT_RUNNER_FIELDS;
         }
@@ -57,7 +59,7 @@ class QrCodeService
         $kitLabel = $isFullKit ? 'Full Kit' : 'Basic Kit';
 
         $values = [
-            'event_name' => 'KFS RUNNERS MARATHON',
+            'event_name' => 'EVENT: ' . ($event?->translated('title') ?? 'KFS RUNNERS MARATHON'),
             'race_number' => 'RACE NUMBER: ' . $registration->bib_number,
             'registration_reference' => 'REGISTRATION REF: ' . $registration->registration_code,
             'runner_name' => 'RUNNER: ' . trim($registration->first_name . ' ' . $registration->last_name),

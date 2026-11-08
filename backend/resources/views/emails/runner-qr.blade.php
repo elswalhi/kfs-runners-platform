@@ -26,6 +26,7 @@
                     <div><span style="color:#718279;">{{ __('Runner') }}:</span> <strong>{{ $details['name'] }}</strong></div>
                     <div><span style="color:#718279;">{{ __('Race number') }}:</span> <strong dir="ltr">#{{ $details['race_number'] }}</strong></div>
                     <div><span style="color:#718279;">{{ __('Registration reference') }}:</span> <strong dir="ltr">{{ $details['reference'] }}</strong></div>
+                    @if (! empty($details['event']))<div><span style="color:#718279;">{{ __('Event') }}:</span> <strong>{{ $details['event'] }}</strong></div>@endif
                     <div><span style="color:#718279;">{{ __('Race') }}:</span> <strong>{{ $details['race'] }}</strong></div>
                     <div><span style="color:#718279;">{{ __('Distance') }}:</span> <strong>{{ $details['distance'] }}</strong></div>
                     <div><span style="color:#718279;">{{ __('Package') }}:</span> <strong>{{ $details['kit'] === 'full' ? __('Full Kit') : __('Basic Kit') }}@if($details['shirt_size']) ({{ __('Size') }}: {{ $details['shirt_size'] }})@endif</strong></div>

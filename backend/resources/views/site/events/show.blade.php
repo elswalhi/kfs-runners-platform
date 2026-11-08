@@ -32,6 +32,7 @@
         <div class="wrap kfs-event-detail-hero-content">
             <div class="kfs-event-hero-meta">
                 @if ($event->event_year)<span>{{ $event->event_year }}</span>@endif
+                @if ($event->starts_at)<span>{{ $event->starts_at->translatedFormat('l, d F Y · H:i') }}</span>@endif
                 @if ($event->translated('location'))<span><i aria-hidden="true">⌖</i>{{ $event->translated('location') }}</span>@endif
             </div>
             <h1>{{ $event->translated('title') }}</h1>
@@ -63,6 +64,30 @@
                 @endif
                 @if ($event->translated('location'))
                     <div class="kfs-event-info-row"><span>{{ __('Location') }}</span><strong>{{ $event->translated('location') }}</strong></div>
+                @endif
+                @if ($event->starts_at)
+                    <div class="kfs-event-info-row"><span>{{ __('Race day') }}</span><strong>{{ $event->starts_at->translatedFormat('l, d F Y') }}</strong></div>
+                    <div class="kfs-event-info-row"><span>{{ __('Start time') }}</span><strong>{{ $event->starts_at->format('H:i') }}</strong></div>
+                @endif
+                @if ($event->countdown_enabled && $raceDateTime && $event->starts_at->isFuture())
+                    <div class="kfs-countdown-card kfs-event-countdown" id="kfs-race-countdown" data-target="{{ $raceDateTime }}" aria-label="{{ __('Countdown to race day') }}">
+                        <div class="kfs-countdown-header"><span aria-hidden="true">●</span>{{ __('RACE DAY COUNTDOWN') }}</div>
+                        <div class="kfs-countdown-grid">
+                            <div class="kfs-countdown-unit"><span class="kfs-countdown-number" id="countdown-days">--</span><span class="kfs-countdown-label">{{ __('DAYS') }}</span></div>
+                            <span class="kfs-countdown-sep">:</span>
+                            <div class="kfs-countdown-unit"><span class="kfs-countdown-number" id="countdown-hours">--</span><span class="kfs-countdown-label">{{ __('HOURS') }}</span></div>
+                            <span class="kfs-countdown-sep">:</span>
+                            <div class="kfs-countdown-unit"><span class="kfs-countdown-number" id="countdown-mins">--</span><span class="kfs-countdown-label">{{ __('MINS') }}</span></div>
+                            <span class="kfs-countdown-sep">:</span>
+                            <div class="kfs-countdown-unit"><span class="kfs-countdown-number" id="countdown-secs">--</span><span class="kfs-countdown-label">{{ __('SECS') }}</span></div>
+                        </div>
+                    </div>
+                @endif
+                @if ($event->races->isNotEmpty())
+                    <div class="kfs-event-info-row"><span>{{ __('Race distances') }}</span><strong>{{ $event->races->pluck('distance_label')->unique()->join(' · ') }}</strong></div>
+                @endif
+                @if ($event->registration_enabled)
+                    <a class="kfs-events-button primary" href="{{ route('events.register', $event->slug) }}">{{ __('Register for this event') }} <span aria-hidden="true">→</span></a>
                 @endif
 
             </aside>

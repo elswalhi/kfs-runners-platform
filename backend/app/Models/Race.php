@@ -5,12 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Race extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'slug', 'distance_label', 'category_type', 'sort_order', 'is_active', 'bib_number_start', 'next_bib_number'];
+    protected $fillable = ['event_id', 'name', 'slug', 'distance_label', 'category_type', 'sort_order', 'is_active', 'bib_number_start', 'next_bib_number'];
 
     protected function casts(): array
     {
@@ -39,6 +40,11 @@ class Race extends Model
     public function kitPrices(): HasMany
     {
         return $this->hasMany(RaceKitPrice::class);
+    }
+
+    public function event(): BelongsTo
+    {
+        return $this->belongsTo(Event::class);
     }
 
     public function registrations(): HasMany

@@ -14,7 +14,7 @@
         <h1 class="stitch-hero-title">Race <span>Registrations</span></h1>
         <p class="stitch-hero-desc">Search runners, filter payment statuses, download documents, and manage event rosters.</p>
         <small style="display:block;margin-top:7px;color:var(--st-text-muted);">
-            {{ __('Age is calculated on race day (:date).', ['date' => $raceDate->format('d M Y')]) }}
+            {{ __('Age and age groups are calculated using each event’s race day.') }}
         </small>
     </div>
     <div class="stitch-hero-actions">
@@ -56,10 +56,17 @@
             @endforeach
         </select>
 
+        <select name="event_id" class="stitch-select">
+            <option value="">{{ __('All events') }}</option>
+            @foreach($events as $event)
+                <option value="{{ $event->id }}" @selected((string) request('event_id') === (string) $event->id)>{{ $event->title }}</option>
+            @endforeach
+        </select>
+
         <select name="race_id" class="stitch-select">
             <option value="">All race distances</option>
             @foreach($races as $race)
-                <option value="{{ $race->id }}" @selected((string) request('race_id') === (string) $race->id)>{{ $race->distance_label }} · {{ $race->name }}</option>
+                <option value="{{ $race->id }}" @selected((string) request('race_id') === (string) $race->id)>{{ $race->event?->title ? $race->event->title . ' · ' : '' }}{{ $race->distance_label }} · {{ $race->name }}</option>
             @endforeach
         </select>
 
@@ -77,7 +84,7 @@
             <span>Filter</span>
         </button>
 
-        @if(request()->hasAny(['search', 'payment_status', 'race_id', 'age_group_id']))
+        @if(request()->hasAny(['search', 'payment_status', 'event_id', 'race_id', 'age_group_id']))
             <a href="{{ route('admin.registrations') }}" class="stitch-btn stitch-btn-secondary" style="height: 42px; color: #ef4444;" title="Reset filters">
                 <span>Reset</span>
             </a>
@@ -93,6 +100,7 @@
                     <th>{{ __('Age / Age group') }}</th>
                     <th>Reference</th>
                     <th>Runner</th>
+                    <th>{{ __('Event') }}</th>
                     <th>Distance & Category</th>
                     <th>Package & Kit</th>
                     <th>Club / Team</th>
@@ -129,6 +137,10 @@
                                     <div class="stitch-runner-sub">{{ $item->email }}</div>
                                 </div>
                             </div>
+                        </td>
+                        <td>
+                            <strong>{{ $item->race?->event?->translated('title') ?? '—' }}</strong>
+                            @if ($item->race?->event?->starts_at)<small style="display:block;color:var(--st-text-muted);">{{ $item->race->event->starts_at->format('d M Y') }}</small>@endif
                         </td>
                         <td>
                             <div style="display: flex; flex-direction: column; gap: 3px;">
@@ -192,7 +204,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="10" style="text-align: center; padding: 48px 20px; color: var(--st-text-muted);">
+                        <td colspan="11" style="text-align: center; padding: 48px 20px; color: var(--st-text-muted);">
                             <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
                                 <span style="font-size: 14px; font-weight: 700; color: #475569;">No registrations found</span>

@@ -16,8 +16,8 @@ class RegistrationDetailsMail extends Mailable
     public function build()
     {
         $subject = $this->details['payment_status'] === 'paid'
-            ? __('Your KFS Runners registration is confirmed')
-            : __('Your KFS Runners registration details');
+            ? __('Your :event registration is confirmed', ['event' => $this->details['event_name'] ?? 'KFS Runners'])
+            : __('Your :event registration details', ['event' => $this->details['event_name'] ?? 'KFS Runners']);
 
         $mail = $this->subject($subject)
             ->view('emails.registration-details')

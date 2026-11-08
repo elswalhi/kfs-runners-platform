@@ -73,6 +73,10 @@
 
             <form class="runner-form" method="POST" action="{{ route('register.store') }}" enctype="multipart/form-data" id="runner-form">
                 @csrf
+                @if ($event)<input type="hidden" name="event" value="{{ $event->slug }}">@endif
+                @unless ($registrationOpen)
+                    <div class="register-payment-alert" role="status">{{ __('Registration for this event is currently closed.') }}</div>
+                @endunless
 
                 <!-- ================= STEP 1: DISTANCE & KIT (MULTI-TICKET CART) ================= -->
                 <div class="kfs-step-view active" data-step-view="1">
@@ -307,7 +311,7 @@
                     </div>
 
                     <label class="terms-check"><input type="checkbox" name="terms" id="input-terms" value="1" required><span>{{ __('I confirm that the details provided are correct and agree to the race terms and conditions.') }} <b>*</b></span></label>
-                    <button class="btn btn-red form-submit" type="submit" id="submit-registration" @disabled($races->isEmpty())>
+                    <button class="btn btn-red form-submit" type="submit" id="submit-registration" @disabled($races->isEmpty() || ! $registrationOpen)>
                         <span id="submit-btn-text">{{ __('Proceed to pay for all runners') }}</span> <span>→</span>
                     </button>
                     <p class="form-fineprint">♙ Payment is confirmed by EasyKash’s signed server callback.</p>
@@ -968,7 +972,8 @@
                     code: code.trim(),
                     total: baseTotal,
                     race: tickets[0].race,
-                    kit: tickets[0].kit
+                    kit: tickets[0].kit,
+                    event: @json($event?->slug)
                 })
             });
 

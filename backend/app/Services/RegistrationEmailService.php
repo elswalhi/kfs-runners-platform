@@ -25,7 +25,7 @@ class RegistrationEmailService
             return false;
         }
 
-        $registration->loadMissing('race', 'team');
+        $registration->loadMissing('race.event', 'team');
         $qrCode = $this->qrCodeFor($registration);
 
         return $this->deliver($registration->email, [
@@ -42,6 +42,7 @@ class RegistrationEmailService
             'discount_amount' => (float) $registration->discount_amount,
             'currency' => $registration->currency,
             'payment_status' => $registration->payment_status,
+            'event_name' => $registration->race?->event?->translated('title'),
             'registered_at' => $registration->created_at?->timezone('Africa/Cairo')->format('d M Y, h:i A'),
             'checkout_url' => $checkoutUrl,
             'is_group' => false,
@@ -52,7 +53,7 @@ class RegistrationEmailService
 
     public function sendTeam(Team $team, ?string $checkoutUrl = null): bool
     {
-        $team->loadMissing('registrations.race');
+        $team->loadMissing('registrations.race.event');
         $payment = $team->payments()->latest()->first();
 
         if ($payment?->status !== 'paid') {
@@ -75,6 +76,7 @@ class RegistrationEmailService
             'kit' => $registration->kit_type,
             'shirt_size' => $registration->shirt_size,
             'amount' => (float) $registration->amount,
+            'event_name' => $registration->race?->event?->translated('title'),
         ])->all();
         $qrCodes = $team->registrations
             ->map(fn (Registration $registration) => $this->qrCodeFor($registration))
@@ -95,6 +97,7 @@ class RegistrationEmailService
             'discount_amount' => (float) ($paymentDetails['discount_amount'] ?? 0),
             'currency' => $payment?->currency ?? 'EGP',
             'payment_status' => $payment?->status ?? $team->status,
+            'event_name' => $team->registrations->first()?->race?->event?->translated('title'),
             'registered_at' => $team->created_at?->timezone('Africa/Cairo')->format('d M Y, h:i A'),
             'checkout_url' => $checkoutUrl,
             'is_group' => true,
@@ -134,10 +137,10 @@ class RegistrationEmailService
         $sent = false;
         try {
             if ($recipientIds['registration_id']) {
-                $registration = Registration::query()->with('race')->find($recipientIds['registration_id']);
+                $registration = Registration::query()->with('race.event')->find($recipientIds['registration_id']);
                 $sent = $registration ? $this->sendRegistration($registration) : false;
             } elseif ($recipientIds['team_id']) {
-                $team = Team::query()->with('registrations.race')->find($recipientIds['team_id']);
+                $team = Team::query()->with('registrations.race.event')->find($recipientIds['team_id']);
                 $sent = $team ? $this->sendTeam($team) : false;
             }
         } catch (Throwable $exception) {

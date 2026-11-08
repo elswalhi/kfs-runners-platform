@@ -4,24 +4,183 @@ namespace App\Http\Controllers\Web;
 
 use App\Models\Event;
 use App\Models\EventPhoto;
+use App\Models\Race;
+use App\Models\AppSetting;
+use App\Services\QrCodeService;
 use App\Services\GoogleDriveService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class AdminEventController
 {
-    public function index()
+    public function index(Request $request)
     {
         $events = Event::query()
             ->with(['coverPhoto'])
-            ->withCount('photos')
+            ->withCount(['photos', 'races', 'registrations'])
+            ->orderByDesc('is_current')
+            ->orderByDesc('starts_at')
             ->orderByDesc('event_year')
             ->orderBy('sort_order')
             ->get();
+        $currentEvents = $events->where('is_current', true)->values();
+        $selectedEvent = $events->firstWhere('id', $request->integer('event'))
+            ?? $currentEvents->firstWhere('is_default', true)
+            ?? $currentEvents->first()
+            ?? $events->first();
+        $selectedEvent?->load(['races' => fn ($query) => $query->with('kitPrices')->withCount('registrations')->orderBy('sort_order')->orderBy('id')]);
+        $currentRegistrationCount = $currentEvents->sum('registrations_count');
+        $nextEvent = $currentEvents->filter(fn (Event $event) => $event->starts_at && $event->starts_at->isFuture())->sortBy('starts_at')->first();
 
-        return view('admin.events.index', compact('events'));
+        return view('admin.events.index', compact('events', 'currentEvents', 'selectedEvent', 'currentRegistrationCount', 'nextEvent'));
+    }
+
+    public function configure(Event $event)
+    {
+        $event->load(['coverPhoto', 'races' => fn ($query) => $query->with('kitPrices')->withCount('registrations')->orderBy('sort_order')->orderBy('id')]);
+        $qrFields = QrCodeService::runnerFields();
+        $selectedQrFields = $event->qr_fields ?? AppSetting::get('runner_qr_fields', QrCodeService::defaultRunnerFields());
+        if (! is_array($selectedQrFields)) {
+            $selectedQrFields = QrCodeService::defaultRunnerFields();
+        }
+        $selectedQrFields = array_values(array_intersect(array_keys($qrFields), $selectedQrFields));
+
+        return view('admin.events.configure', compact('event', 'qrFields', 'selectedQrFields'));
+    }
+
+    public function updateSettings(Request $request, Event $event)
+    {
+        $qrFields = QrCodeService::runnerFields();
+        $data = $request->validate([
+            'title' => ['sometimes', 'required', 'string', 'max:180'],
+            'title_ar' => ['sometimes', 'nullable', 'string', 'max:180'],
+            'event_year' => ['sometimes', 'required', 'integer', 'between:1900,2200'],
+            'starts_at' => ['sometimes', 'nullable', 'date'],
+            'location' => ['sometimes', 'nullable', 'string', 'max:180'],
+            'location_ar' => ['sometimes', 'nullable', 'string', 'max:180'],
+            'summary' => ['sometimes', 'nullable', 'string', 'max:280'],
+            'summary_ar' => ['sometimes', 'nullable', 'string', 'max:280'],
+            'registration_enabled' => ['sometimes', 'boolean'],
+            'payments_enabled' => ['sometimes', 'boolean'],
+            'countdown_enabled' => ['sometimes', 'boolean'],
+            'is_current' => ['sometimes', 'boolean'],
+            'is_published' => ['sometimes', 'boolean'],
+            'is_default' => ['sometimes', 'boolean'],
+            'qr_fields' => ['sometimes', 'required', 'array', 'min:1'],
+            'qr_fields.*' => ['required', 'string', Rule::in(array_keys($qrFields))],
+        ]);
+
+        $isCurrent = array_key_exists('is_current', $data) ? $request->boolean('is_current') : $event->is_current;
+        $registrationEnabled = array_key_exists('registration_enabled', $data) ? $request->boolean('registration_enabled') : $event->registration_enabled;
+        if (array_key_exists('is_default', $data) && $request->boolean('is_default') && (! $isCurrent || ! $registrationEnabled)) {
+            return back()->withErrors(['is_default' => __('The default event must be current and accept registrations.')])->withInput();
+        }
+
+        DB::transaction(function () use ($event, $request, $data) {
+            if (array_key_exists('is_default', $data) && $request->boolean('is_default')) {
+                Event::query()->where('is_default', true)->where('id', '!=', $event->id)->update(['is_default' => false]);
+            }
+
+            $updates = collect($data)->except(['qr_fields'])->all();
+            foreach (['registration_enabled', 'payments_enabled', 'countdown_enabled', 'is_current', 'is_published', 'is_default'] as $booleanField) {
+                if (array_key_exists($booleanField, $data)) {
+                    $updates[$booleanField] = $request->boolean($booleanField);
+                }
+            }
+            if (array_key_exists('qr_fields', $data)) {
+                $updates['qr_fields'] = array_values(array_unique($data['qr_fields']));
+            }
+
+            $event->update($updates);
+        });
+
+        return back()->with('success', __('Event settings saved.'));
+    }
+
+    public function storeRace(Request $request, Event $event)
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'slug' => ['required', 'string', 'max:120', 'alpha_dash', Rule::unique('races', 'slug')->where('event_id', $event->id)],
+            'distance_label' => ['required', 'string', 'max:40'],
+            'category_type' => ['required', Rule::in(['individual', 'family', 'para'])],
+            'sort_order' => ['nullable', 'integer', 'min:0', 'max:10000'],
+            'bib_number_start' => ['required', 'integer', 'min:1', 'max:999999999'],
+            'full_price' => ['required', 'numeric', 'gt:1', 'max:1000000'],
+            'basic_price' => ['required', 'numeric', 'gt:1', 'max:1000000'],
+        ]);
+
+        DB::transaction(function () use ($event, $data, $request) {
+            $race = $event->races()->create([
+                'name' => trim($data['name']),
+                'slug' => strtolower($data['slug']),
+                'distance_label' => trim($data['distance_label']),
+                'category_type' => $data['category_type'],
+                'sort_order' => $data['sort_order'] ?? ((int) $event->races()->max('sort_order') + 1),
+                'is_active' => $request->boolean('is_active', true),
+                'bib_number_start' => $data['bib_number_start'],
+                'next_bib_number' => $data['bib_number_start'],
+            ]);
+
+            foreach (['full' => $data['full_price'], 'basic' => $data['basic_price']] as $kit => $price) {
+                $race->kitPrices()->create(['kit_type' => $kit, 'price' => $price, 'currency' => 'EGP', 'is_active' => true]);
+            }
+        });
+
+        return back()->with('success', __('Race distance and prices added to this event.'));
+    }
+
+    public function updateRace(Request $request, Event $event, Race $race)
+    {
+        abort_unless((int) $race->event_id === (int) $event->id, 404);
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'slug' => ['required', 'string', 'max:120', 'alpha_dash', Rule::unique('races', 'slug')->where('event_id', $event->id)->ignore($race->id)],
+            'distance_label' => ['required', 'string', 'max:40'],
+            'category_type' => ['required', Rule::in(['individual', 'family', 'para'])],
+            'sort_order' => ['required', 'integer', 'min:0', 'max:10000'],
+            'bib_number_start' => ['required', 'integer', 'min:1', 'max:999999999'],
+            'full_price' => ['required', 'numeric', 'gt:1', 'max:1000000'],
+            'basic_price' => ['required', 'numeric', 'gt:1', 'max:1000000'],
+        ]);
+
+        DB::transaction(function () use ($race, $data, $request) {
+            $activeKitTypes = $race->kitPrices()->where('is_active', true)->pluck('kit_type')->unique();
+            if ($request->boolean('is_active') && (! $activeKitTypes->contains('full') || ! $activeKitTypes->contains('basic'))) {
+                abort(422, __('An active race needs active Full and Basic prices.'));
+            }
+
+            $nextBibNumber = max((int) $race->next_bib_number, (int) $data['bib_number_start'], (int) $race->registrations()->max('bib_number') + 1);
+            $race->update([
+                ...collect($data)->except(['full_price', 'basic_price'])->all(),
+                'name' => trim($data['name']),
+                'slug' => strtolower($data['slug']),
+                'distance_label' => trim($data['distance_label']),
+                'is_active' => $request->boolean('is_active'),
+                'next_bib_number' => $nextBibNumber,
+            ]);
+
+            foreach (['full' => $data['full_price'], 'basic' => $data['basic_price']] as $kit => $price) {
+                $race->kitPrices()->updateOrCreate(['kit_type' => $kit], ['price' => $price, 'currency' => 'EGP', 'is_active' => true]);
+            }
+        });
+
+        return back()->with('success', __('Event race settings saved.'));
+    }
+
+    public function destroyRace(Event $event, Race $race)
+    {
+        abort_unless((int) $race->event_id === (int) $event->id, 404);
+        if ($race->registrations()->exists()) {
+            return back()->withErrors(['race' => __('This distance has registrations. Deactivate it instead of deleting it.')]);
+        }
+
+        $race->delete();
+
+        return back()->with('success', __('Race distance removed from this event.'));
     }
 
     public function create()
@@ -35,9 +194,24 @@ class AdminEventController
         $photos = $data['photos'] ?? [];
         unset($data['photos']);
         $data['is_published'] = $request->boolean('is_published');
+        $data['is_current'] = $request->boolean('is_current');
+        $data['registration_enabled'] = $request->boolean('registration_enabled');
+        $data['payments_enabled'] = $request->boolean('payments_enabled', true);
+        $data['countdown_enabled'] = $request->boolean('countdown_enabled', true);
+        $data['is_default'] = $request->boolean('is_default');
         $data['sort_order'] = (int) Event::query()->max('sort_order') + 1;
 
-        $event = Event::query()->create($data);
+        if ($data['is_default'] && (! $data['is_current'] || ! $data['registration_enabled'])) {
+            return back()->withErrors(['is_default' => __('The default event must be current and accept registrations.')])->withInput();
+        }
+
+        $event = DB::transaction(function () use ($data) {
+            if ($data['is_default']) {
+                Event::query()->where('is_default', true)->update(['is_default' => false]);
+            }
+
+            return Event::query()->create($data);
+        });
         $this->storePhotos($event, $photos);
 
         if ($event->drive_url) {
@@ -61,8 +235,22 @@ class AdminEventController
         $photos = $data['photos'] ?? [];
         unset($data['photos']);
         $data['is_published'] = $request->boolean('is_published');
+        $data['is_current'] = $request->boolean('is_current');
+        $data['registration_enabled'] = $request->boolean('registration_enabled');
+        $data['payments_enabled'] = $request->boolean('payments_enabled', true);
+        $data['countdown_enabled'] = $request->boolean('countdown_enabled', true);
+        $data['is_default'] = $request->boolean('is_default');
 
-        $event->update($data);
+        if ($data['is_default'] && (! $data['is_current'] || ! $data['registration_enabled'])) {
+            return back()->withErrors(['is_default' => __('The default event must be current and accept registrations.')])->withInput();
+        }
+
+        DB::transaction(function () use ($event, $data) {
+            if ($data['is_default']) {
+                Event::query()->where('is_default', true)->where('id', '!=', $event->id)->update(['is_default' => false]);
+            }
+            $event->update($data);
+        });
         $this->storePhotos($event, $photos);
 
         if ($event->drive_url && ($event->drive_url !== $previousDriveUrl || $request->boolean('sync_drive'))) {
@@ -77,6 +265,12 @@ class AdminEventController
 
     public function destroy(Event $event)
     {
+        if ($event->registrations()->exists()) {
+            return back()->withErrors(['event' => __('This event has registrations. Keep the event and disable registration instead of deleting it.')]);
+        }
+
+        $event->races()->get()->each->delete();
+
         foreach ($event->photos as $photo) {
             if (! $photo->isBundledAsset() && ! $photo->isExternalUrl()) {
                 Storage::disk('public')->delete($photo->path);
@@ -201,6 +395,7 @@ class AdminEventController
             'title_ar' => ['nullable', 'string', 'max:180'],
             'slug' => ['required', 'alpha_dash', 'max:200', $slugRule],
             'event_year' => ['required', 'integer', 'between:1900,2200'],
+            'starts_at' => ['nullable', 'date'],
             'location' => ['nullable', 'string', 'max:180'],
             'location_ar' => ['nullable', 'string', 'max:180'],
             'summary' => ['nullable', 'string', 'max:280'],
@@ -211,6 +406,11 @@ class AdminEventController
             'source_url' => ['nullable', 'url', 'max:2048'],
             'drive_url' => ['nullable', 'url', 'max:2048'],
             'is_published' => ['nullable', 'boolean'],
+            'is_current' => ['nullable', 'boolean'],
+            'registration_enabled' => ['nullable', 'boolean'],
+            'payments_enabled' => ['nullable', 'boolean'],
+            'countdown_enabled' => ['nullable', 'boolean'],
+            'is_default' => ['nullable', 'boolean'],
             'photos' => ['nullable', 'array', 'max:20'],
             'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:max_width=6000,max_height=6000'],
         ]);

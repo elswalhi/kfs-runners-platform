@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Race;
+use App\Models\Event;
 use App\Models\RaceKitPrice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -11,22 +12,32 @@ use Illuminate\Validation\Rule;
 
 class RaceController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(['data' => Race::query()
+        $event = $request->filled('event_id')
+            ? Event::query()->findOrFail($request->integer('event_id'))
+            : Event::query()->where('is_default', true)->first();
+        $races = Race::query()
+            ->when($event, fn ($query) => $query->where('event_id', $event->id))
             ->with('kitPrices')
             ->withCount('registrations')
             ->orderBy('sort_order')
             ->orderBy('id')
-            ->get()
-            ->map(fn (Race $race) => $this->serialize($race))]);
+            ->get();
+
+        return response()->json(['data' => $races->map(fn (Race $race) => $this->serialize($race))]);
     }
 
     public function store(Request $request)
     {
+        $eventId = $request->input('event_id') ?: Event::query()->where('is_default', true)->value('id');
+        $event = Event::query()->find($eventId);
+        if (! $event) {
+            return response()->json(['message' => 'Select an event before adding a race.'], 422);
+        }
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
-            'slug' => ['required', 'string', 'max:120', 'alpha_dash', Rule::unique('races', 'slug')],
+            'slug' => ['required', 'string', 'max:120', 'alpha_dash', Rule::unique('races', 'slug')->where('event_id', $event->id)],
             'distance_label' => ['required', 'string', 'max:40'],
             'category_type' => ['required', Rule::in(['individual', 'family', 'para'])],
             'sort_order' => ['sometimes', 'integer', 'min:0', 'max:10000'],
@@ -37,9 +48,10 @@ class RaceController extends Controller
             'currency' => ['sometimes', 'string', 'size:3'],
         ]);
 
-        $race = DB::transaction(function () use ($data) {
+        $race = DB::transaction(function () use ($data, $event) {
             $bibStart = $data['bib_number_start'] ?? Race::suggestedBibNumberStart($data['distance_label'], $data['category_type']);
             $race = Race::query()->create([
+                'event_id' => $event->id,
                 'name' => trim($data['name']),
                 'slug' => strtolower($data['slug']),
                 'distance_label' => trim($data['distance_label']),
@@ -74,7 +86,7 @@ class RaceController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
-            'slug' => ['required', 'string', 'max:120', 'alpha_dash', Rule::unique('races', 'slug')->ignore($race->id)],
+            'slug' => ['required', 'string', 'max:120', 'alpha_dash', Rule::unique('races', 'slug')->where('event_id', $race->event_id)->ignore($race->id)],
             'distance_label' => ['required', 'string', 'max:40'],
             'category_type' => ['required', Rule::in(['individual', 'family', 'para'])],
             'sort_order' => ['required', 'integer', 'min:0', 'max:10000'],
@@ -114,6 +126,7 @@ class RaceController extends Controller
     {
         return [
             'id' => $race->id,
+            'event_id' => $race->event_id,
             'name' => $race->name,
             'slug' => $race->slug,
             'distance_label' => $race->distance_label,

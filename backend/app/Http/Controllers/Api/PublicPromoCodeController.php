@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\PromoCode;
+use App\Models\Event;
 use App\Models\Race;
 use App\Models\RaceKitPrice;
 use Illuminate\Http\JsonResponse;
@@ -17,6 +18,7 @@ class PublicPromoCodeController extends Controller
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:64'],
             'race' => ['nullable', 'string', 'exists:races,slug'],
+            'event' => ['nullable', 'string', 'exists:events,slug'],
             'kit' => ['nullable', Rule::in(['full', 'basic'])],
             'total' => ['nullable', 'numeric', 'min:0'],
         ]);
@@ -24,20 +26,30 @@ class PublicPromoCodeController extends Controller
         $currency = 'EGP';
         $originalAmount = 0.00;
 
-        if ($request->filled('total') && (float) $request->input('total') > 0) {
-            $originalAmount = (float) $request->input('total');
-        } elseif ($request->filled('race') && $request->filled('kit')) {
-            $race = Race::query()->where('slug', $validated['race'])->where('is_active', true)->first();
+        if ($request->filled('race')) {
+            $raceQuery = Race::query()->where('slug', $validated['race'])->where('is_active', true);
+            if ($request->filled('event')) {
+                $raceQuery->where('event_id', Event::query()->where('slug', $validated['event'])->value('id'));
+            } elseif ($defaultEventId = Event::query()->where('is_default', true)->value('id')) {
+                $raceQuery->where('event_id', $defaultEventId);
+            }
+            $race = $raceQuery->first();
             if (! $race) {
-                return response()->json(['valid' => false, 'message' => 'Selected race is not active.'], 422);
+                return response()->json(['valid' => false, 'message' => 'Selected race is not active for this event.'], 422);
             }
 
-            $price = RaceKitPrice::query()->where('race_id', $race->id)->where('kit_type', $validated['kit'])->where('is_active', true)->first();
-            if (! $price) {
-                return response()->json(['valid' => false, 'message' => 'Price for selected kit is not available.'], 422);
+            if (! $request->filled('total') && $request->filled('kit')) {
+                $price = RaceKitPrice::query()->where('race_id', $race->id)->where('kit_type', $validated['kit'])->where('is_active', true)->first();
+                if (! $price) {
+                    return response()->json(['valid' => false, 'message' => 'Price for selected kit is not available.'], 422);
+                }
+                $originalAmount = (float) $price->price;
+                $currency = $price->currency;
             }
-            $originalAmount = (float) $price->price;
-            $currency = $price->currency;
+        }
+
+        if ($request->filled('total') && (float) $request->input('total') > 0) {
+            $originalAmount = (float) $request->input('total');
         }
 
         $cleanCode = strtoupper(trim($validated['code']));

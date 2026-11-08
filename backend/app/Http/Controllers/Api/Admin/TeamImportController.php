@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
+use App\Models\Event;
 use App\Models\Race;
 use App\Models\RaceKitPrice;
 use App\Models\Registration;
@@ -23,6 +24,7 @@ class TeamImportController extends Controller
     {
         $data = $request->validate([
             'request_key' => ['required', 'string', 'regex:/\A[a-f0-9]{64}\z/i'],
+            'event_id' => ['required', 'integer', 'exists:events,id'],
             'team' => ['required', 'array'],
             'team.name' => ['required', 'string', 'max:150'],
             'team.contact_name' => ['required', 'string', 'max:150'],
@@ -42,6 +44,11 @@ class TeamImportController extends Controller
             'members.*.kit_type' => ['required', Rule::in(['full', 'basic'])],
             'members.*.shirt_size' => ['nullable', Rule::in(['S', 'M', 'L', 'XL', 'XXL'])],
         ]);
+
+        $event = Event::query()->findOrFail($data['event_id']);
+        if (! $event->registration_enabled || ! $event->payments_enabled) {
+            return response()->json(['message' => 'This event is not accepting paid team registrations.'], 422);
+        }
 
         $teamPhone = $this->normalizeEgyptianMobile($data['team']['phone']);
         if ($teamPhone === null) {
@@ -72,7 +79,7 @@ class TeamImportController extends Controller
                 continue;
             }
 
-            $race = Race::query()->where('slug', $member['race_slug'])->where('is_active', true)->first();
+            $race = Race::query()->where('event_id', $event->id)->where('slug', $member['race_slug'])->where('is_active', true)->first();
             $price = $race
                 ? RaceKitPrice::query()->where('race_id', $race->id)->where('kit_type', $member['kit_type'])->where('is_active', true)->first()
                 : null;

@@ -31,6 +31,40 @@
         </div>
     </section>
 
+    @if ($upcomingEvents->isNotEmpty())
+        <section class="kfs-events-list kfs-upcoming-events" aria-labelledby="kfs-upcoming-events-title">
+            <div class="wrap">
+                <div class="kfs-events-list-heading">
+                    <div>
+                        <p class="kfs-events-kicker">{{ __('CURRENT EVENTS') }}</p>
+                        <h2 id="kfs-upcoming-events-title">{{ __('Upcoming events') }}</h2>
+                        <p class="kfs-events-list-subtitle">{{ __('Choose an event to see its race distances and registration options.') }}</p>
+                    </div>
+                    <p class="kfs-events-result-count"><strong>{{ $upcomingEvents->count() }}</strong> {{ __('events') }}</p>
+                </div>
+                <div class="kfs-events-grid">
+                    @foreach ($upcomingEvents as $event)
+                        <article class="kfs-events-card">
+                            <a class="kfs-events-card-image" href="{{ route('events.show', $event->slug) }}" aria-label="{{ __('View event') }}: {{ $event->translated('title') }}">
+                                <img src="{{ $event->coverPhoto?->publicUrl() ?? asset('images/kfs-runners-hero.png') }}" alt="{{ $event->coverPhoto?->alt ?: $event->translated('title') }}" loading="lazy">
+                                @if ($event->event_year)<span class="kfs-events-year-badge">{{ $event->event_year }}</span>@endif
+                            </a>
+                            <div class="kfs-events-card-content">
+                                @if ($event->translated('location'))<p class="kfs-events-card-location"><i aria-hidden="true">⌖</i>{{ $event->translated('location') }}</p>@endif
+                                <h3><a href="{{ route('events.show', $event->slug) }}">{{ $event->translated('title') }}</a></h3>
+                                @if ($event->translated('summary'))<p class="kfs-events-summary">{{ $event->translated('summary') }}</p>@endif
+                                <div class="kfs-events-card-footer">
+                                    <span class="kfs-photo-count">{{ $event->starts_at?->format('d M Y') ?? $event->event_year }}</span>
+                                    <a href="{{ $event->registration_enabled ? route('events.register', $event->slug) : route('events.show', $event->slug) }}">{{ $event->registration_enabled ? __('Register now') : __('View event') }} <span aria-hidden="true">→</span></a>
+                                </div>
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
+
     @if ($featuredEvent)
         <section class="kfs-featured-event wrap">
             <a class="kfs-featured-event-image" href="{{ route('events.show', $featuredEvent->slug) }}" aria-label="{{ __('View event') }}: {{ $featuredEvent->translated('title') }}">
