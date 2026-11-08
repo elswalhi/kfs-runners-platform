@@ -43,6 +43,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/export-overview', [AdminWebController::class, 'exportOverview'])->name('export-overview');
         Route::post('/registrations/clear-all', [AdminWebController::class, 'clearAllRegistrations'])->middleware('throttle:1,1')->name('registrations.clear-all');
         Route::get('/registrations', [AdminWebController::class, 'registrations'])->name('registrations');
+        Route::post('/registrations/send-qr-reminders', [AdminWebController::class, 'sendQrRemindersToPaidRunners'])->middleware('throttle:1,10')->name('registrations.send-qr-reminders');
         Route::get('/registrations/export', [AdminWebController::class, 'exportRegistrations'])->name('registrations.export');
         Route::get('/registrations/{registration}', [AdminWebController::class, 'registration'])->name('registrations.show');
         Route::post('/registrations/{registration}/send-qr', [AdminWebController::class, 'sendRegistrationQr'])->middleware('throttle:5,1')->name('registrations.send-qr');

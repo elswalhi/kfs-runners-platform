@@ -68,8 +68,9 @@ class AdminWebController
             $registration->setAttribute('age_on_race_day', $age);
             $registration->setAttribute('age_group_name', $ageGroups->first(fn (AgeGroup $group) => $group->containsAge($age))?->name);
         });
+        $paidRunnerCount = Registration::query()->where('payment_status', 'paid')->count();
 
-        return view('admin.registrations', compact('registrations', 'races', 'ageGroups', 'raceDate'));
+        return view('admin.registrations', compact('registrations', 'races', 'ageGroups', 'raceDate', 'paidRunnerCount'));
     }
 
     public function exportRegistrations(Request $request)
@@ -192,29 +193,9 @@ class AdminWebController
         }
 
         try {
-            $registration->loadMissing('race', 'team');
-            $qrDataUri = QrCodeService::generateRunnerQr($registration, 360);
-            if ($qrDataUri === null) {
+            if (! $this->sendRunnerQrReminder($registration)) {
                 return back()->withErrors(__('No QR fields are enabled. Select at least one field in Runner QR Settings first.'));
             }
-            $qrBase64 = substr($qrDataUri, strlen('data:image/png;base64,'));
-            $qrPng = base64_decode($qrBase64, true);
-
-            if ($qrPng === false) {
-                throw new \RuntimeException('Could not decode the runner QR image.');
-            }
-
-            Mail::to($registration->email)->send(new RunnerQrMail([
-                'locale' => app()->getLocale(),
-                'reference' => $registration->registration_code,
-                'race_number' => $registration->bib_number,
-                'name' => trim($registration->first_name . ' ' . $registration->last_name),
-                'race' => $registration->race?->name ?? '—',
-                'distance' => $registration->race?->distance_label ?? '—',
-                'kit' => $registration->kit_type,
-                'shirt_size' => $registration->shirt_size,
-                'team' => $registration->team?->name ?? $registration->team_name,
-            ], $qrPng));
         } catch (Throwable $exception) {
             Log::warning('Could not email the runner kit pickup QR.', [
                 'registration_reference' => $registration->registration_code,
@@ -225,6 +206,88 @@ class AdminWebController
         }
 
         return back()->with('success', __('Runner QR reminder sent to :email.', ['email' => $registration->email]));
+    }
+
+    public function sendQrRemindersToPaidRunners()
+    {
+        if (config('mail.default') === 'log') {
+            return back()->withErrors(__('Email delivery is not configured. Set up SMTP before sending runner QR codes.'));
+        }
+
+        $paidRunnerCount = Registration::query()->where('payment_status', 'paid')->count();
+        if ($paidRunnerCount === 0) {
+            return back()->with('success', __('There are no paid runners to remind.'));
+        }
+
+        $sent = 0;
+        $skipped = 0;
+        $failed = 0;
+
+        Registration::query()
+            ->with(['race', 'team'])
+            ->where('payment_status', 'paid')
+            ->orderBy('id')
+            ->chunkById(25, function ($registrations) use (&$sent, &$skipped, &$failed) {
+                foreach ($registrations as $registration) {
+                    if (! $registration->bib_number || ! filter_var($registration->email, FILTER_VALIDATE_EMAIL)) {
+                        $skipped++;
+                        continue;
+                    }
+
+                    try {
+                        if ($this->sendRunnerQrReminder($registration)) {
+                            $sent++;
+                        } else {
+                            $skipped++;
+                        }
+                    } catch (Throwable $exception) {
+                        $failed++;
+                        Log::warning('Could not send a bulk runner QR reminder.', [
+                            'registration_reference' => $registration->registration_code,
+                            'exception' => $exception::class,
+                        ]);
+                    }
+                }
+            });
+
+        return back()->with('success', __('QR reminders sent: :sent; skipped: :skipped; failed: :failed.', [
+            'sent' => $sent,
+            'skipped' => $skipped,
+            'failed' => $failed,
+        ]));
+    }
+
+    private function sendRunnerQrReminder(Registration $registration): bool
+    {
+        $registration = Registration::query()
+            ->with(['race', 'team'])
+            ->whereKey($registration->getKey())
+            ->where('payment_status', 'paid')
+            ->whereNotNull('bib_number')
+            ->first();
+
+        if (! $registration) {
+            return false;
+        }
+
+        $qrPng = QrCodeService::generateRunnerQrPng($registration, 360);
+        if ($qrPng === null) {
+            return false;
+        }
+
+        Mail::to($registration->email)->send(new RunnerQrMail([
+            'locale' => app()->getLocale(),
+            'reference' => $registration->registration_code,
+            'race_number' => $registration->bib_number,
+            'name' => trim($registration->first_name . ' ' . $registration->last_name),
+            'race' => $registration->race?->name ?? '—',
+            'distance' => $registration->race?->distance_label ?? '—',
+            'kit' => $registration->kit_type,
+            'shirt_size' => $registration->shirt_size,
+            'team' => $registration->team?->name ?? $registration->team_name,
+        ], $qrPng));
+
+        return true;
     }
 
     public function updateRegistration(Request $request, Registration $registration)

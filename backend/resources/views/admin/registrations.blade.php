@@ -18,6 +18,14 @@
         </small>
     </div>
     <div class="stitch-hero-actions">
+        <form method="POST" action="{{ route('admin.registrations.send-qr-reminders') }}" onsubmit="return confirm(@js(__('Send a QR reminder to all :count paid runners? Each eligible runner will receive a separate email.', ['count' => $paidRunnerCount])))">
+            @csrf
+            <button type="submit" class="stitch-btn stitch-btn-secondary" @disabled($paidRunnerCount === 0)>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 6L2 7"/></svg>
+                <span>{{ __('Send QR reminder to all paid runners') }} ({{ $paidRunnerCount }})</span>
+            </button>
+            <small style="display:block;max-width:300px;margin-top:6px;color:var(--st-text-muted);font-size:10px;line-height:1.45;">{{ __('Only paid runners with an assigned race number are emailed. Pending registrations are not included.') }}</small>
+        </form>
         <a href="{{ route('admin.age-groups') }}" class="stitch-btn stitch-btn-secondary">
             <span>{{ __('Manage age groups') }}</span>
         </a>
