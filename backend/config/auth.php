@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\RunnerAccount;
 use App\Models\User;
 
 return [
@@ -42,6 +43,10 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'runner' => [
+            'driver' => 'session',
+            'provider' => 'runner_accounts',
+        ],
     ],
 
     /*
@@ -65,6 +70,10 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+        'runner_accounts' => [
+            'driver' => 'eloquent',
+            'model' => RunnerAccount::class,
         ],
 
         // 'users' => [

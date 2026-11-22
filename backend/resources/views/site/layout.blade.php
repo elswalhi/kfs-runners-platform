@@ -78,6 +78,39 @@
             border-color: #064b3e;
             background: #f0fdf4;
         }
+        .main-nav > a[aria-current="page"] {
+            text-decoration: underline;
+            text-underline-offset: .35em;
+        }
+        @media (min-width: 761px) and (max-width: 920px) {
+            .site-header .mobile-menu-btn {
+                display: inline-flex;
+            }
+            .site-header .main-nav {
+                display: none;
+                position: absolute;
+                inset: 100% 0 auto;
+                padding: 18px 24px;
+                align-items: stretch;
+                flex-direction: column;
+                gap: 16px;
+                background: #fff;
+                border-bottom: 1px solid var(--line);
+            }
+            .site-header .main-nav.nav-open {
+                display: flex;
+            }
+            .site-header .main-nav > a:not(.nav-cta) {
+                padding-block: 5px;
+            }
+            .site-header .nav-cta {
+                justify-content: center;
+            }
+            html.dark .site-header .main-nav {
+                background: #121e1a;
+                border-color: #223830;
+            }
+        }
     </style>
     @stack('styles')
 </head>
@@ -92,6 +125,7 @@
             <a href="{{ route('home') }}#our-sports">{{ __('Our sports') }}</a>
             <a href="{{ route('home') }}#our-groups">{{ __('Our groups') }}</a>
             <a href="{{ route('events.index') }}">{{ __('Events') }}</a>
+            <a href="{{ auth('runner')->check() ? route('runner.account') : route('runner.login') }}" @if (request()->routeIs('runner.*')) aria-current="page" @endif>{{ __('Runner account') }}</a>
             <a href="{{ route('register') }}" class="nav-cta">{{ __('Register now') }} <span aria-hidden="true">↗</span></a>
             <a href="{{ route('locale.switch', app()->getLocale() === 'ar' ? 'en' : 'ar') }}" class="lang-switch-btn" title="Toggle language">
                 <span>{{ app()->getLocale() === 'ar' ? '🇬🇧 English' : '🇪🇬 العربية' }}</span>

@@ -1,0 +1,51 @@
+.runner-entry-card {
+    width: min(100%, 32rem);
+    margin-inline: auto;
+}
+
+.runner-entry-actions {
+    display: grid;
+    gap: .75rem;
+    margin-block: 1.5rem;
+}
+
+.runner-profile-fill {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem 1rem;
+    margin-block: 1rem;
+    padding: .875rem 1rem;
+    color: #164a3c;
+    background: #eff7f2;
+    border: 1px solid #cbe2d4;
+    border-radius: .625rem;
+}
+
+.runner-profile-fill p {
+    flex: 1 1 15rem;
+    margin: 0;
+    font-size: .875rem;
+    line-height: 1.5;
+}
+
+.runner-profile-fill button {
+    min-height: 2.75rem;
+}
+
+.runner-profile-fill [role="status"] {
+    flex-basis: 100%;
+    font-size: .875rem;
+    font-weight: 700;
+}
+
+.runner-profile-fill [role="status"]:empty {
+    display: none;
+}
+
+html.dark .runner-profile-fill {
+    color: #c0ead7;
+    background: #17342b;
+    border-color: #3d6253;
+}

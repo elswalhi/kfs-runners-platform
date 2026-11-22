@@ -7,6 +7,7 @@ use App\Models\AppSetting;
 use App\Models\Event;
 use App\Models\Race;
 use App\Models\Registration;
+use App\Models\Team;
 use App\Services\BibNumberService;
 use App\Services\EasyKashCashApi;
 use App\Services\RegistrationEmailService;
@@ -59,6 +60,11 @@ class PublicSiteController
                 ->with('race.event')
                 ->where('registration_code', $returnReference)
                 ->first()?->race?->event;
+
+            if (! $event && is_string($returnReference) && str_starts_with($returnReference, 'KFS-GRP-')) {
+                $team = Team::query()->where('registration_code', $returnReference)->first();
+                $event = $team?->registrations()->with('race.event')->first()?->race?->event;
+            }
         }
 
         $event ??= Event::query()->where('is_default', true)->first()
@@ -98,13 +104,49 @@ class PublicSiteController
 
         $eventName = $event?->translated('title');
         $registrationOpen = $event?->registration_enabled ?? true;
+        $runner = auth('runner')->user();
 
-        return view('site.register', compact('event', 'eventName', 'registrationOpen', 'races', 'returnReference'));
+        if ($registrationOpen && ($event?->is_published ?? true) && $races->isNotEmpty()
+            && ! $runner && ! $request->boolean('guest')
+            && blank($returnReference) && ! $request->session()->hasAny(['payment_error', 'payment_reference', 'errors'])) {
+            $race = $request->query('race');
+            $kit = $request->query('kit');
+            $selection = array_filter([
+                'race' => is_string($race) && $races->contains('slug', $race) ? $race : null,
+                'kit' => in_array($kit, ['full', 'basic'], true) ? $kit : null,
+            ]);
+            $guestUrl = $event
+                ? route('events.register', ['event' => $event->slug, 'guest' => 1, ...$selection])
+                : route('register', ['guest' => 1, ...$selection]);
+            $signInUrl = route('runner.login', array_filter([
+                'event' => $event?->slug,
+                'return' => 'registration',
+                ...$selection,
+            ]));
+
+            return response()->view('site.runner.entry', compact('eventName', 'guestUrl', 'signInUrl'))
+                ->header('Cache-Control', 'private, no-store');
+        }
+
+        $savedRunnerDetails = $runner && $registrationOpen && blank($returnReference) && ! $request->session()->has('payment_reference')
+            ? array_filter([
+                'firstName' => $runner->first_name,
+                'lastName' => $runner->last_name,
+                'email' => $runner->email,
+                'phone' => $runner->phone,
+                'birthDate' => $runner->birth_date?->toDateString(),
+                'gender' => $runner->gender,
+                'teamName' => $runner->team_name,
+            ], fn ($value) => filled($value))
+            : [];
+
+        return response()->view('site.register', compact('event', 'eventName', 'registrationOpen', 'races', 'returnReference', 'savedRunnerDetails'))
+            ->header('Cache-Control', 'private, no-store');
     }
 
     public function storeRegistration(Request $request, PublicRegistrationController $registrations, EasyKashCashApi $easyKash, RegistrationEmailService $registrationEmails, BibNumberService $bibNumbers)
     {
-        $response = $registrations->store($request, $easyKash, $registrationEmails, $bibNumbers);
+        $response = $registrations->store($request, $easyKash, $registrationEmails, $bibNumbers, auth('runner')->id());
 
         if (! $response instanceof JsonResponse) {
             return back()->withInput()->with('payment_error', 'We could not start the registration. Please try again.');

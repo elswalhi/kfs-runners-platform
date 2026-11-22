@@ -15,7 +15,7 @@ class Registration extends Model
     use HasFactory;
 
     protected $fillable = [
-        'registration_code', 'bib_number', 'race_id', 'promo_code_id', 'promo_code', 'team_id', 'kit_type',
+        'registration_code', 'bib_number', 'race_id', 'promo_code_id', 'promo_code', 'team_id', 'runner_account_id', 'kit_type',
         'first_name', 'last_name', 'email', 'phone', 'birth_date', 'gender', 'id_number',
         'shirt_size', 'team_name', 'document_path', 'status', 'payment_status',
         'amount', 'discount_amount', 'original_amount', 'currency', 'notes',
@@ -65,6 +65,7 @@ class Registration extends Model
     }
 
     public function race(): BelongsTo { return $this->belongsTo(Race::class); }
+    public function runnerAccount(): BelongsTo { return $this->belongsTo(RunnerAccount::class); }
     public function promoCode(): BelongsTo { return $this->belongsTo(PromoCode::class); }
     public function team(): BelongsTo { return $this->belongsTo(Team::class); }
     public function payments(): HasMany { return $this->hasMany(Payment::class); }

@@ -2,6 +2,10 @@
 
 @section('title', __('Register for KFS Runners'))
 
+@push('styles')
+    <link rel="stylesheet" href="{{ asset('css/kfs-runner-registration.css') }}">
+@endpush
+
 @section('content')
 @php
     $registerHeroImage = \App\Support\SiteMedia::url('register', 'hero', asset('images/kfs-runners-hero.png'));
@@ -150,6 +154,14 @@
                         </div>
                         <div class="secure-label">♙ {{ __('Your information stays protected') }}</div>
                     </div>
+
+                    @if ($savedRunnerDetails !== [])
+                        <div class="runner-profile-fill">
+                            <p>{{ __('Fill empty fields for Runner 1 from your account. You can edit them before checkout.') }}</p>
+                            <button class="btn btn-dark" type="button" id="use-saved-runner-details">{{ __('Use my saved details') }}</button>
+                            <span id="saved-runner-details-result" role="status"></span>
+                        </div>
+                    @endif
 
                     <!-- Attendees / Runners Details Container -->
                     <div id="attendees-container">
@@ -1052,6 +1064,34 @@
         otherTeamWrap.style.display = 'block';
     }
 
+    @if ($savedRunnerDetails !== [])
+        const savedRunnerDetails = @js($savedRunnerDetails);
+        document.getElementById('use-saved-runner-details').addEventListener('click', () => {
+            let filled = false;
+
+            for (const field of ['firstName', 'lastName', 'email', 'phone', 'birthDate', 'gender']) {
+                const input = document.getElementById('input-' + field);
+                if (input.value.trim() || !savedRunnerDetails[field]) continue;
+
+                input.value = savedRunnerDetails[field];
+                input.dispatchEvent(new Event(input.matches('select, input[type="date"]') ? 'change' : 'input', { bubbles: true }));
+                filled = filled || Boolean(input.value);
+            }
+
+            if (teamSelect && !teamSelect.value && savedRunnerDetails.teamName) {
+                const teamIsListed = [...teamSelect.options].some(option => option.value === savedRunnerDetails.teamName);
+                teamSelect.value = teamIsListed ? savedRunnerDetails.teamName : 'Other';
+                if (!teamIsListed && otherTeamInput) otherTeamInput.value = savedRunnerDetails.teamName;
+                teamSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                filled = filled || Boolean(teamSelect.value);
+            }
+
+            setText('saved-runner-details-result', filled
+                ? @js(__('Runner details added from your account.'))
+                : @js(__('Your current entries were kept.')));
+        });
+    @endif
+
     // Form submit check
     document.getElementById('runner-form')?.addEventListener('submit', event => {
         if (!validateStep1()) {
@@ -1087,22 +1127,30 @@
                 hiddenContainer.id = 'hidden-runner-0-inputs';
                 document.getElementById('runner-form').appendChild(hiddenContainer);
             }
-            hiddenContainer.innerHTML = `
-                <input type="hidden" name="runners[0][firstName]" value="${document.getElementById('input-firstName')?.value || ''}">
-                <input type="hidden" name="runners[0][lastName]" value="${document.getElementById('input-lastName')?.value || ''}">
-                <input type="hidden" name="runners[0][email]" value="${document.getElementById('input-email')?.value || ''}">
-                <input type="hidden" name="runners[0][phone]" value="${document.getElementById('input-phone')?.value || ''}">
-                <input type="hidden" name="runners[0][birthDate]" value="${document.getElementById('input-birthDate')?.value || ''}">
-                <input type="hidden" name="runners[0][gender]" value="${document.getElementById('input-gender')?.value || ''}">
-                <input type="hidden" name="runners[0][idNumber]" value="${document.getElementById('input-idNumber')?.value || ''}">
-                <input type="hidden" name="runners[0][race]" value="${tickets[0].race}">
-                <input type="hidden" name="runners[0][kit]" value="${tickets[0].kit}">
-                <input type="hidden" name="runners[0][shirtSize]" value="${tickets[0].shirtSize || ''}">
-                <input type="hidden" name="buyerFirstName" value="${document.getElementById('input-firstName')?.value || ''}">
-                <input type="hidden" name="buyerLastName" value="${document.getElementById('input-lastName')?.value || ''}">
-                <input type="hidden" name="buyerEmail" value="${document.getElementById('input-email')?.value || ''}">
-                <input type="hidden" name="buyerPhone" value="${document.getElementById('input-phone')?.value || ''}">
-            `;
+            const firstRunner = Object.fromEntries(
+                ['firstName', 'lastName', 'email', 'phone', 'birthDate', 'gender', 'idNumber']
+                    .map(field => [field, document.getElementById('input-' + field)?.value || ''])
+            );
+            const runnerFields = {
+                ...firstRunner,
+                race: tickets[0].race,
+                kit: tickets[0].kit,
+                shirtSize: tickets[0].shirtSize || ''
+            };
+            const fields = [
+                ...Object.entries(runnerFields).map(([key, value]) => ['runners[0][' + key + ']', value]),
+                ['buyerFirstName', firstRunner.firstName],
+                ['buyerLastName', firstRunner.lastName],
+                ['buyerEmail', firstRunner.email],
+                ['buyerPhone', firstRunner.phone]
+            ];
+            hiddenContainer.replaceChildren(...fields.map(([name, value]) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = name;
+                input.value = value;
+                return input;
+            }));
 
             const r1File = document.getElementById('runner-1-doc-file');
             if (r1File) {

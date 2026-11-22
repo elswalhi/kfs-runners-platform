@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\AdminWebController;
 use App\Http\Controllers\Web\PublicEventController;
 use App\Http\Controllers\Web\PublicSiteMediaController;
 use App\Http\Controllers\Web\PublicSiteController;
+use App\Http\Controllers\Web\RunnerAccountController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicSiteController::class, 'home'])->name('home');
@@ -19,6 +20,15 @@ Route::get('/events/{event:slug}/register', [PublicSiteController::class, 'regis
 Route::get('/login', fn () => redirect()->route('admin.login'))->name('login');
 Route::get('/register', [PublicSiteController::class, 'register'])->name('register');
 Route::post('/register', [PublicSiteController::class, 'storeRegistration'])->middleware('throttle:10,1')->name('register.store');
+Route::prefix('runner')->name('runner.')->group(function () {
+    Route::get('/sign-in', [RunnerAccountController::class, 'login'])->name('login');
+    Route::post('/code/send', [RunnerAccountController::class, 'sendCode'])->name('code.send');
+    Route::get('/verify', [RunnerAccountController::class, 'verify'])->name('verify');
+    Route::post('/code/verify', [RunnerAccountController::class, 'verifyCode'])->name('code.verify');
+    Route::get('/account', [RunnerAccountController::class, 'account'])->name('account');
+    Route::patch('/account/profile', [RunnerAccountController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/sign-out', [RunnerAccountController::class, 'logout'])->name('logout');
+});
 Route::post('/promo-codes/validate', [PublicPromoCodeController::class, 'validateCode'])->middleware('throttle:30,1')->name('promo-codes.validate');
 Route::get('/site-media/{page}/{slot}', [PublicSiteMediaController::class, 'show'])
     ->where(['page' => 'home|event|register', 'slot' => '[a-z0-9_-]+'])

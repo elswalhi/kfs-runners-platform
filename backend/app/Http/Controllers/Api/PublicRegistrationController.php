@@ -23,11 +23,16 @@ use Illuminate\Validation\Rule;
 
 class PublicRegistrationController extends Controller
 {
-    public function store(Request $request, EasyKashCashApi $easyKash, RegistrationEmailService $registrationEmails, BibNumberService $bibNumbers)
-    {
+    public function store(
+        Request $request,
+        EasyKashCashApi $easyKash,
+        RegistrationEmailService $registrationEmails,
+        BibNumberService $bibNumbers,
+        ?int $runnerAccountId = null,
+    ) {
         // Handle Group / Multi-Runner Registration (EasyKash cart cycle)
         if ($request->has('runners') && is_array($request->input('runners')) && count($request->input('runners')) > 1) {
-            return $this->storeGroup($request, $easyKash, $registrationEmails, $bibNumbers);
+            return $this->storeGroup($request, $easyKash, $registrationEmails, $bibNumbers, $runnerAccountId);
         }
 
         // If single runner is sent inside runners array, extract to root
@@ -132,9 +137,10 @@ class PublicRegistrationController extends Controller
 
         // Handle 100% Free Registration (discount reduces price to 0)
         if ($finalAmount == 0.00) {
-            $registration = DB::transaction(function () use ($validated, $race, $price, $documentPath, $promo, $originalAmount, $discountAmount, $bibNumbers) {
+            $registration = DB::transaction(function () use ($validated, $race, $price, $documentPath, $promo, $originalAmount, $discountAmount, $bibNumbers, $runnerAccountId) {
                 $registration = Registration::query()->create([
                     'registration_code' => $this->newCode(),
+                    'runner_account_id' => $runnerAccountId,
                     'bib_number' => $bibNumbers->next($race->id),
                     'race_id' => $race->id,
                     'promo_code_id' => $promo?->id,
@@ -219,9 +225,10 @@ class PublicRegistrationController extends Controller
             return response()->json(['message' => 'EasyKash cash checkout expiry is not configured correctly.'], 503);
         }
 
-        $registration = DB::transaction(function () use ($validated, $race, $price, $documentPath, $promo, $originalAmount, $discountAmount, $finalAmount) {
+        $registration = DB::transaction(function () use ($validated, $race, $price, $documentPath, $promo, $originalAmount, $discountAmount, $finalAmount, $runnerAccountId) {
             $registration = Registration::query()->create([
                 'registration_code' => $this->newCode(),
+                'runner_account_id' => $runnerAccountId,
                 'bib_number' => null,
                 'race_id' => $race->id,
                 'promo_code_id' => $promo?->id,
@@ -307,8 +314,13 @@ class PublicRegistrationController extends Controller
         ], 201);
     }
 
-    public function storeGroup(Request $request, EasyKashCashApi $easyKash, RegistrationEmailService $registrationEmails, BibNumberService $bibNumbers)
-    {
+    public function storeGroup(
+        Request $request,
+        EasyKashCashApi $easyKash,
+        RegistrationEmailService $registrationEmails,
+        BibNumberService $bibNumbers,
+        ?int $runnerAccountId = null,
+    ) {
         // Fallback buyer info from runner #1 / root inputs
         if (! $request->filled('buyerFirstName')) {
             $request->merge(['buyerFirstName' => $request->input('firstName', $request->input('runners.0.firstName'))]);
@@ -424,7 +436,7 @@ class PublicRegistrationController extends Controller
         }
 
         // Database transaction: Create Team, Registrations, Payment
-        $team = DB::transaction(function () use ($request, $validated, $buyerName, $runnerItems, $originalAmount, $discountAmount, $finalAmount, $promo, $bibNumbers) {
+        $team = DB::transaction(function () use ($request, $validated, $buyerName, $runnerItems, $originalAmount, $discountAmount, $finalAmount, $promo, $bibNumbers, $runnerAccountId) {
             $isPaid = ($finalAmount == 0.00);
 
             $team = Team::query()->create([
@@ -453,6 +465,7 @@ class PublicRegistrationController extends Controller
 
                 Registration::query()->create([
                     'registration_code' => $this->newCode(),
+                    'runner_account_id' => $runnerAccountId,
                     'bib_number' => $isPaid ? $bibNumbers->next($item['race']->id) : null,
                     'team_id' => $team->id,
                     'race_id' => $item['race']->id,
