@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Registration;
 use App\Models\Team;
+use App\Models\BusBooking;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
@@ -69,7 +70,19 @@ class EasyKashCashApi
         return null;
     }
 
-    private function createCheckoutLink(array $payer): array
+    public function createBusPaymentLink(BusBooking $booking): array
+    {
+        return $this->createCheckoutLink([
+            'amount' => (float) $booking->amount,
+            'currency' => 'EGP',
+            'name' => $booking->name,
+            'email' => $booking->email,
+            'mobile' => preg_replace('/\D+/', '', $booking->phone),
+            'customerReference' => $booking->reference,
+        ], route('bus.return'));
+    }
+
+    private function createCheckoutLink(array $payer, ?string $redirectUrl = null): array
     {
         $cashExpiry = (int) config('easykash.cash_expiry', 48);
         if (! in_array($cashExpiry, [3, 6, 12, 48], true)) {
@@ -84,7 +97,7 @@ class EasyKashCashApi
                 ...$payer,
                 // Omitting paymentOptions asks EasyKash to show every method enabled for this account.
                 'cashExpiry' => $cashExpiry,
-                'redirectUrl' => config('easykash.redirect_url'),
+                'redirectUrl' => $redirectUrl ?? config('easykash.redirect_url'),
             ]);
 
         $responseData = $response->json();

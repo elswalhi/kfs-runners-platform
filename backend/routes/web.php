@@ -9,6 +9,8 @@ use App\Http\Controllers\Web\PublicEventController;
 use App\Http\Controllers\Web\PublicSiteMediaController;
 use App\Http\Controllers\Web\PublicSiteController;
 use App\Http\Controllers\Web\RunnerAccountController;
+use App\Http\Controllers\Web\BusBookingController;
+use App\Http\Controllers\Web\AdminBusBookingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicSiteController::class, 'home'])->name('home');
@@ -19,6 +21,10 @@ Route::get('/event-photos/{photo}', [PublicEventController::class, 'photo'])->na
 Route::get('/events/{event:slug}/register', [PublicSiteController::class, 'registerForEvent'])->name('events.register');
 Route::get('/login', fn () => redirect()->route('admin.login'))->name('login');
 Route::get('/register', [PublicSiteController::class, 'register'])->name('register');
+Route::get('/zayed-bus', [BusBookingController::class, 'create'])->name('bus.create');
+Route::post('/zayed-bus', [BusBookingController::class, 'store'])->middleware('throttle:10,1')->name('bus.store');
+Route::get('/zayed-bus/payment', [BusBookingController::class, 'paymentReturn'])->name('bus.return');
+Route::get('/zayed-bus/status/{reference}', [BusBookingController::class, 'status'])->middleware('throttle:30,1')->name('bus.status');
 Route::post('/register', [PublicSiteController::class, 'storeRegistration'])->middleware('throttle:10,1')->name('register.store');
 Route::prefix('runner')->name('runner.')->group(function () {
     Route::get('/sign-in', [RunnerAccountController::class, 'login'])->name('login');
@@ -27,6 +33,7 @@ Route::prefix('runner')->name('runner.')->group(function () {
     Route::post('/code/verify', [RunnerAccountController::class, 'verifyCode'])->name('code.verify');
     Route::get('/account', [RunnerAccountController::class, 'account'])->name('account');
     Route::patch('/account/profile', [RunnerAccountController::class, 'updateProfile'])->name('profile.update');
+    Route::get('/account/registration-details', [RunnerAccountController::class, 'registrationDetails'])->name('registration-details');
     Route::post('/sign-out', [RunnerAccountController::class, 'logout'])->name('logout');
 });
 Route::post('/promo-codes/validate', [PublicPromoCodeController::class, 'validateCode'])->middleware('throttle:30,1')->name('promo-codes.validate');
@@ -51,6 +58,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware(['auth', 'admin'])->group(function () {
         Route::post('/logout', [AdminWebAuthController::class, 'logout'])->name('logout');
         Route::get('/', [AdminWebController::class, 'dashboard'])->name('dashboard');
+        Route::get('/bus-bookings', [AdminBusBookingController::class, 'index'])->name('bus.index');
+        Route::put('/bus-bookings/price', [AdminBusBookingController::class, 'updatePrice'])->name('bus.price');
         Route::get('/export-overview', [AdminWebController::class, 'exportOverview'])->name('export-overview');
         Route::post('/registrations/clear-all', [AdminWebController::class, 'clearAllRegistrations'])->middleware('throttle:1,1')->name('registrations.clear-all');
         Route::get('/registrations', [AdminWebController::class, 'registrations'])->name('registrations');

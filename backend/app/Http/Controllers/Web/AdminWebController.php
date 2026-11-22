@@ -39,7 +39,7 @@ class AdminWebController
         $ageGroups = AgeGroup::query()->orderBy('min_age')->get();
         $raceBreakdown = Race::query()->withCount('registrations')->orderBy('sort_order')->get();
         $teamCount = Team::query()->count();
-        $paymentCount = Payment::query()->count();
+        $paymentCount = Payment::query()->whereNull('bus_booking_id')->count();
         $trend = collect(range(6, 0))->map(function (int $daysAgo) {
             $day = Carbon::today()->subDays($daysAgo);
             return ['label' => $day->format('D'), 'value' => (float) Registration::query()->where('payment_status', 'paid')->whereDate('created_at', $day)->sum('amount')];
@@ -126,9 +126,9 @@ class AdminWebController
             $documentPaths = Registration::query()->whereNotNull('document_path')->pluck('document_path')->all();
             $registrationCount = Registration::query()->count();
             $teamCount = Team::query()->count();
-            $paymentCount = Payment::query()->count();
+            $paymentCount = Payment::query()->whereNull('bus_booking_id')->count();
 
-            Payment::query()->delete();
+            Payment::query()->whereNull('bus_booking_id')->delete();
             Registration::query()->delete();
             Team::query()->delete();
             PromoCode::query()->update(['times_used' => 0]);
@@ -332,9 +332,9 @@ class AdminWebController
 
     public function payments()
     {
-        $payments = Payment::query()->with(['registration.race', 'team'])->latest()->paginate(50);
-        $paidTotal = Payment::query()->whereIn('status', ['paid', 'succeeded'])->sum('amount');
-        $needsAttention = Payment::query()->whereIn('status', ['pending', 'failed'])->count();
+        $payments = Payment::query()->whereNull('bus_booking_id')->with(['registration.race', 'team'])->latest()->paginate(50);
+        $paidTotal = Payment::query()->whereNull('bus_booking_id')->whereIn('status', ['paid', 'succeeded'])->sum('amount');
+        $needsAttention = Payment::query()->whereNull('bus_booking_id')->whereIn('status', ['pending', 'failed'])->count();
 
         return view('admin.payments', compact('payments', 'paidTotal', 'needsAttention'));
     }

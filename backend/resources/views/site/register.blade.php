@@ -155,7 +155,7 @@
                         <div class="secure-label">♙ {{ __('Your information stays protected') }}</div>
                     </div>
 
-                    @if ($savedRunnerDetails !== [])
+                    @if ($canUseSavedRunnerDetails)
                         <div class="runner-profile-fill">
                             <p>{{ __('Fill empty fields for Runner 1 from your account. You can edit them before checkout.') }}</p>
                             <button class="btn btn-dark" type="button" id="use-saved-runner-details">{{ __('Use my saved details') }}</button>
@@ -1064,31 +1064,47 @@
         otherTeamWrap.style.display = 'block';
     }
 
-    @if ($savedRunnerDetails !== [])
-        const savedRunnerDetails = @js($savedRunnerDetails);
-        document.getElementById('use-saved-runner-details').addEventListener('click', () => {
-            let filled = false;
+    @if ($canUseSavedRunnerDetails)
+        const profileButton = document.getElementById('use-saved-runner-details');
+        profileButton.addEventListener('click', async () => {
+            profileButton.disabled = true;
+            setText('saved-runner-details-result', @js(__('Loading your runner details…')));
 
-            for (const field of ['firstName', 'lastName', 'email', 'phone', 'birthDate', 'gender']) {
-                const input = document.getElementById('input-' + field);
-                if (input.value.trim() || !savedRunnerDetails[field]) continue;
+            try {
+                const response = await fetch(@js(route('runner.registration-details', absolute: false)), {
+                    headers: { Accept: 'application/json' },
+                    cache: 'no-store',
+                });
 
-                input.value = savedRunnerDetails[field];
-                input.dispatchEvent(new Event(input.matches('select, input[type="date"]') ? 'change' : 'input', { bubbles: true }));
-                filled = filled || Boolean(input.value);
+                if (!response.ok) throw new Error('Could not load runner details');
+
+                const details = await response.json();
+                let filled = false;
+                for (const field of ['firstName', 'lastName', 'email', 'phone', 'birthDate', 'gender', 'idNumber']) {
+                    const input = document.getElementById('input-' + field);
+                    if (input.value.trim() || !details[field]) continue;
+
+                    input.value = details[field];
+                    input.dispatchEvent(new Event(input.matches('select, input[type="date"]') ? 'change' : 'input', { bubbles: true }));
+                    filled = filled || Boolean(input.value);
+                }
+
+                if (teamSelect && !teamSelect.value && details.teamName) {
+                    const teamIsListed = [...teamSelect.options].some(option => option.value === details.teamName);
+                    teamSelect.value = teamIsListed ? details.teamName : 'Other';
+                    if (!teamIsListed && otherTeamInput) otherTeamInput.value = details.teamName;
+                    teamSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                    filled = filled || Boolean(teamSelect.value);
+                }
+
+                setText('saved-runner-details-result', filled
+                    ? @js(__('Runner details added from your account.'))
+                    : @js(__('Your current entries were kept.')));
+            } catch {
+                setText('saved-runner-details-result', @js(__('Could not load your saved details. Try again or enter them manually.')));
+            } finally {
+                profileButton.disabled = false;
             }
-
-            if (teamSelect && !teamSelect.value && savedRunnerDetails.teamName) {
-                const teamIsListed = [...teamSelect.options].some(option => option.value === savedRunnerDetails.teamName);
-                teamSelect.value = teamIsListed ? savedRunnerDetails.teamName : 'Other';
-                if (!teamIsListed && otherTeamInput) otherTeamInput.value = savedRunnerDetails.teamName;
-                teamSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                filled = filled || Boolean(teamSelect.value);
-            }
-
-            setText('saved-runner-details-result', filled
-                ? @js(__('Runner details added from your account.'))
-                : @js(__('Your current entries were kept.')));
         });
     @endif
 

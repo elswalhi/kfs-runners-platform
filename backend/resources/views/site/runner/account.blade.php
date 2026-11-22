@@ -16,7 +16,7 @@
                     @endif
                     <h1 class="runner-title">{{ $onboarding ? __('Set up your runner profile') : __('Runner account') }}</h1>
                     <p class="runner-description">
-                        {{ $onboarding ? __('Save the details you want to reuse when registering. You can do this later.') : __('Manage your runner profile and view your event registrations.') }}
+                        {{ $onboarding ? __('Complete your runner profile before continuing.') : __('Manage your runner profile and view your event registrations.') }}
                     </p>
                 </div>
                 <form action="{{ route('runner.logout') }}" method="POST">
@@ -41,38 +41,48 @@
                         <div class="runner-fields">
                             <div class="runner-field">
                                 <label for="profile-first-name">{{ __('First name') }}</label>
-                                <input id="profile-first-name" name="first_name" type="text" dir="auto" maxlength="100"
+                                <input id="profile-first-name" name="first_name" type="text" dir="auto" minlength="2" maxlength="100" required
                                     value="{{ old('first_name', $runner->first_name) }}" autocomplete="given-name"
                                     @if ($errors->has('first_name')) aria-invalid="true" @endif>
                             </div>
                             <div class="runner-field">
                                 <label for="profile-last-name">{{ __('Last name') }}</label>
-                                <input id="profile-last-name" name="last_name" type="text" dir="auto" maxlength="100"
+                                <input id="profile-last-name" name="last_name" type="text" dir="auto" minlength="2" maxlength="100" required
                                     value="{{ old('last_name', $runner->last_name) }}" autocomplete="family-name"
                                     @if ($errors->has('last_name')) aria-invalid="true" @endif>
                             </div>
                             <div class="runner-field">
                                 <label for="profile-phone">{{ __('Phone number') }}</label>
-                                <input id="profile-phone" name="phone" type="tel" dir="ltr" maxlength="32"
+                                <input id="profile-phone" name="phone" type="tel" dir="ltr" maxlength="32" required
                                     value="{{ old('phone', $runner->phone) }}" autocomplete="tel"
                                     @if ($errors->has('phone')) aria-invalid="true" @endif>
                             </div>
                             <div class="runner-field">
                                 <label for="profile-birth-date">{{ __('Date of birth') }}</label>
-                                <input id="profile-birth-date" name="birth_date" type="date" dir="ltr" max="{{ today()->subDay()->toDateString() }}"
+                                <input id="profile-birth-date" name="birth_date" type="date" dir="ltr" max="{{ today()->subDay()->toDateString() }}" required
                                     value="{{ old('birth_date', $runner->birth_date?->toDateString()) }}" autocomplete="bday"
                                     @if ($errors->has('birth_date')) aria-invalid="true" @endif>
                             </div>
                             <div class="runner-field">
                                 <label for="profile-gender">{{ __('Gender') }}</label>
-                                <select id="profile-gender" name="gender" @if ($errors->has('gender')) aria-invalid="true" @endif>
+                                <select id="profile-gender" name="gender" required @if ($errors->has('gender')) aria-invalid="true" @endif>
                                     <option value="">{{ __('Choose gender') }}</option>
                                     <option value="male" @selected(old('gender', $runner->gender) === 'male')>{{ __('Male') }}</option>
                                     <option value="female" @selected(old('gender', $runner->gender) === 'female')>{{ __('Female') }}</option>
                                 </select>
                             </div>
                             <div class="runner-field">
-                                <label for="profile-team">{{ __('Team name') }}</label>
+                                <label for="profile-id-number">{{ __('National ID / Passport') }}</label>
+                                <input id="profile-id-number" name="id_number" type="text" dir="auto"
+                                    autocomplete="off" minlength="4" maxlength="100" @required(! $hasSavedId)
+                                    @if ($hasSavedId) placeholder="{{ __('ID number saved') }}" aria-describedby="profile-id-help" @endif
+                                    @if ($errors->has('id_number')) aria-invalid="true" @endif>
+                                @if ($hasSavedId)
+                                    <small id="profile-id-help">{{ __('Enter a new number only if you want to replace the saved one.') }}</small>
+                                @endif
+                            </div>
+                            <div class="runner-field">
+                                <label for="profile-team">{{ __('Team name') }} ({{ __('Optional') }})</label>
                                 <input id="profile-team" name="team_name" type="text" dir="auto" maxlength="120"
                                     value="{{ old('team_name', $runner->team_name) }}" autocomplete="organization"
                                     @if ($errors->has('team_name')) aria-invalid="true" @endif>
@@ -81,12 +91,8 @@
 
                         <div class="runner-actions">
                             <button class="runner-button" type="submit">{{ $onboarding && $returnUrl ? __('Save and continue') : __('Save runner profile') }}</button>
-                            @if ($returnUrl)
-                                <a class="runner-button runner-button--secondary" href="{{ $returnUrl }}">
-                                    {{ $onboarding ? __('Skip for now') : __('Back to registration') }}
-                                </a>
-                            @elseif ($onboarding)
-                                <a class="runner-button runner-button--secondary" href="{{ route('runner.account') }}">{{ __('Skip for now') }}</a>
+                            @if ($returnUrl && ! $onboarding)
+                                <a class="runner-button runner-button--secondary" href="{{ $returnUrl }}">{{ __('Back to registration') }}</a>
                             @endif
                         </div>
                     </form>

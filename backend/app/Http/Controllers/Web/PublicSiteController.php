@@ -105,6 +105,15 @@ class PublicSiteController
         $eventName = $event?->translated('title');
         $registrationOpen = $event?->registration_enabled ?? true;
         $runner = auth('runner')->user();
+        $returningFromPayment = filled($returnReference) || $request->session()->has('payment_reference');
+
+        if ($registrationOpen && ! $returningFromPayment && $runner && ! $runner->hasCompleteProfile()) {
+            return $this->requireRunnerProfile([
+                'event' => $event?->slug,
+                'race' => $request->query('race'),
+                'kit' => $request->query('kit'),
+            ]);
+        }
 
         if ($registrationOpen && ($event?->is_published ?? true) && $races->isNotEmpty()
             && ! $runner && ! $request->boolean('guest')
@@ -128,25 +137,20 @@ class PublicSiteController
                 ->header('Cache-Control', 'private, no-store');
         }
 
-        $savedRunnerDetails = $runner && $registrationOpen && blank($returnReference) && ! $request->session()->has('payment_reference')
-            ? array_filter([
-                'firstName' => $runner->first_name,
-                'lastName' => $runner->last_name,
-                'email' => $runner->email,
-                'phone' => $runner->phone,
-                'birthDate' => $runner->birth_date?->toDateString(),
-                'gender' => $runner->gender,
-                'teamName' => $runner->team_name,
-            ], fn ($value) => filled($value))
-            : [];
+        $canUseSavedRunnerDetails = $runner !== null && $registrationOpen && ! $returningFromPayment;
 
-        return response()->view('site.register', compact('event', 'eventName', 'registrationOpen', 'races', 'returnReference', 'savedRunnerDetails'))
+        return response()->view('site.register', compact('event', 'eventName', 'registrationOpen', 'races', 'returnReference', 'canUseSavedRunnerDetails'))
             ->header('Cache-Control', 'private, no-store');
     }
 
     public function storeRegistration(Request $request, PublicRegistrationController $registrations, EasyKashCashApi $easyKash, RegistrationEmailService $registrationEmails, BibNumberService $bibNumbers)
     {
-        $response = $registrations->store($request, $easyKash, $registrationEmails, $bibNumbers, auth('runner')->id());
+        $runner = auth('runner')->user();
+        if ($runner && ! $runner->hasCompleteProfile()) {
+            return $this->requireRunnerProfile($request->only(['event', 'race', 'kit']));
+        }
+
+        $response = $registrations->store($request, $easyKash, $registrationEmails, $bibNumbers, $runner?->getKey());
 
         if (! $response instanceof JsonResponse) {
             return back()->withInput()->with('payment_error', 'We could not start the registration. Please try again.');
@@ -175,5 +179,12 @@ class PublicSiteController
             ->withInput($request->except(['idFile', 'terms']))
             ->with('payment_error', data_get($payload, 'message', 'We could not start payment. Please contact the race team.'))
             ->with('payment_reference', data_get($payload, 'data.reference'));
+    }
+
+    private function requireRunnerProfile(array $selection)
+    {
+        $context = array_filter($selection, fn ($value) => is_string($value) && $value !== '');
+
+        return redirect()->route('runner.account', [...$context, 'return' => 'registration']);
     }
 }

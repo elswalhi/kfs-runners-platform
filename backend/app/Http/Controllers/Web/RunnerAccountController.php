@@ -6,6 +6,7 @@ use App\Mail\RunnerSignInCodeMail;
 use App\Models\Event;
 use App\Models\RunnerAccount;
 use App\Models\RunnerEmailChallenge;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Throwable;
@@ -207,10 +209,6 @@ class RunnerAccountController
         // The session guard regenerates the session ID and CSRF token at login.
         Auth::guard('runner')->login($runner);
 
-        if ($runner->wasRecentlyCreated) {
-            return redirect()->route('runner.account', [...$this->contextParameters($context), 'setup' => 1]);
-        }
-
         return $this->redirectAfterLogin($context);
     }
 
@@ -234,7 +232,8 @@ class RunnerAccountController
             ...$context,
             'runner' => $runner,
             'registrations' => $registrations,
-            'onboarding' => $request->boolean('setup'),
+            'onboarding' => ! $runner->hasCompleteProfile(),
+            'hasSavedId' => $runner->savedIdNumber() !== null,
             'returnUrl' => $this->registrationUrl($context),
         ])->header('Cache-Control', 'private, no-store');
     }
@@ -247,16 +246,46 @@ class RunnerAccountController
             return redirect()->route('runner.login', $this->contextParameters($context));
         }
 
-        $runner->update($request->validate([
-            'first_name' => ['nullable', 'string', 'max:100'],
-            'last_name' => ['nullable', 'string', 'max:100'],
-            'phone' => ['nullable', 'string', 'max:32', 'regex:/\A\+?[\p{Nd} ().-]+\z/u'],
-            'birth_date' => ['nullable', 'date_format:Y-m-d', 'before:today'],
-            'gender' => ['nullable', Rule::in(['male', 'female'])],
+        $validator = Validator::make($request->all(), [
+            'first_name' => ['required', 'string', 'min:2', 'max:100'],
+            'last_name' => ['required', 'string', 'min:2', 'max:100'],
+            'phone' => ['required', 'string', 'max:32', 'regex:/\A\+?(?:[ ().-]*\p{Nd}){7,15}[ ().-]*\z/u'],
+            'birth_date' => ['required', 'date_format:Y-m-d', 'before:today'],
+            'gender' => ['required', Rule::in(['male', 'female'])],
+            'id_number' => [Rule::requiredIf($runner->savedIdNumber() === null), 'nullable', 'string', 'min:4', 'max:100'],
             'team_name' => ['nullable', 'string', 'max:120'],
-        ]));
+        ], [], ['id_number' => __('National ID / Passport')]);
+
+        if ($validator->fails()) {
+            return redirect()->route('runner.account', $this->contextParameters($context))
+                ->withErrors($validator)
+                ->withInput($request->only(['first_name', 'last_name', 'phone', 'birth_date', 'gender', 'team_name']));
+        }
+
+        $details = $validator->validated();
+        if (blank($details['id_number'] ?? null)) {
+            unset($details['id_number']);
+        }
+        $runner->update($details);
 
         return $this->redirectAfterLogin($context)->with('status', __('Your runner profile has been saved.'));
+    }
+
+    public function registrationDetails(): JsonResponse
+    {
+        $runner = Auth::guard('runner')->user();
+        abort_unless($runner?->hasCompleteProfile(), 403);
+
+        return response()->json([
+            'firstName' => $runner->first_name,
+            'lastName' => $runner->last_name,
+            'email' => $runner->email,
+            'phone' => $runner->phone,
+            'birthDate' => $runner->birth_date->toDateString(),
+            'gender' => $runner->gender,
+            'idNumber' => $runner->savedIdNumber(),
+            'teamName' => $runner->team_name,
+        ])->header('Cache-Control', 'private, no-store');
     }
 
     public function logout(Request $request): RedirectResponse
@@ -265,7 +294,7 @@ class RunnerAccountController
         Auth::guard('runner')->logout();
         $request->session()->regenerate(true);
 
-        return redirect()->to($this->registrationUrl($context, guest: true) ?? route('home'));
+        return redirect()->to($this->registrationUrl($context) ?? route('home'));
     }
 
     private function authPage(array $context, ?RunnerEmailChallenge $challenge = null): Response
@@ -283,6 +312,11 @@ class RunnerAccountController
 
     private function redirectAfterLogin(array $context): RedirectResponse
     {
+        $runner = Auth::guard('runner')->user();
+        if (! $runner?->hasCompleteProfile()) {
+            return redirect()->route('runner.account', $this->contextParameters($context));
+        }
+
         return redirect()->to($this->registrationUrl($context) ?? route('runner.account'));
     }
 

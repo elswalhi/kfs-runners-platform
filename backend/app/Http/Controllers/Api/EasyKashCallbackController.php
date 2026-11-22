@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Models\Registration;
 use App\Models\Team;
+use App\Models\BusBooking;
 use App\Services\BibNumberService;
 use App\Services\EasyKashCashApi;
 use App\Services\RegistrationEmailService;
@@ -43,6 +44,10 @@ class EasyKashCallbackController extends Controller
 
         if (! $payment) {
             return response()->json(['message' => 'Payment reference was not found.'], 404);
+        }
+
+        if ($payment->bus_booking_id && ! hash_equals((string) $payment->transaction_reference, $customerReference)) {
+            return response()->json(['message' => 'Payment reference does not match.'], 422);
         }
 
         if ((float) $amount < (float) $payment->amount) {
@@ -116,12 +121,16 @@ class EasyKashCallbackController extends Controller
                 }
             }
 
-            if ($paymentStatus === 'paid') {
+            if ($lockedPayment->bus_booking_id) {
+                BusBooking::query()->whereKey($lockedPayment->bus_booking_id)->update(['payment_status' => $paymentStatus]);
+            }
+
+            if ($paymentStatus === 'paid' && ! $lockedPayment->bus_booking_id) {
                 $bibNumbers->assignForPaidPayment($lockedPayment);
             }
         });
 
-        if ($paymentStatus === 'paid') {
+        if ($paymentStatus === 'paid' && ! $payment->bus_booking_id) {
             $registrationEmails->sendPaidPaymentConfirmation($payment);
         }
 
