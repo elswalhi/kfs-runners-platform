@@ -13,7 +13,7 @@
             <p style="line-height:1.7;">أهلًا {{ $booking->name }}، تم تأكيد دفع حجزك. احتفظ برقم الحجز للرجوع إليه.</p>
             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
                 <tr><td style="padding:12px 0;border-bottom:1px solid #e7eee9;">الاسم</td><td style="text-align:left;font-weight:bold;">{{ $booking->name }}</td></tr>
-                <tr><td style="padding:12px 0;border-bottom:1px solid #e7eee9;">رقم الحجز</td><td dir="ltr" style="text-align:left;font-weight:bold;">{{ $booking->reference }}</td></tr>
+                <tr><td style="padding:12px 0;border-bottom:1px solid #e7eee9;">رقم الحجز</td><td dir="ltr" style="text-align:left;font-weight:bold;">{{ $booking->booking_number }}</td></tr>
                 <tr><td style="padding:12px 0;border-bottom:1px solid #e7eee9;">المبلغ المدفوع</td><td dir="ltr" style="text-align:left;font-weight:bold;">{{ number_format((float) $booking->amount, 2) }} EGP</td></tr>
                 <tr><td style="padding:12px 0;">حالة الدفع</td><td style="text-align:left;font-weight:bold;color:#17835f;">مدفوع</td></tr>
             </table>

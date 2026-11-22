@@ -146,7 +146,7 @@ class RegistrationEmailService
                 $team = Team::query()->with('registrations.race.event')->find($recipientIds['team_id']);
                 $sent = $team ? $this->sendTeam($team) : false;
             } elseif ($recipientIds['bus_booking_id']) {
-                $booking = BusBooking::query()->find($recipientIds['bus_booking_id']);
+                $booking = BusBooking::withTrashed()->find($recipientIds['bus_booking_id']);
                 if ($booking && $booking->payment_status === 'paid'
                     && filter_var($booking->email, FILTER_VALIDATE_EMAIL)
                     && config('mail.default') !== 'log') {

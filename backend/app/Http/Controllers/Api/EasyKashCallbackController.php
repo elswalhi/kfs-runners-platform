@@ -122,7 +122,7 @@ class EasyKashCallbackController extends Controller
             }
 
             if ($lockedPayment->bus_booking_id) {
-                BusBooking::query()->whereKey($lockedPayment->bus_booking_id)->update(['payment_status' => $paymentStatus]);
+                BusBooking::withTrashed()->whereKey($lockedPayment->bus_booking_id)->update(['payment_status' => $paymentStatus]);
             }
 
             if ($paymentStatus === 'paid' && ! $lockedPayment->bus_booking_id) {

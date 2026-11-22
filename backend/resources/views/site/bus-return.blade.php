@@ -9,7 +9,7 @@
         <section class="runner-card" style="max-width:620px;margin:auto" aria-live="polite">
             <h1 class="runner-title">{{ __('Bus booking') }}</h1>
             @if ($booking)
-                <p class="runner-description">{{ __('Booking reference') }}: <bdi>{{ $booking->reference }}</bdi></p>
+                <p class="runner-description">{{ __('Booking reference') }}: <bdi>{{ $booking->booking_number }}</bdi></p>
                 <p class="runner-description">{{ __('Amount') }}: {{ number_format($booking->amount, 2) }} EGP</p>
                 <p class="runner-description">{{ __('Payment status') }}: <strong id="bus-payment-status">{{ __($booking->payment_status === 'paid' ? 'Paid' : ($booking->payment_status === 'failed' ? 'Failed' : 'Pending')) }}</strong></p>
                 @if ($voucher)

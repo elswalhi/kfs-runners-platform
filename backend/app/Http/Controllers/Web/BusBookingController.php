@@ -82,7 +82,7 @@ class BusBookingController
     {
         $reference = $request->query('customerReference');
         $booking = is_string($reference)
-            ? BusBooking::query()->where('reference', $reference)->first()
+            ? BusBooking::withTrashed()->where('reference', $reference)->first()
             : null;
         $voucher = $request->query('voucher');
         $voucher = is_string($voucher) && preg_match('/\A[a-zA-Z0-9-]{1,100}\z/', $voucher) ? $voucher : null;
@@ -94,7 +94,7 @@ class BusBookingController
 
     public function status(string $reference)
     {
-        $booking = BusBooking::query()->where('reference', $reference)->firstOrFail();
+        $booking = BusBooking::withTrashed()->where('reference', $reference)->firstOrFail();
         return response()->json(['status' => $booking->payment_status])
             ->header('Cache-Control', 'private, no-store');
     }

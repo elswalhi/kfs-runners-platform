@@ -60,6 +60,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/', [AdminWebController::class, 'dashboard'])->name('dashboard');
         Route::get('/bus-bookings', [AdminBusBookingController::class, 'index'])->name('bus.index');
         Route::put('/bus-bookings/price', [AdminBusBookingController::class, 'updatePrice'])->name('bus.price');
+        Route::delete('/bus-bookings/{booking}', [AdminBusBookingController::class, 'destroy'])->name('bus.destroy');
+        Route::patch('/bus-bookings/{booking}/restore', [AdminBusBookingController::class, 'restore'])->name('bus.restore');
         Route::get('/export-overview', [AdminWebController::class, 'exportOverview'])->name('export-overview');
         Route::post('/registrations/clear-all', [AdminWebController::class, 'clearAllRegistrations'])->middleware('throttle:1,1')->name('registrations.clear-all');
         Route::get('/registrations', [AdminWebController::class, 'registrations'])->name('registrations');
