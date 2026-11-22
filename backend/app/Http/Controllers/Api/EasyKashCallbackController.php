@@ -130,7 +130,7 @@ class EasyKashCallbackController extends Controller
             }
         });
 
-        if ($paymentStatus === 'paid' && ! $payment->bus_booking_id) {
+        if ($paymentStatus === 'paid') {
             $registrationEmails->sendPaidPaymentConfirmation($payment);
         }
 
