@@ -51,6 +51,7 @@
         <label>{{ __('From date') }}<input class="stitch-input" type="date" name="from" value="{{ request('from') }}"></label>
         <label>{{ __('To date') }}<input class="stitch-input" type="date" name="to" value="{{ request('to') }}"></label>
         <button class="stitch-btn stitch-btn-primary" type="submit">{{ __('Filter') }}</button>
+        <button class="stitch-btn stitch-btn-secondary" type="submit" formaction="{{ route('admin.bus.export') }}">{{ __('Export CSV') }}</button>
         <a class="stitch-btn stitch-btn-secondary" href="{{ route('admin.bus.index', $deleted ? ['tab' => 'deleted'] : []) }}">{{ __('Reset') }}</a>
     </form>
     <div class="stitch-table-scroll">
