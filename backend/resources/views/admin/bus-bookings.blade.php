@@ -71,7 +71,7 @@
             <tbody>
                 @forelse ($bookings as $booking)
                     <tr>
-                        <td><bdi>{{ $booking->booking_number }}</bdi></td><td>{{ $booking->name }}</td><td>{{ $booking->email ?: '—' }}</td><td><bdi>{{ $booking->phone }}</bdi></td><td>EGP {{ number_format($booking->amount, 2) }}</td><td>{{ __(ucfirst($booking->payment_status)) }}<br><small>{{ $booking->payment?->provider === 'wallet' ? __('Wallet transfer') : __('EasyKash') }}</small></td><td>{{ $booking->created_at->format('d M Y, H:i') }}</td>
+                        <td><a href="{{ route('admin.bus.show', $booking->id) }}"><bdi>{{ $booking->booking_number }}</bdi></a></td><td>{{ $booking->name }}</td><td>{{ $booking->email ?: '—' }}</td><td><bdi>{{ $booking->phone }}</bdi></td><td>EGP {{ number_format($booking->amount, 2) }}</td><td>{{ __(ucfirst($booking->payment_status)) }}<br><small>{{ $booking->payment?->provider === 'wallet' ? __('Wallet transfer') : __('EasyKash') }}</small></td><td>{{ $booking->created_at->format('d M Y, H:i') }}</td>
                         <td>
                             @if ($booking->receipt_path)
                                 <button type="button" class="bus-receipt-preview" data-receipt-src="{{ route('admin.bus.receipt.preview', $booking->id) }}" data-receipt-number="{{ $booking->booking_number }}" aria-label="{{ __('Enlarge transfer image') }} {{ $booking->booking_number }}">

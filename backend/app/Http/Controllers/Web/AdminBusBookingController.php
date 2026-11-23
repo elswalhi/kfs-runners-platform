@@ -12,6 +12,14 @@ use Illuminate\Validation\Rule;
 
 class AdminBusBookingController
 {
+    public function show(int $booking)
+    {
+        $booking = BusBooking::withTrashed()->with('payment')->findOrFail($booking);
+
+        return response()->view('admin.bus-booking-show', compact('booking'))
+            ->header('Cache-Control', 'private, no-store');
+    }
+
     public function index(Request $request)
     {
         $price = (float) AppSetting::get('zayed_bus_price', 350);
