@@ -12,6 +12,12 @@
     .bus-tabs { display: flex; gap: 8px; padding: 18px 20px 0; flex-wrap: wrap; }
     .bus-tabs a[aria-current="page"] { color: #fff; background: #064b3e; }
     .bus-action { font-size: 13px; }
+    .bus-receipt-preview { display: inline-flex; padding: 3px; border: 1px solid #cfddd5; border-radius: 8px; background: #fff; cursor: zoom-in; }
+    .bus-receipt-preview img { display: block; width: 64px; height: 64px; object-fit: cover; border-radius: 5px; }
+    .bus-receipt-dialog { max-width: min(940px, 95vw); max-height: 92vh; padding: 18px; border: 0; border-radius: 12px; background: #fff; color: #123d34; }
+    .bus-receipt-dialog::backdrop { background: rgba(0, 20, 17, .8); }
+    .bus-receipt-dialog header { display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-bottom: 12px; }
+    .bus-receipt-dialog img { display: block; max-width: 100%; max-height: 75vh; width: auto; height: auto; margin: auto; object-fit: contain; }
 </style>
 @endpush
 @section('content')
@@ -61,11 +67,20 @@
     </form>
     <div class="stitch-table-scroll">
         <table class="stitch-table">
-            <thead><tr><th>{{ __('Booking reference') }}</th><th>{{ __('Full name') }}</th><th>{{ __('Email address') }}</th><th>{{ __('Phone number') }}</th><th>{{ __('Amount') }}</th><th>{{ __('Payment status') }}</th><th>{{ __('Date') }}</th><th>{{ __('Action') }}</th></tr></thead>
+            <thead><tr><th>{{ __('Booking reference') }}</th><th>{{ __('Full name') }}</th><th>{{ __('Email address') }}</th><th>{{ __('Phone number') }}</th><th>{{ __('Amount') }}</th><th>{{ __('Payment status') }}</th><th>{{ __('Date') }}</th><th>{{ __('Transfer receipt image') }}</th><th>{{ __('Action') }}</th></tr></thead>
             <tbody>
                 @forelse ($bookings as $booking)
                     <tr>
                         <td><bdi>{{ $booking->booking_number }}</bdi></td><td>{{ $booking->name }}</td><td>{{ $booking->email ?: '—' }}</td><td><bdi>{{ $booking->phone }}</bdi></td><td>EGP {{ number_format($booking->amount, 2) }}</td><td>{{ __(ucfirst($booking->payment_status)) }}<br><small>{{ $booking->payment?->provider === 'wallet' ? __('Wallet transfer') : __('EasyKash') }}</small></td><td>{{ $booking->created_at->format('d M Y, H:i') }}</td>
+                        <td>
+                            @if ($booking->receipt_path)
+                                <button type="button" class="bus-receipt-preview" data-receipt-src="{{ route('admin.bus.receipt.preview', $booking->id) }}" data-receipt-number="{{ $booking->booking_number }}" aria-label="{{ __('Enlarge transfer image') }} {{ $booking->booking_number }}">
+                                    <img src="{{ route('admin.bus.receipt.preview', $booking->id) }}" alt="{{ __('Transfer receipt image') }} {{ $booking->booking_number }}" loading="lazy">
+                                </button>
+                            @else
+                                —
+                            @endif
+                        </td>
                         <td>
                             @if ($booking->receipt_path)
                                 <a class="stitch-btn stitch-btn-secondary bus-action" href="{{ route('admin.bus.receipt', $booking->id) }}">{{ __('Download transfer image') }}</a>
@@ -81,12 +96,42 @@
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="8">{{ __('No bus bookings found.') }}</td></tr>
+                    <tr><td colspan="9">{{ __('No bus bookings found.') }}</td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
     <div class="stitch-pagination-wrap">{{ $bookings->links() }}</div>
 </section>
+<dialog id="bus-receipt-dialog" class="bus-receipt-dialog" aria-labelledby="bus-receipt-title">
+    <header>
+        <strong id="bus-receipt-title">{{ __('Transfer receipt image') }}</strong>
+        <button type="button" class="stitch-btn stitch-btn-secondary" id="bus-receipt-close">{{ __('Close') }}</button>
+    </header>
+    <img id="bus-receipt-image" alt="">
+</dialog>
 </div>
 @endsection
+@push('scripts')
+<script>
+    (() => {
+        const dialog = document.getElementById('bus-receipt-dialog');
+        const image = document.getElementById('bus-receipt-image');
+        const title = document.getElementById('bus-receipt-title');
+        const label = @js(__('Transfer receipt image'));
+        document.querySelectorAll('.bus-receipt-preview').forEach(button => {
+            button.addEventListener('click', () => {
+                image.src = button.dataset.receiptSrc;
+                image.alt = label + ' ' + button.dataset.receiptNumber;
+                title.textContent = label + ' · ' + button.dataset.receiptNumber;
+                dialog.showModal();
+            });
+        });
+        document.getElementById('bus-receipt-close').addEventListener('click', () => dialog.close());
+        dialog.addEventListener('click', event => {
+            if (event.target === dialog) dialog.close();
+        });
+        dialog.addEventListener('close', () => { image.removeAttribute('src'); });
+    })();
+</script>
+@endpush

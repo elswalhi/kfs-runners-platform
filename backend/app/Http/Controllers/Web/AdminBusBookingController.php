@@ -134,14 +134,32 @@ class AdminBusBookingController
 
     public function receipt(int $booking)
     {
+        $record = $this->receiptBooking($booking);
+
+        return Storage::disk('local')->download($record->receipt_path, $record->booking_number.'-receipt.'.pathinfo($record->receipt_path, PATHINFO_EXTENSION), [
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
+    public function receiptPreview(int $booking)
+    {
+        $record = $this->receiptBooking($booking);
+
+        return response()->file(Storage::disk('local')->path($record->receipt_path), [
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+            'Content-Security-Policy' => "default-src 'none'; sandbox",
+        ]);
+    }
+
+    private function receiptBooking(int $booking): BusBooking
+    {
         $record = BusBooking::withTrashed()->findOrFail($booking);
         $path = $record->receipt_path;
         abort_unless(is_string($path) && preg_match('/\Abus-receipts\/[A-Za-z0-9]+\.(?:jpg|jpeg|png|webp)\z/i', $path), 404);
         abort_unless(Storage::disk('local')->exists($path), 404);
 
-        return Storage::disk('local')->download($path, $record->booking_number.'-receipt.'.pathinfo($path, PATHINFO_EXTENSION), [
-            'Cache-Control' => 'private, no-store',
-            'X-Content-Type-Options' => 'nosniff',
-        ]);
+        return $record;
     }
 }
