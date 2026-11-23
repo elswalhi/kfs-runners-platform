@@ -32,8 +32,8 @@
             <div><dt>{{ __('Payment status') }}</dt><dd>{{ __(ucfirst($booking->payment_status)) }}</dd></div>
             <div><dt>{{ __('Date') }}</dt><dd>{{ $booking->created_at->format('d M Y, H:i') }}</dd></div>
         </dl>
-        @if (! $booking->trashed() && $booking->payment?->provider === 'wallet' && in_array($booking->payment_status, ['pending', 'paid'], true))
-            <p>{{ __('Check your wallet and the transfer image before confirming payment.') }}</p>
+        @if (! $booking->trashed() && in_array($booking->payment?->provider, ['wallet', 'manual'], true) && in_array($booking->payment_status, ['pending', 'paid'], true))
+            @if ($booking->payment?->provider === 'wallet')<p>{{ __('Check your wallet and the transfer image before confirming payment.') }}</p>@endif
             <form method="POST" action="{{ route('admin.bus.payment', $booking->id) }}" onsubmit="return confirm(@js(__('Update this booking payment status?')))">
                 @csrf @method('PATCH')
                 <input type="hidden" name="status" value="{{ $booking->payment_status === 'paid' ? 'pending' : 'paid' }}">

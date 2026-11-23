@@ -43,6 +43,20 @@
         <button class="stitch-btn stitch-btn-primary" type="submit">{{ __('Save price') }}</button>
     </form>
 </section>
+<details class="stitch-table-panel" style="padding:24px;margin-bottom:24px" @if($errors->manualBooking->any()) open @endif>
+    <summary class="stitch-panel-title" style="cursor:pointer">+ {{ __('Add bus booking manually') }}</summary>
+    <p class="stitch-panel-subtitle">{{ __('Only the name is required. New bookings default to pending and the current ticket price.') }}</p>
+    @if($errors->manualBooking->any())<div role="alert">@foreach($errors->manualBooking->all() as $error)<p>{{ $error }}</p>@endforeach</div>@endif
+    <form method="POST" action="{{ route('admin.bus.store') }}" class="bus-filters" style="padding:16px 0 0">
+        @csrf
+        <label>{{ __('Full name') }} *<input class="stitch-input" name="name" maxlength="150" value="{{ old('name') }}" required></label>
+        <label>{{ __('Phone number') }}<input class="stitch-input" name="phone" maxlength="32" value="{{ old('phone') }}"></label>
+        <label>{{ __('Email address') }}<input class="stitch-input" type="email" name="email" maxlength="190" value="{{ old('email') }}"></label>
+        <label>{{ __('Amount') }} (EGP)<input class="stitch-input" type="number" name="amount" min="0" max="1000000" step="0.01" placeholder="{{ number_format($price, 2, '.', '') }}" value="{{ old('amount') }}"></label>
+        <label>{{ __('Payment status') }}<select class="stitch-select" name="status"><option value="pending" @selected(old('status', 'pending') === 'pending')>{{ __('Pending') }}</option><option value="paid" @selected(old('status') === 'paid')>{{ __('Confirmed') }}</option></select></label>
+        <button class="stitch-btn stitch-btn-primary" type="submit">{{ __('Add booking') }}</button>
+    </form>
+</details>
 <section class="stitch-table-panel">
     <nav class="bus-tabs" aria-label="{{ __('Bus bookings') }}">
         <a class="stitch-btn stitch-btn-secondary" href="{{ route('admin.bus.index') }}" @if (! $deleted) aria-current="page" @endif>{{ __('Active bookings') }}</a>
@@ -54,7 +68,7 @@
         <label>{{ __('Payment status') }}
             <select class="stitch-select" name="status">
                 <option value="">{{ __('All payment statuses') }}</option>
-                @foreach (['pending' => 'Pending', 'paid' => 'Paid', 'failed' => 'Failed', 'refunded' => 'Refunded'] as $value => $label)
+                @foreach (['paid' => 'Confirmed', 'pending' => 'Pending'] as $value => $label)
                     <option value="{{ $value }}" @selected(request('status') === $value)>{{ __($label) }}</option>
                 @endforeach
             </select>
@@ -71,7 +85,7 @@
             <tbody>
                 @forelse ($bookings as $booking)
                     <tr>
-                        <td><a href="{{ route('admin.bus.show', $booking->id) }}"><bdi>{{ $booking->booking_number }}</bdi></a></td><td>{{ $booking->name }}</td><td>{{ $booking->email ?: '—' }}</td><td><bdi>{{ $booking->phone }}</bdi></td><td>EGP {{ number_format($booking->amount, 2) }}</td><td>{{ __(ucfirst($booking->payment_status)) }}<br><small>{{ $booking->payment?->provider === 'wallet' ? __('Wallet transfer') : __('EasyKash') }}</small></td><td>{{ $booking->created_at->format('d M Y, H:i') }}</td>
+                        <td><a href="{{ route('admin.bus.show', $booking->id) }}"><bdi>{{ $booking->booking_number }}</bdi></a></td><td>{{ $booking->name }}</td><td>{{ $booking->email ?: '—' }}</td><td><bdi>{{ $booking->phone ?: '—' }}</bdi></td><td>EGP {{ number_format($booking->amount, 2) }}</td><td>{{ __(ucfirst($booking->payment_status)) }}<br><small>{{ match ($booking->payment?->provider) { 'wallet' => __('Wallet transfer'), 'manual' => __('Manual booking'), default => __('EasyKash') } }}</small></td><td>{{ $booking->created_at->format('d M Y, H:i') }}</td>
                         <td>
                             @if ($booking->receipt_path)
                                 <button type="button" class="bus-receipt-preview" data-receipt-src="{{ route('admin.bus.receipt.preview', $booking->id) }}" data-receipt-number="{{ $booking->booking_number }}" aria-label="{{ __('Enlarge transfer image') }} {{ $booking->booking_number }}">
@@ -88,7 +102,7 @@
                             @if ($deleted)
                                 <form method="POST" action="{{ route('admin.bus.restore', $booking->id) }}">@csrf @method('PATCH')<button class="stitch-btn stitch-btn-secondary bus-action" type="submit">{{ __('Restore') }}</button></form>
                             @else
-                                @if ($booking->payment?->provider === 'wallet' && in_array($booking->payment_status, ['pending', 'paid'], true))
+                                @if (in_array($booking->payment?->provider, ['wallet', 'manual'], true) && in_array($booking->payment_status, ['pending', 'paid'], true))
                                     <form method="POST" action="{{ route('admin.bus.payment', $booking) }}" onsubmit="return confirm(@js(__('Update this booking payment status?')))">@csrf @method('PATCH')<input type="hidden" name="status" value="{{ $booking->payment_status === 'paid' ? 'pending' : 'paid' }}"><button class="stitch-btn stitch-btn-secondary bus-action" type="submit">{{ $booking->payment_status === 'paid' ? __('Mark pending') : __('Confirm payment') }}</button></form>
                                 @endif
                                 <form method="POST" action="{{ route('admin.bus.destroy', $booking) }}" onsubmit="return confirm(@js(__('Move this booking to deleted?')))">@csrf @method('DELETE')<button class="stitch-btn stitch-btn-secondary bus-action" type="submit">{{ __('Delete') }}</button></form>

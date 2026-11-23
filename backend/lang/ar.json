@@ -532,6 +532,7 @@
     "Permanently deletes registrations, teams, payment records, and uploaded runner documents. Real payments are not refunded. Races and settings remain.": "سيحذف التسجيلات والفرق وسجلات الدفع ومستندات المتسابقين نهائيًا. لن تُسترد المدفوعات الفعلية. ستبقى السباقات والإعدادات كما هي.",
     "Type DELETE ALL to confirm": "اكتب DELETE ALL للتأكيد",
     "Pending": "قيد الانتظار",
+    "Confirmed": "مؤكد",
     "Failed": "فشل",
     "Refunded": "مسترد",
     "KFS RUNNERS · EVENT ARCHIVE": "أرشيف فعاليات KFS RUNNERS",
@@ -696,5 +697,10 @@
     "Booking details": "تفاصيل الحجز",
     "This booking has been deleted. Restore it before changing its payment status.": "تم حذف هذا الحجز. استعده قبل تغيير حالة الدفع.",
     "Check your wallet and the transfer image before confirming payment.": "راجع محفظتك وصورة التحويل قبل تأكيد الدفع.",
-    "No transfer image available.": "لا توجد صورة تحويل متاحة."
+    "No transfer image available.": "لا توجد صورة تحويل متاحة.",
+    "Add bus booking manually": "إضافة حجز باص يدويًا",
+    "Only the name is required. New bookings default to pending and the current ticket price.": "الاسم فقط مطلوب. الحجز الجديد قيد الانتظار وبسعر التذكرة الحالي افتراضيًا.",
+    "Add booking": "إضافة الحجز",
+    "Manual booking": "حجز يدوي",
+    "Bus booking added.": "تمت إضافة حجز الباص."
 }

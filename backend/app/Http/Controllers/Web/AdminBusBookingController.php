@@ -4,14 +4,46 @@ namespace App\Http\Controllers\Web;
 
 use App\Models\AppSetting;
 use App\Models\BusBooking;
+use App\Models\Payment;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class AdminBusBookingController
 {
+    public function store(Request $request)
+    {
+        $data = $request->validateWithBag('manualBooking', [
+            'name' => ['required', 'string', 'max:150', 'regex:/\p{L}/u'],
+            'phone' => ['nullable', 'string', 'max:32'],
+            'email' => ['nullable', 'email', 'max:190'],
+            'amount' => ['nullable', 'numeric', 'min:0', 'max:1000000', 'decimal:0,2'],
+            'status' => ['nullable', Rule::in(['paid', 'pending'])],
+        ]);
+        DB::transaction(function () use ($data) {
+            $amount = $data['amount'] ?? AppSetting::get('zayed_bus_price', 350);
+            $status = $data['status'] ?? 'pending';
+            $booking = BusBooking::create([
+                'reference' => 'BUS-'.strtoupper(Str::random(24)),
+                'name' => trim($data['name']),
+                'phone' => $data['phone'] ?? '',
+                'email' => $data['email'] ?? null,
+                'amount' => $amount,
+                'payment_status' => $status,
+            ]);
+            Payment::create([
+                'bus_booking_id' => $booking->id, 'provider' => 'manual', 'amount' => $amount,
+                'currency' => 'EGP', 'status' => $status, 'transaction_reference' => $booking->reference,
+                'verified_at' => $status === 'paid' ? now() : null,
+            ]);
+        });
+
+        return redirect()->route('admin.bus.index')->with('success', __('Bus booking added.'));
+    }
+
     public function show(int $booking)
     {
         $booking = BusBooking::withTrashed()->with('payment')->findOrFail($booking);
@@ -121,7 +153,7 @@ class AdminBusBookingController
         $data = $request->validate(['status' => ['required', Rule::in(['paid', 'pending'])]]);
         DB::transaction(function () use ($booking, $data) {
             $payment = $booking->payment()->lockForUpdate()->firstOrFail();
-            abort_unless($payment->provider === 'wallet', 403);
+            abort_unless(in_array($payment->provider, ['wallet', 'manual'], true), 403);
             $booking = BusBooking::query()->lockForUpdate()->findOrFail($booking->id);
             $booking->update(['payment_status' => $data['status']]);
             $payment->update([

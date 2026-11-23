@@ -59,6 +59,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/logout', [AdminWebAuthController::class, 'logout'])->name('logout');
         Route::get('/', [AdminWebController::class, 'dashboard'])->name('dashboard');
         Route::get('/bus-bookings', [AdminBusBookingController::class, 'index'])->name('bus.index');
+        Route::post('/bus-bookings', [AdminBusBookingController::class, 'store'])->name('bus.store');
         Route::get('/bus-bookings/export', [AdminBusBookingController::class, 'export'])->name('bus.export');
         Route::get('/bus-bookings/{booking}', [AdminBusBookingController::class, 'show'])->name('bus.show');
         Route::put('/bus-bookings/price', [AdminBusBookingController::class, 'updatePrice'])->name('bus.price');
