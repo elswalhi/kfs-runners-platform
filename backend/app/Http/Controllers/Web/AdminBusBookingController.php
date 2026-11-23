@@ -7,6 +7,7 @@ use App\Models\BusBooking;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class AdminBusBookingController
@@ -129,5 +130,18 @@ class AdminBusBookingController
         BusBooking::onlyTrashed()->findOrFail($booking)->restore();
 
         return back()->with('success', __('Bus booking restored.'));
+    }
+
+    public function receipt(int $booking)
+    {
+        $record = BusBooking::withTrashed()->findOrFail($booking);
+        $path = $record->receipt_path;
+        abort_unless(is_string($path) && preg_match('/\Abus-receipts\/[A-Za-z0-9]+\.(?:jpg|jpeg|png|webp)\z/i', $path), 404);
+        abort_unless(Storage::disk('local')->exists($path), 404);
+
+        return Storage::disk('local')->download($path, $record->booking_number.'-receipt.'.pathinfo($path, PATHINFO_EXTENSION), [
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 }

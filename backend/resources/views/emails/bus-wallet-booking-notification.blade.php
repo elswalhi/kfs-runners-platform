@@ -10,6 +10,7 @@
         <p>رقم المحفظة المُحوِّلة: <bdi>{{ $booking->phone }}</bdi></p>
         <p>المبلغ: {{ number_format((float) $booking->amount, 2) }} جنيه</p>
         <p>حالة الدفع: في انتظار المراجعة</p>
+        <p><a href="{{ route('admin.bus.receipt', $booking->id) }}">تحميل صورة التحويل بعد تسجيل الدخول</a></p>
         <a href="{{ route('admin.bus.index', ['search' => $booking->booking_number]) }}">عرض الحجز في الداشبورد</a>
     </div>
 </body>

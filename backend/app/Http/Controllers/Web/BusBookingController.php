@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -32,6 +33,7 @@ class BusBookingController
             'name' => ['required', 'string', 'min:2', 'max:150'],
             'phone' => ['required', 'string', 'max:32', 'regex:/\A(?:01[0125][0-9]{8}|\+201[0125][0-9]{8})\z/'],
             'displayed_price' => ['required', 'numeric', 'gt:1'],
+            'receipt' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120', 'dimensions:max_width=8000,max_height=8000'],
         ]);
         if (! preg_match('/\p{L}/u', $data['name'])) {
             return back()->withInput()->withErrors(['name' => __('Please enter a name containing letters.')]);
@@ -40,26 +42,38 @@ class BusBookingController
         if (round((float) $data['displayed_price'], 2) !== round($price, 2)) {
             return back()->withInput()->withErrors(['price' => __('The ticket price has changed. Please review the new price before continuing.')]);
         }
-        unset($data['displayed_price']);
-        $booking = DB::transaction(function () use ($data, $price) {
-            $booking = BusBooking::create([
-                ...$data,
-                'name' => trim($data['name']),
-                'reference' => 'BUS-'.strtoupper(Str::random(24)),
-                'amount' => $price,
-                'payment_status' => 'pending',
-            ]);
-            Payment::create([
-                'bus_booking_id' => $booking->id,
-                'provider' => 'wallet',
-                'amount' => $price,
-                'currency' => 'EGP',
-                'status' => 'pending',
-                'transaction_reference' => $booking->reference,
-            ]);
+        unset($data['displayed_price'], $data['receipt']);
+        $receiptPath = $request->file('receipt')->store('bus-receipts', 'local');
+        if (! is_string($receiptPath)) {
+            return back()->withInput($request->except('receipt'))
+                ->withErrors(['receipt' => __('Could not save the transfer image. Please try again.')]);
+        }
 
-            return $booking;
-        });
+        try {
+            $booking = DB::transaction(function () use ($data, $price, $receiptPath) {
+                $booking = BusBooking::create([
+                    ...$data,
+                    'name' => trim($data['name']),
+                    'reference' => 'BUS-'.strtoupper(Str::random(24)),
+                    'amount' => $price,
+                    'payment_status' => 'pending',
+                    'receipt_path' => $receiptPath,
+                ]);
+                Payment::create([
+                    'bus_booking_id' => $booking->id,
+                    'provider' => 'wallet',
+                    'amount' => $price,
+                    'currency' => 'EGP',
+                    'status' => 'pending',
+                    'transaction_reference' => $booking->reference,
+                ]);
+
+                return $booking;
+            });
+        } catch (Throwable $exception) {
+            Storage::disk('local')->delete($receiptPath);
+            throw $exception;
+        }
 
         try {
             if (config('mail.default') === 'log') {

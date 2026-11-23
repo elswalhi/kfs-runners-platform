@@ -67,6 +67,9 @@
                     <tr>
                         <td><bdi>{{ $booking->booking_number }}</bdi></td><td>{{ $booking->name }}</td><td>{{ $booking->email ?: '—' }}</td><td><bdi>{{ $booking->phone }}</bdi></td><td>EGP {{ number_format($booking->amount, 2) }}</td><td>{{ __(ucfirst($booking->payment_status)) }}<br><small>{{ $booking->payment?->provider === 'wallet' ? __('Wallet transfer') : __('EasyKash') }}</small></td><td>{{ $booking->created_at->format('d M Y, H:i') }}</td>
                         <td>
+                            @if ($booking->receipt_path)
+                                <a class="stitch-btn stitch-btn-secondary bus-action" href="{{ route('admin.bus.receipt', $booking->id) }}">{{ __('Download transfer image') }}</a>
+                            @endif
                             @if ($deleted)
                                 <form method="POST" action="{{ route('admin.bus.restore', $booking->id) }}">@csrf @method('PATCH')<button class="stitch-btn stitch-btn-secondary bus-action" type="submit">{{ __('Restore') }}</button></form>
                             @else

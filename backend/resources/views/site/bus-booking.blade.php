@@ -15,7 +15,7 @@
             @if ($errors->any())
                 <div class="runner-error" role="alert"><ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
             @endif
-            <form class="runner-form" method="POST" action="{{ route('bus.store') }}">
+            <form class="runner-form" method="POST" action="{{ route('bus.store') }}" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="displayed_price" value="{{ number_format($price, 2, '.', '') }}">
                 <div class="runner-field">
@@ -26,6 +26,11 @@
                     <label for="bus-phone">{{ __('Wallet number used for transfer') }}</label>
                     <input id="bus-phone" name="phone" type="tel" dir="ltr" value="{{ old('phone') }}" autocomplete="tel" maxlength="32" placeholder="01012345678" required>
                     <small>{{ __('Use an Egyptian mobile number. Local and +20 formats are accepted.') }}</small>
+                </div>
+                <div class="runner-field">
+                    <label for="bus-receipt">{{ __('Transfer receipt image') }}</label>
+                    <input id="bus-receipt" name="receipt" type="file" accept="image/jpeg,image/png,image/webp" required>
+                    <small>{{ __('Upload a JPG, PNG or WebP image of your transfer, up to 5 MB.') }}</small>
                 </div>
                 <button class="runner-button" type="submit">{{ __('I have transferred — submit booking') }}</button>
             </form>

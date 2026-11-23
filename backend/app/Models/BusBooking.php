@@ -10,7 +10,8 @@ class BusBooking extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['reference', 'name', 'email', 'phone', 'amount', 'payment_status'];
+    protected $fillable = ['reference', 'name', 'email', 'phone', 'amount', 'payment_status', 'receipt_path'];
+    protected $hidden = ['receipt_path'];
 
     protected function casts(): array
     {
