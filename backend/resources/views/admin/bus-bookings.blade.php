@@ -23,6 +23,11 @@
     </div>
     <a class="stitch-btn stitch-btn-secondary" href="{{ route('bus.create') }}" target="_blank" rel="noopener noreferrer">{{ __('Open booking page') }} ↗</a>
 </div>
+<div class="stitch-kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-bottom:24px">
+    <div class="stitch-kpi-card"><div class="stitch-kpi-title">{{ __('Total booking value') }}</div><div class="stitch-kpi-value">EGP {{ number_format($totalAmount, 2) }}</div></div>
+    <div class="stitch-kpi-card"><div class="stitch-kpi-title">{{ __('Confirmed payments') }}</div><div class="stitch-kpi-value">EGP {{ number_format($paidAmount, 2) }}</div></div>
+    <div class="stitch-kpi-card"><div class="stitch-kpi-title">{{ __('Awaiting payment review') }}</div><div class="stitch-kpi-value">EGP {{ number_format($pendingAmount, 2) }}</div></div>
+</div>
 <section class="stitch-table-panel" style="padding:24px;margin-bottom:24px">
     <h2 class="stitch-panel-title">{{ __('Bus ticket price') }}</h2>
     <p class="stitch-panel-subtitle">{{ __('The updated price applies to new bookings.') }}</p>
@@ -60,11 +65,14 @@
             <tbody>
                 @forelse ($bookings as $booking)
                     <tr>
-                        <td><bdi>{{ $booking->booking_number }}</bdi></td><td>{{ $booking->name }}</td><td>{{ $booking->email }}</td><td><bdi>{{ $booking->phone }}</bdi></td><td>EGP {{ number_format($booking->amount, 2) }}</td><td>{{ __(ucfirst($booking->payment_status)) }}</td><td>{{ $booking->created_at->format('d M Y, H:i') }}</td>
+                        <td><bdi>{{ $booking->booking_number }}</bdi></td><td>{{ $booking->name }}</td><td>{{ $booking->email ?: '—' }}</td><td><bdi>{{ $booking->phone }}</bdi></td><td>EGP {{ number_format($booking->amount, 2) }}</td><td>{{ __(ucfirst($booking->payment_status)) }}<br><small>{{ $booking->payment?->provider === 'wallet' ? __('Wallet transfer') : __('EasyKash') }}</small></td><td>{{ $booking->created_at->format('d M Y, H:i') }}</td>
                         <td>
                             @if ($deleted)
                                 <form method="POST" action="{{ route('admin.bus.restore', $booking->id) }}">@csrf @method('PATCH')<button class="stitch-btn stitch-btn-secondary bus-action" type="submit">{{ __('Restore') }}</button></form>
                             @else
+                                @if ($booking->payment?->provider === 'wallet' && in_array($booking->payment_status, ['pending', 'paid'], true))
+                                    <form method="POST" action="{{ route('admin.bus.payment', $booking) }}" onsubmit="return confirm(@js(__('Update this booking payment status?')))">@csrf @method('PATCH')<input type="hidden" name="status" value="{{ $booking->payment_status === 'paid' ? 'pending' : 'paid' }}"><button class="stitch-btn stitch-btn-secondary bus-action" type="submit">{{ $booking->payment_status === 'paid' ? __('Mark pending') : __('Confirm payment') }}</button></form>
+                                @endif
                                 <form method="POST" action="{{ route('admin.bus.destroy', $booking) }}" onsubmit="return confirm(@js(__('Move this booking to deleted?')))">@csrf @method('DELETE')<button class="stitch-btn stitch-btn-secondary bus-action" type="submit">{{ __('Delete') }}</button></form>
                             @endif
                         </td>

@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use App\Mail\RegistrationDetailsMail;
-use App\Mail\BusBookingConfirmationMail;
-use App\Models\BusBooking;
 use App\Models\Payment;
 use App\Models\Registration;
 use App\Models\Team;
@@ -129,7 +127,6 @@ class RegistrationEmailService
             return [
                 'registration_id' => $lockedPayment->registration_id,
                 'team_id' => $lockedPayment->team_id,
-                'bus_booking_id' => $lockedPayment->bus_booking_id,
             ];
         });
 
@@ -145,14 +142,6 @@ class RegistrationEmailService
             } elseif ($recipientIds['team_id']) {
                 $team = Team::query()->with('registrations.race.event')->find($recipientIds['team_id']);
                 $sent = $team ? $this->sendTeam($team) : false;
-            } elseif ($recipientIds['bus_booking_id']) {
-                $booking = BusBooking::withTrashed()->find($recipientIds['bus_booking_id']);
-                if ($booking && $booking->payment_status === 'paid'
-                    && filter_var($booking->email, FILTER_VALIDATE_EMAIL)
-                    && config('mail.default') !== 'log') {
-                    Mail::to($booking->email)->send(new BusBookingConfirmationMail($booking));
-                    $sent = true;
-                }
             }
         } catch (Throwable $exception) {
             Log::warning('Paid KFS registration confirmation email could not be prepared.', [

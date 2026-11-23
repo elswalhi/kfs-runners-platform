@@ -6,6 +6,8 @@ use App\Models\AppSetting;
 use App\Models\BusBooking;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class AdminBusBookingController
 {
@@ -14,11 +16,14 @@ class AdminBusBookingController
         $price = (float) AppSetting::get('zayed_bus_price', 350);
         $filters = $this->validatedFilters($request);
         $deleted = ($filters['tab'] ?? 'active') === 'deleted';
-        $bookings = $this->filteredBookings($filters)->latest()->paginate(25)->withQueryString();
+        $bookings = $this->filteredBookings($filters)->with('payment')->latest()->paginate(25)->withQueryString();
         $paidCount = BusBooking::query()->where('payment_status', 'paid')->count();
         $deletedCount = BusBooking::onlyTrashed()->count();
+        $totalAmount = BusBooking::query()->sum('amount');
+        $paidAmount = BusBooking::query()->where('payment_status', 'paid')->sum('amount');
+        $pendingAmount = BusBooking::query()->where('payment_status', 'pending')->sum('amount');
 
-        return view('admin.bus-bookings', compact('price', 'bookings', 'paidCount', 'deletedCount', 'deleted'));
+        return view('admin.bus-bookings', compact('price', 'bookings', 'paidCount', 'deletedCount', 'deleted', 'totalAmount', 'paidAmount', 'pendingAmount'));
     }
 
     public function export(Request $request)
@@ -100,6 +105,23 @@ class AdminBusBookingController
         $booking->delete();
 
         return back()->with('success', __('Bus booking moved to deleted.'));
+    }
+
+    public function updatePayment(Request $request, BusBooking $booking)
+    {
+        $data = $request->validate(['status' => ['required', Rule::in(['paid', 'pending'])]]);
+        DB::transaction(function () use ($booking, $data) {
+            $payment = $booking->payment()->lockForUpdate()->firstOrFail();
+            abort_unless($payment->provider === 'wallet', 403);
+            $booking = BusBooking::query()->lockForUpdate()->findOrFail($booking->id);
+            $booking->update(['payment_status' => $data['status']]);
+            $payment->update([
+                'status' => $data['status'],
+                'verified_at' => $data['status'] === 'paid' ? now() : null,
+            ]);
+        });
+
+        return back()->with('success', __('Bus payment status updated.'));
     }
 
     public function restore(int $booking)

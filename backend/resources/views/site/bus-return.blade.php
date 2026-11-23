@@ -12,13 +12,15 @@
                 <p class="runner-description">{{ __('Booking reference') }}: <bdi>{{ $booking->booking_number }}</bdi></p>
                 <p class="runner-description">{{ __('Amount') }}: {{ number_format($booking->amount, 2) }} EGP</p>
                 <p class="runner-description">{{ __('Payment status') }}: <strong id="bus-payment-status">{{ __($booking->payment_status === 'paid' ? 'Paid' : ($booking->payment_status === 'failed' ? 'Failed' : 'Pending')) }}</strong></p>
-                @if ($voucher)
+                @if ($wallet)
+                    <p class="runner-description">{{ __('Your booking is saved. Your wallet transfer will be checked by the team before payment is confirmed.') }}</p>
+                @elseif ($voucher)
                     <p class="runner-description">{{ __('Payment code') }}: <strong dir="ltr">{{ $voucher }}</strong></p>
                     <p class="runner-description">{{ __('Use this code with your selected cash payment provider.') }}</p>
                 @endif
-                @if (session('checkout_uncertain'))
+                @if (! $wallet && session('checkout_uncertain'))
                     <p class="runner-description">{{ __('We could not confirm that a payment link was created. Contact the team with your booking reference before booking again.') }}</p>
-                @else
+                @elseif (! $wallet)
                     <p class="runner-description">{{ __('Keep your booking reference. Payment is confirmed when EasyKash sends confirmation.') }}</p>
                 @endif
             @else
