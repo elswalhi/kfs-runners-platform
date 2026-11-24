@@ -785,5 +785,6 @@
     "Name, order number, email or phone": "الاسم أو رقم الطلب أو البريد أو الهاتف",
     "Cancel this order?": "إلغاء هذا الطلب؟",
     "Move this order to deleted?": "نقل هذا الطلب للمحذوفات؟",
-    "No store orders found.": "لا توجد طلبات متجر."
+    "No store orders found.": "لا توجد طلبات متجر.",
+    "All sizes": "كل المقاسات"
 }

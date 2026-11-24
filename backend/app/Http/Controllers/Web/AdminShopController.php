@@ -58,7 +58,7 @@ class AdminShopController
     }
     private function filters(Request $request): array
     {
-        return $request->validate(['tab' => 'nullable|in:active,deleted', 'search' => 'nullable|string|max:190', 'status' => 'nullable|in:pending,paid,failed,refunded', 'from' => 'nullable|date_format:Y-m-d', 'to' => 'nullable|date_format:Y-m-d|after_or_equal:from']);
+        return $request->validate(['tab' => 'nullable|in:active,deleted', 'search' => 'nullable|string|max:190', 'status' => 'nullable|in:pending,paid,failed,refunded', 'size' => 'nullable|string|max:50', 'from' => 'nullable|date_format:Y-m-d', 'to' => 'nullable|date_format:Y-m-d|after_or_equal:from']);
     }
     private function filteredOrders(array $filters): Builder
     {
@@ -70,6 +70,7 @@ class AdminShopController
             });
         }
         if (! empty($filters['status'])) $query->where('payment_status', $filters['status']);
+        if (filled($filters['size'] ?? null)) $query->whereHas('items', fn ($items) => $items->where('size', $filters['size']));
         if (! empty($filters['from'])) $query->whereDate('created_at', '>=', $filters['from']);
         if (! empty($filters['to'])) $query->whereDate('created_at', '<=', $filters['to']);
         return $query;
@@ -83,6 +84,10 @@ class AdminShopController
             'totalAmount' => ShopOrder::sum('total'), 'paidAmount' => ShopOrder::where('payment_status', 'paid')->sum('total'),
             'pendingAmount' => ShopOrder::where('payment_status', 'pending')->where('status', '!=', 'cancelled')->sum('total'),
             'variants' => ShopProductVariant::with('product')->get(),
+            'sizes' => \App\Models\ShopOrderItem::query()->select('size')->distinct()->pluck('size')->sortBy(function ($size) {
+                $order = array_flip(['XXXS', 'XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL']);
+                return [$order[strtoupper(trim($size))] ?? count($order), strtoupper(trim($size))];
+            })->values(),
         ]);
     }
     public function export(Request $request)
@@ -90,10 +95,10 @@ class AdminShopController
         $orders = $this->filteredOrders($this->filters($request))->with('items')->latest()->cursor();
         return response()->streamDownload(function () use ($orders) {
             $out = fopen('php://output', 'w'); fwrite($out, "\xEF\xBB\xBF");
-            fputcsv($out, ['Order', 'Name', 'Email', 'Phone', 'Products', 'Amount EGP', 'Payment status', 'Order status', 'Date']);
+            fputcsv($out, ['Order', 'Name', 'Email', 'Phone', 'Products', 'Sizes', 'Amount EGP', 'Payment status', 'Order status', 'Date']);
             foreach ($orders as $o) {
                 $items = $o->items->map(fn ($i) => "{$i->product_name} ({$i->size}, {$i->color}) x{$i->quantity}")->implode('; ');
-                $row = [$o->id, $o->name, $o->email, $o->phone, $items, $o->total, $o->payment_status, $o->status, $o->created_at?->format('Y-m-d H:i:s')];
+                $row = [$o->id, $o->name, $o->email, $o->phone, $items, $o->items->pluck('size')->implode('; '), $o->total, $o->payment_status, $o->status, $o->created_at?->format('Y-m-d H:i:s')];
                 fputcsv($out, array_map(static fn ($v) => is_string($v) && preg_match('/\A[\s\x00-\x1F]*[=+\-@]/u', $v) ? "'".$v : $v, $row));
             }
             fclose($out);
@@ -119,10 +124,16 @@ class AdminShopController
     }
     public function destroy(ShopOrder $order) { $order->delete(); return back()->with('success', __('Order moved to deleted.')); }
     public function restore(int $order) { ShopOrder::onlyTrashed()->findOrFail($order)->restore(); return back()->with('success', __('Order restored.')); }
-    public function sales()
+    public function sales(Request $request)
     {
+        $data = $request->validate(['size' => 'nullable|string|max:50']);
         $sales = ShopOrder::where('payment_status', 'paid');
-        return view('admin.shop-sales', ['total' => (clone $sales)->sum('total'), 'count' => (clone $sales)->count(), 'pendingWalletCount' => ShopOrder::where('payment_method', 'wallet')->where('payment_status', 'pending')->where('status', '!=', 'cancelled')->count(), 'orders' => $sales->with('items')->latest()->paginate(25)]);
+        if (filled($data['size'] ?? null)) $sales->whereHas('items', fn ($items) => $items->where('size', $data['size']));
+        $sizes = \App\Models\ShopOrderItem::whereHas('order', fn ($order) => $order->where('payment_status', 'paid'))->select('size')->distinct()->pluck('size')->sortBy(function ($size) {
+            $order = array_flip(['XXXS', 'XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL']);
+            return [$order[strtoupper(trim($size))] ?? count($order), strtoupper(trim($size))];
+        })->values();
+        return view('admin.shop-sales', ['total' => (clone $sales)->sum('total'), 'count' => (clone $sales)->count(), 'pendingWalletCount' => ShopOrder::where('payment_method', 'wallet')->where('payment_status', 'pending')->where('status', '!=', 'cancelled')->count(), 'orders' => $sales->with('items')->latest()->paginate(25)->withQueryString(), 'sizes' => $sizes]);
     }
     public function receipt(int $order)
     {

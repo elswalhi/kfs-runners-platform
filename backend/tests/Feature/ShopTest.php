@@ -17,6 +17,20 @@ class ShopTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_size_filter_applies_to_orders_and_export(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => 'admin']));
+        $xs = ShopProductVariant::where('size', 'XS')->firstOrFail();
+        $large = ShopProductVariant::where('size', 'L')->firstOrFail();
+        $this->post(route('admin.shop.orders.store'), ['name' => 'Small Buyer', 'variant_id' => $xs->id, 'payment_status' => 'paid']);
+        $this->post(route('admin.shop.orders.store'), ['name' => 'Large Buyer', 'variant_id' => $large->id, 'payment_status' => 'paid']);
+        $this->get(route('admin.shop.orders', ['size' => 'XS']))->assertOk()->assertSee('Small Buyer')->assertDontSee('Large Buyer');
+        $this->get(route('admin.shop.sales', ['size' => 'XS']))->assertOk()->assertSee('Small Buyer')->assertDontSee('Large Buyer');
+        $csv = $this->get(route('admin.shop.orders.export', ['size' => 'XS']))->streamedContent();
+        $this->assertStringContainsString('Small Buyer', $csv);
+        $this->assertStringNotContainsString('Large Buyer', $csv);
+    }
+
     public function test_admin_can_filter_export_delete_restore_and_add_orders(): void
     {
         $this->actingAs(User::factory()->create(['role' => 'admin']));

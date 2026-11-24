@@ -57,6 +57,7 @@
             @if($deleted)<input type="hidden" name="tab" value="deleted">@endif
             <label class="shop-order-search">{{ __('Search') }}<input class="stitch-input" type="search" name="search" value="{{ request('search') }}" placeholder="{{ __('Name, order number, email or phone') }}"></label>
             <label>{{ __('Payment status') }}<select class="stitch-select" name="status"><option value="">{{ __('All payment statuses') }}</option>@foreach(['paid' => 'Confirmed', 'pending' => 'Pending'] as $value => $label)<option value="{{ $value }}" @selected(request('status') === $value)>{{ __($label) }}</option>@endforeach</select></label>
+            <label>{{ __('Size') }}<select class="stitch-select" name="size"><option value="">{{ __('All sizes') }}</option>@foreach($sizes as $size)<option value="{{ $size }}" @selected(request('size') === $size)>{{ $size }}</option>@endforeach</select></label>
             <label>{{ __('From date') }}<input class="stitch-input" type="date" name="from" value="{{ request('from') }}"></label>
             <label>{{ __('To date') }}<input class="stitch-input" type="date" name="to" value="{{ request('to') }}"></label>
             <button class="stitch-btn stitch-btn-primary" type="submit">{{ __('Filter') }}</button>
@@ -64,11 +65,12 @@
             <a class="stitch-btn stitch-btn-secondary" href="{{ route('admin.shop.orders', $deleted ? ['tab' => 'deleted'] : []) }}">{{ __('Reset') }}</a>
         </form>
         <div class="stitch-table-scroll"><table class="stitch-table">
-            <thead><tr><th>{{ __('Order') }}</th><th>{{ __('Full name') }}</th><th>{{ __('Email address') }}</th><th>{{ __('Phone number') }}</th><th>{{ __('Products') }}</th><th>{{ __('Amount') }}</th><th>{{ __('Payment status') }}</th><th>{{ __('Order status') }}</th><th>{{ __('Date') }}</th><th>{{ __('Transfer receipt image') }}</th><th>{{ __('Action') }}</th></tr></thead>
+            <thead><tr><th>{{ __('Order') }}</th><th>{{ __('Full name') }}</th><th>{{ __('Email address') }}</th><th>{{ __('Phone number') }}</th><th>{{ __('Products') }}</th><th>{{ __('Size') }}</th><th>{{ __('Amount') }}</th><th>{{ __('Payment status') }}</th><th>{{ __('Order status') }}</th><th>{{ __('Date') }}</th><th>{{ __('Transfer receipt image') }}</th><th>{{ __('Action') }}</th></tr></thead>
             <tbody>@forelse($orders as $order)
                 <tr>
                     <td><a href="{{ route('admin.shop.orders.show', $order->id) }}">#{{ $order->id }}</a></td><td>{{ $order->name }}</td><td>{{ $order->email ?: '—' }}</td><td><bdi>{{ $order->phone ?: '—' }}</bdi></td>
-                    <td>@forelse($order->items as $item)<div>{{ $item->product_name }} · {{ $item->size }} · {{ $item->color }} × {{ $item->quantity }}</div>@empty — @endforelse</td>
+                    <td>@forelse($order->items as $item)<div>{{ $item->product_name }} · {{ $item->color }} × {{ $item->quantity }}</div>@empty — @endforelse</td>
+                    <td>@forelse($order->items as $item)<div>{{ $item->size }}</div>@empty — @endforelse</td>
                     <td>EGP {{ number_format($order->total, 2) }}</td><td>{{ __(ucfirst($order->payment_status)) }}<br><small>{{ __($order->payment_method === 'wallet' ? 'Wallet transfer' : ($order->payment_method === 'manual' ? 'Manual booking' : 'EasyKash')) }}</small></td><td>{{ __(ucfirst($order->status)) }}</td><td>{{ $order->created_at->format('d M Y, H:i') }}</td>
                     <td>@if($order->receipt_path)<button type="button" class="shop-receipt-preview" data-receipt-src="{{ route('admin.shop.orders.receipt', $order->id) }}" data-receipt-number="#{{ $order->id }}" aria-label="{{ __('Enlarge transfer image') }} #{{ $order->id }}"><img src="{{ route('admin.shop.orders.receipt', $order->id) }}" alt="{{ __('Transfer receipt image') }} #{{ $order->id }}" loading="lazy"></button>@else — @endif</td>
                     <td><div class="shop-order-actions">
@@ -85,7 +87,7 @@
                         @endif
                     </div></td>
                 </tr>
-            @empty<tr><td colspan="11">{{ __('No store orders found.') }}</td></tr>@endforelse</tbody>
+            @empty<tr><td colspan="12">{{ __('No store orders found.') }}</td></tr>@endforelse</tbody>
         </table></div>
         <div class="stitch-pagination-wrap">{{ $orders->links() }}</div>
     </section>

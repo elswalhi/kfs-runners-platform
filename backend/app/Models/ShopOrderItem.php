@@ -1,4 +1,8 @@
 <?php
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
-class ShopOrderItem extends Model { protected $guarded = []; }
+class ShopOrderItem extends Model
+{
+    protected $guarded = [];
+    public function order() { return $this->belongsTo(ShopOrder::class, 'order_id'); }
+}
