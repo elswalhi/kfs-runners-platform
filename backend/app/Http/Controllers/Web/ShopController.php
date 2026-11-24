@@ -28,7 +28,18 @@ class ShopController
         abort_unless(Storage::disk('public')->exists($path), 404);
         return response()->file(Storage::disk('public')->path($path), ['X-Content-Type-Options' => 'nosniff']);
     }
-    public function show(ShopProduct $product) { abort_unless($product->is_published, 404); return view('site.shop.show', ['product' => $product->load(['images', 'variants'])]); }
+    public function show(ShopProduct $product)
+    {
+        abort_unless($product->is_published, 404);
+        $product->load(['images', 'variants']);
+        $sizes = array_flip(['XXXS', 'XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', 'XXXXL']);
+        $product->setRelation('variants', $product->variants->sortBy(fn ($variant) => [
+            $sizes[strtoupper(trim($variant->size))] ?? count($sizes),
+            strtoupper(trim($variant->size)),
+            mb_strtolower($variant->color),
+        ])->values());
+        return view('site.shop.show', compact('product'));
+    }
     public function cart(Request $request)
     {
         $cart = $request->session()->get('shop_cart', []);

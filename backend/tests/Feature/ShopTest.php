@@ -17,6 +17,15 @@ class ShopTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_product_sizes_are_shown_from_smallest_to_largest(): void
+    {
+        $product = ShopProduct::firstOrFail();
+        $product->update(['is_published' => true]);
+        $this->get(route('shop.show', $product))->assertOk()->assertSeeInOrder([
+            'XS · Teal', 'S · Teal', 'M · Teal', 'L · Teal', 'XL · Teal', 'XXL · Teal',
+        ]);
+    }
+
     public function test_signed_easykash_callback_updates_the_store_order_without_the_browser(): void
     {
         config(['easykash.api_key' => 'test-key', 'easykash.hmac_secret' => 'test-secret']);
