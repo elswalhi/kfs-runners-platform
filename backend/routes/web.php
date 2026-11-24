@@ -11,6 +11,8 @@ use App\Http\Controllers\Web\PublicSiteController;
 use App\Http\Controllers\Web\RunnerAccountController;
 use App\Http\Controllers\Web\BusBookingController;
 use App\Http\Controllers\Web\AdminBusBookingController;
+use App\Http\Controllers\Web\ShopController;
+use App\Http\Controllers\Web\AdminShopController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicSiteController::class, 'home'])->name('home');
@@ -25,6 +27,15 @@ Route::get('/zayed-bus', [BusBookingController::class, 'create'])->name('bus.cre
 Route::post('/zayed-bus', [BusBookingController::class, 'store'])->middleware('throttle:10,1')->name('bus.store');
 Route::get('/zayed-bus/payment', [BusBookingController::class, 'paymentReturn'])->name('bus.return');
 Route::get('/zayed-bus/status/{reference}', [BusBookingController::class, 'status'])->middleware('throttle:30,1')->name('bus.status');
+Route::get('/shop', [ShopController::class, 'index'])->name('shop.index');
+Route::get('/shop/images/{image}', [ShopController::class, 'image'])->name('shop.image');
+Route::get('/shop/cart', [ShopController::class, 'cart'])->name('shop.cart');
+Route::post('/shop/cart', [ShopController::class, 'add'])->name('shop.cart.add');
+Route::delete('/shop/cart/{variant}', [ShopController::class, 'remove'])->name('shop.cart.remove');
+Route::post('/shop/checkout', [ShopController::class, 'checkout'])->middleware('throttle:10,1')->name('shop.checkout');
+Route::get('/shop/payment', [ShopController::class, 'paymentReturn'])->name('shop.return');
+Route::get('/shop/order/{reference}', [ShopController::class, 'status'])->middleware('throttle:30,1')->name('shop.status');
+Route::get('/shop/product/{product}', [ShopController::class, 'show'])->name('shop.show');
 Route::post('/register', [PublicSiteController::class, 'storeRegistration'])->middleware('throttle:10,1')->name('register.store');
 Route::prefix('runner')->name('runner.')->group(function () {
     Route::get('/sign-in', [RunnerAccountController::class, 'login'])->name('login');
@@ -57,6 +68,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     Route::middleware(['auth', 'admin'])->group(function () {
         Route::post('/logout', [AdminWebAuthController::class, 'logout'])->name('logout');
+        Route::get('/shop', [AdminShopController::class, 'index'])->name('shop.index');
+        Route::post('/shop/products', [AdminShopController::class, 'store'])->name('shop.products.store');
+        Route::put('/shop/products/{product}', [AdminShopController::class, 'update'])->name('shop.products.update');
+        Route::post('/shop/products/{product}/variants', [AdminShopController::class, 'variant'])->name('shop.variants.store');
+        Route::post('/shop/products/{product}/images', [AdminShopController::class, 'image'])->name('shop.images.store');
+        Route::delete('/shop/products/{product}/images/{image}', [AdminShopController::class, 'deleteImage'])->name('shop.images.destroy');
+        Route::put('/shop/settings', [AdminShopController::class, 'settings'])->name('shop.settings');
+        Route::get('/shop/orders', [AdminShopController::class, 'orders'])->name('shop.orders');
+        Route::get('/shop/orders/{order}/receipt', [AdminShopController::class, 'receipt'])->name('shop.orders.receipt');
+        Route::patch('/shop/orders/{order}', [AdminShopController::class, 'order'])->name('shop.orders.update');
         Route::get('/', [AdminWebController::class, 'dashboard'])->name('dashboard');
         Route::get('/bus-bookings', [AdminBusBookingController::class, 'index'])->name('bus.index');
         Route::post('/bus-bookings', [AdminBusBookingController::class, 'store'])->name('bus.store');

@@ -75,7 +75,7 @@
 
             <div class="team-home-more-links" aria-label="{{ __('More from KFS Runners') }}">
                 <span>{{ __('MORE FROM KFS') }}</span>
-                <a href="https://elatiky.com/shop/" target="_blank" rel="noopener noreferrer">{{ __('Store') }} <span aria-hidden="true">↗</span></a>
+                <a href="{{ route('shop.index') }}">{{ __('Store') }} <span aria-hidden="true">↗</span></a>
                 <a href="https://elatiky.com/production/skate-academy/" target="_blank" rel="noopener noreferrer">{{ __('Skate academy') }} <span aria-hidden="true">↗</span></a>
                 <a href="{{ route('event') }}">{{ __('Events') }} <span aria-hidden="true">→</span></a>
             </div>

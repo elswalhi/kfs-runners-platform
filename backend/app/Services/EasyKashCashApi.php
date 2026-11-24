@@ -69,7 +69,7 @@ class EasyKashCashApi
         return null;
     }
 
-    private function createCheckoutLink(array $payer): array
+    public function createCheckoutLink(array $payer, ?string $redirectUrl = null): array
     {
         $cashExpiry = (int) config('easykash.cash_expiry', 48);
         if (! in_array($cashExpiry, [3, 6, 12, 48], true)) {
@@ -84,7 +84,7 @@ class EasyKashCashApi
                 ...$payer,
                 // Omitting paymentOptions asks EasyKash to show every method enabled for this account.
                 'cashExpiry' => $cashExpiry,
-                'redirectUrl' => config('easykash.redirect_url'),
+                'redirectUrl' => $redirectUrl ?? config('easykash.redirect_url'),
             ]);
 
         $responseData = $response->json();

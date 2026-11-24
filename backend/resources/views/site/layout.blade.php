@@ -125,6 +125,7 @@
             <a href="{{ route('home') }}#our-sports">{{ __('Our sports') }}</a>
             <a href="{{ route('home') }}#our-groups">{{ __('Our groups') }}</a>
             <a href="{{ route('events.index') }}">{{ __('Events') }}</a>
+            <a href="{{ route('shop.index') }}">{{ __('Store') }}</a>
             <a href="{{ route('bus.create') }}">{{ __('Zayed bus') }}</a>
             <a href="{{ auth('runner')->check() ? route('runner.account') : route('runner.login') }}" @if (request()->routeIs('runner.*')) aria-current="page" @endif>{{ __('Runner account') }}</a>
             <a href="{{ route('register') }}" class="nav-cta">{{ __('Register now') }} <span aria-hidden="true">↗</span></a>

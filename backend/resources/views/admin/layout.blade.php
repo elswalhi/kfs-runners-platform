@@ -89,6 +89,7 @@
             <a class="stitch-nav-item {{ request()->routeIs('admin.bus.*') ? 'active' : '' }}" href="{{ route('admin.bus.index') }}">
                 <span aria-hidden="true">🚌</span><span>{{ __('Zayed bus bookings') }}</span>
             </a>
+            <a class="stitch-nav-item {{ request()->routeIs('admin.shop.*') ? 'active' : '' }}" href="{{ route('admin.shop.index') }}"><span aria-hidden="true">🛍</span><span>{{ __('Store') }}</span></a>
 
             <div class="stitch-nav-label" style="margin-top: 10px;">{{ __('Race Configuration') }}</div>
 

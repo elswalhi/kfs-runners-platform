@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Payment extends Model
 {
     use HasFactory;
-    protected $fillable = ['registration_id', 'team_id', 'bus_booking_id', 'provider', 'amount', 'currency', 'status', 'transaction_reference', 'gateway_reference', 'payload', 'verified_at'];
+    protected $fillable = ['registration_id', 'team_id', 'bus_booking_id', 'shop_order_id', 'provider', 'amount', 'currency', 'status', 'transaction_reference', 'gateway_reference', 'payload', 'verified_at'];
     protected $hidden = ['payload'];
     protected function casts(): array { return ['amount' => 'decimal:2', 'payload' => 'array', 'verified_at' => 'datetime']; }
     public function registration(): BelongsTo { return $this->belongsTo(Registration::class); }
