@@ -9,6 +9,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ShopWalletOrderNotification;
 use Tests\TestCase;
 
 class ShopTest extends TestCase
@@ -37,6 +39,7 @@ class ShopTest extends TestCase
     public function test_wallet_checkout_reserves_stock_and_admin_confirms_payment(): void
     {
         Storage::fake('local');
+        Mail::fake();
         $product = ShopProduct::with('variants')->firstOrFail();
         $this->assertFalse($product->is_published);
         $product->update(['is_published' => true]);
@@ -46,6 +49,7 @@ class ShopTest extends TestCase
         $this->get(route('shop.cart'))->assertOk()->assertSee('700.00');
         $response = $this->post(route('shop.checkout'), ['name' => 'Test Customer', 'email' => 'customer@example.test', 'phone' => '01234567890', 'payment_method' => 'wallet', 'displayed_total' => 70000, 'receipt' => UploadedFile::fake()->image('receipt.jpg')]);
         $order = ShopOrder::with('payment')->firstOrFail();
+        Mail::assertSent(ShopWalletOrderNotification::class, fn ($mail) => $mail->hasTo('swalhiitsme@gmail.com') && $mail->order->id === $order->id);
         $response->assertRedirect(route('shop.status', $order->reference));
         $this->assertSame(8, $variant->fresh()->stock);
         $this->assertEquals(700, $order->total);
@@ -53,9 +57,11 @@ class ShopTest extends TestCase
         $this->get(route('admin.shop.orders.receipt', $order))->assertRedirect();
         $this->actingAs(User::factory()->create(['role' => 'admin']))->get(route('admin.shop.index'))->assertOk()->assertSee('KFS Runners Official Team T-Shirt');
         $this->get(route('admin.shop.orders'))->assertOk()->assertSee('Test Customer');
+        $this->get(route('admin.shop.sales'))->assertOk()->assertDontSee('Test Customer');
         $this->patch(route('admin.shop.orders.update', $order), ['action' => 'confirm_payment'])->assertRedirect();
         $this->assertSame('paid', $order->fresh()->payment_status);
         $this->assertSame('paid', $order->payment()->first()->status);
+        $this->get(route('admin.shop.sales'))->assertOk()->assertSee('Test Customer')->assertSee('700.00');
     }
 
     public function test_store_rejects_quantity_that_exceeds_inventory(): void

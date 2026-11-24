@@ -8,9 +8,12 @@ use App\Models\ShopProduct;
 use App\Models\ShopProductImage;
 use App\Models\ShopProductVariant;
 use App\Services\EasyKashCashApi;
+use App\Mail\ShopWalletOrderNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -77,6 +80,14 @@ class ShopController
             });
         } catch (\Throwable $e) { if ($receipt) Storage::disk('local')->delete($receipt); throw $e; }
         $request->session()->forget('shop_cart');
+        if ($data['payment_method'] === 'wallet') {
+            try {
+                if (config('mail.default') === 'log') throw new \RuntimeException('Email transport is not configured.');
+                Mail::to('swalhiitsme@gmail.com')->send(new ShopWalletOrderNotification($order->load('items')));
+            } catch (\Throwable $e) {
+                Log::warning('Shop wallet order notification could not be sent.', ['order_id' => $order->id, 'exception' => $e::class]);
+            }
+        }
         if ($data['payment_method'] === 'easykash') {
             try {
                 $result = $easyKash->createCheckoutLink(['amount' => (float) $order->total, 'currency' => 'EGP', 'name' => $order->name, 'email' => $order->email, 'mobile' => preg_replace('/\D+/', '', $order->phone), 'customerReference' => $order->reference], rtrim(config('app.url'), '/').'/shop/payment');

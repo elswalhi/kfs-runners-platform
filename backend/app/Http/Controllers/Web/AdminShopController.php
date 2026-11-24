@@ -54,6 +54,11 @@ class AdminShopController
         return back()->with('success', __('Pickup location saved.'));
     }
     public function orders() { return view('admin.shop-orders', ['orders' => ShopOrder::with('items')->latest()->paginate(25)]); }
+    public function sales()
+    {
+        $sales = ShopOrder::where('payment_status', 'paid');
+        return view('admin.shop-sales', ['total' => (clone $sales)->sum('total'), 'count' => (clone $sales)->count(), 'orders' => $sales->with('items')->latest()->paginate(25)]);
+    }
     public function receipt(ShopOrder $order)
     {
         abort_unless($order->receipt_path && Storage::disk('local')->exists($order->receipt_path), 404);

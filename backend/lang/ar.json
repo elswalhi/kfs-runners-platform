@@ -757,5 +757,11 @@
     "Image added.": "تمت إضافة الصورة.",
     "Image removed.": "تم حذف الصورة.",
     "Pickup location saved.": "تم حفظ مكان الاستلام.",
-    "Order updated.": "تم تحديث الطلب."
+    "Order updated.": "تم تحديث الطلب.",
+    "Store sales": "مبيعات المتجر",
+    "Paid orders only": "الطلبات المدفوعة فقط",
+    "Paid orders": "الطلبات المدفوعة",
+    "Confirmed sales": "المبيعات المؤكدة",
+    "Products": "المنتجات",
+    "No paid orders yet.": "لا توجد طلبات مدفوعة حتى الآن."
 }

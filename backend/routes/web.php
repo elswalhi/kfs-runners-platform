@@ -76,6 +76,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/shop/products/{product}/images/{image}', [AdminShopController::class, 'deleteImage'])->name('shop.images.destroy');
         Route::put('/shop/settings', [AdminShopController::class, 'settings'])->name('shop.settings');
         Route::get('/shop/orders', [AdminShopController::class, 'orders'])->name('shop.orders');
+        Route::get('/shop/sales', [AdminShopController::class, 'sales'])->name('shop.sales');
         Route::get('/shop/orders/{order}/receipt', [AdminShopController::class, 'receipt'])->name('shop.orders.receipt');
         Route::patch('/shop/orders/{order}', [AdminShopController::class, 'order'])->name('shop.orders.update');
         Route::get('/', [AdminWebController::class, 'dashboard'])->name('dashboard');
