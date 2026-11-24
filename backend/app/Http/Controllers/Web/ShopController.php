@@ -112,7 +112,7 @@ class ShopController
     public function paymentReturn(Request $request) { $reference = $request->query('customerReference'); return redirect()->route('shop.status', is_string($reference) ? $reference : 'missing'); }
     public function status(string $reference)
     {
-        $order = ShopOrder::where('reference', $reference)->with('items')->firstOrFail();
+        $order = ShopOrder::withTrashed()->where('reference', $reference)->with('items')->firstOrFail();
         return response()->view('site.shop.status', ['order' => $order, 'pickup' => AppSetting::get('shop_pickup_location', '')])->header('Cache-Control', 'private, no-store')->header('Referrer-Policy', 'no-referrer');
     }
 }

@@ -17,6 +17,31 @@ class ShopTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_admin_can_filter_export_delete_restore_and_add_orders(): void
+    {
+        $this->actingAs(User::factory()->create(['role' => 'admin']));
+        $variant = ShopProductVariant::firstOrFail();
+        $this->post(route('admin.shop.orders.store'), ['name' => 'Manual Buyer', 'variant_id' => $variant->id, 'quantity' => 1])->assertRedirect();
+        $order = ShopOrder::where('name', 'Manual Buyer')->firstOrFail();
+        $this->assertEquals(350, $order->total);
+        $this->assertSame(9, $variant->fresh()->stock);
+        $this->post(route('admin.shop.orders.store'), ['name' => 'Other Buyer', 'payment_status' => 'paid'])->assertRedirect();
+        $this->get(route('admin.shop.orders', ['status' => 'pending']))->assertOk()->assertSee('Manual Buyer')->assertDontSee('Other Buyer');
+        $csv = $this->get(route('admin.shop.orders.export', ['search' => 'Manual Buyer']))->streamedContent();
+        $this->assertStringContainsString('Manual Buyer', $csv);
+        $this->assertStringNotContainsString('Other Buyer', $csv);
+        $this->delete(route('admin.shop.orders.destroy', $order))->assertRedirect();
+        $this->assertSame(9, $variant->fresh()->stock);
+        $this->get(route('admin.shop.orders'))->assertDontSee('Manual Buyer');
+        $this->get(route('admin.shop.orders', ['tab' => 'deleted']))->assertSee('Manual Buyer');
+        $this->patch(route('admin.shop.orders.restore', $order->id))->assertRedirect();
+        $this->get(route('admin.shop.orders'))->assertSee('Manual Buyer');
+        $this->patch(route('admin.shop.orders.update', $order->id), ['action' => 'confirm_payment']);
+        $this->assertSame('paid', $order->fresh()->payment_status);
+        $this->patch(route('admin.shop.orders.update', $order->id), ['action' => 'mark_pending']);
+        $this->assertSame('pending', $order->fresh()->payment_status);
+    }
+
     public function test_product_sizes_are_shown_from_smallest_to_largest(): void
     {
         $product = ShopProduct::firstOrFail();
@@ -45,6 +70,18 @@ class ShopTest extends TestCase
         $this->assertSame('paid', $order->payment()->first()->status);
     }
 
+    public function test_paid_callback_updates_a_deleted_order(): void
+    {
+        config(['easykash.hmac_secret' => 'test-secret']);
+        $order = ShopOrder::create(['reference' => 'SHOP-DELETED', 'name' => 'Customer', 'email' => 'a@example.test', 'phone' => '0123', 'total' => 350, 'payment_method' => 'easykash']);
+        \App\Models\Payment::create(['shop_order_id' => $order->id, 'provider' => 'easykash', 'amount' => 350, 'currency' => 'EGP', 'status' => 'pending', 'transaction_reference' => $order->reference]);
+        $order->delete();
+        $payload = ['ProductCode' => 'shop', 'Amount' => '350.00', 'ProductType' => 'store', 'PaymentMethod' => 'card', 'status' => 'PAID', 'easykashRef' => 'gateway-ref', 'customerReference' => $order->reference];
+        $payload['signatureHash'] = hash_hmac('sha512', implode('', $payload), 'test-secret');
+        $this->postJson('/api/payments/easykash/callback', $payload)->assertOk();
+        $this->assertSame('paid', ShopOrder::withTrashed()->findOrFail($order->id)->payment_status);
+    }
+
     public function test_wallet_checkout_reserves_stock_and_admin_confirms_payment(): void
     {
         Storage::fake('local');
@@ -66,11 +103,11 @@ class ShopTest extends TestCase
         $this->get(route('admin.shop.orders.receipt', $order))->assertRedirect();
         $this->actingAs(User::factory()->create(['role' => 'admin']))->get(route('admin.shop.index'))->assertOk()->assertSee('KFS Runners Official Team T-Shirt');
         $this->get(route('admin.shop.orders'))->assertOk()->assertSee('Test Customer');
-        $this->get(route('admin.shop.sales'))->assertOk()->assertDontSee('Test Customer');
+        $this->get(route('admin.shop.sales'))->assertOk()->assertDontSee('Test Customer')->assertSee('Wallet transfers awaiting review')->assertSee('1');
         $this->patch(route('admin.shop.orders.update', $order), ['action' => 'confirm_payment'])->assertRedirect();
         $this->assertSame('paid', $order->fresh()->payment_status);
         $this->assertSame('paid', $order->payment()->first()->status);
-        $this->get(route('admin.shop.sales'))->assertOk()->assertSee('Test Customer')->assertSee('700.00');
+        $this->get(route('admin.shop.sales'))->assertOk()->assertSee('Test Customer')->assertSee('700.00')->assertSee('Wallet transfers awaiting review');
     }
 
     public function test_store_rejects_quantity_that_exceeds_inventory(): void

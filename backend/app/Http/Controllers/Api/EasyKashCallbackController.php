@@ -127,7 +127,7 @@ class EasyKashCallbackController extends Controller
             }
 
             if ($lockedPayment->shop_order_id) {
-                ShopOrder::whereKey($lockedPayment->shop_order_id)->update(['payment_status' => $paymentStatus]);
+                ShopOrder::withTrashed()->whereKey($lockedPayment->shop_order_id)->update(['payment_status' => $paymentStatus]);
             }
 
             if ($paymentStatus === 'paid' && ! $lockedPayment->bus_booking_id && ! $lockedPayment->shop_order_id) {

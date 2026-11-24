@@ -13,6 +13,7 @@ use App\Http\Controllers\Web\BusBookingController;
 use App\Http\Controllers\Web\AdminBusBookingController;
 use App\Http\Controllers\Web\ShopController;
 use App\Http\Controllers\Web\AdminShopController;
+use App\Http\Controllers\Web\AdminShopOrderDetailController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicSiteController::class, 'home'])->name('home');
@@ -76,8 +77,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/shop/products/{product}/images/{image}', [AdminShopController::class, 'deleteImage'])->name('shop.images.destroy');
         Route::put('/shop/settings', [AdminShopController::class, 'settings'])->name('shop.settings');
         Route::get('/shop/orders', [AdminShopController::class, 'orders'])->name('shop.orders');
+        Route::post('/shop/orders', [AdminShopController::class, 'storeOrder'])->name('shop.orders.store');
+        Route::get('/shop/orders/export', [AdminShopController::class, 'export'])->name('shop.orders.export');
+        Route::get('/shop/orders/{order}', AdminShopOrderDetailController::class)->name('shop.orders.show');
+        Route::delete('/shop/orders/{order}', [AdminShopController::class, 'destroy'])->name('shop.orders.destroy');
+        Route::patch('/shop/orders/{order}/restore', [AdminShopController::class, 'restore'])->name('shop.orders.restore');
         Route::get('/shop/sales', [AdminShopController::class, 'sales'])->name('shop.sales');
         Route::get('/shop/orders/{order}/receipt', [AdminShopController::class, 'receipt'])->name('shop.orders.receipt');
+        Route::get('/shop/orders/{order}/receipt/download', [AdminShopController::class, 'downloadReceipt'])->name('shop.orders.receipt.download');
         Route::patch('/shop/orders/{order}', [AdminShopController::class, 'order'])->name('shop.orders.update');
         Route::get('/', [AdminWebController::class, 'dashboard'])->name('dashboard');
         Route::get('/bus-bookings', [AdminBusBookingController::class, 'index'])->name('bus.index');

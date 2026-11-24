@@ -6,9 +6,12 @@ use App\Models\ShopProduct;
 use App\Models\ShopProductVariant;
 use App\Models\ShopProductImage;
 use App\Models\ShopOrder;
+use App\Models\Payment;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class AdminShopController
@@ -53,26 +56,96 @@ class AdminShopController
         AppSetting::set('shop_pickup_location', $data['pickup'] ?? '');
         return back()->with('success', __('Pickup location saved.'));
     }
-    public function orders() { return view('admin.shop-orders', ['orders' => ShopOrder::with('items')->latest()->paginate(25)]); }
+    private function filters(Request $request): array
+    {
+        return $request->validate(['tab' => 'nullable|in:active,deleted', 'search' => 'nullable|string|max:190', 'status' => 'nullable|in:pending,paid,failed,refunded', 'from' => 'nullable|date_format:Y-m-d', 'to' => 'nullable|date_format:Y-m-d|after_or_equal:from']);
+    }
+    private function filteredOrders(array $filters): Builder
+    {
+        $query = ($filters['tab'] ?? 'active') === 'deleted' ? ShopOrder::onlyTrashed() : ShopOrder::query();
+        if ($term = trim($filters['search'] ?? '')) {
+            $query->where(function ($q) use ($term) {
+                $q->where('name', 'like', "%{$term}%")->orWhere('email', 'like', "%{$term}%")->orWhere('phone', 'like', "%{$term}%")->orWhere('reference', 'like', "%{$term}%");
+                if (preg_match('/\A#?0*([0-9]+)\z/', $term, $m)) $q->orWhere('id', $m[1]);
+            });
+        }
+        if (! empty($filters['status'])) $query->where('payment_status', $filters['status']);
+        if (! empty($filters['from'])) $query->whereDate('created_at', '>=', $filters['from']);
+        if (! empty($filters['to'])) $query->whereDate('created_at', '<=', $filters['to']);
+        return $query;
+    }
+    public function orders(Request $request)
+    {
+        $filters = $this->filters($request);
+        return view('admin.shop-orders', [
+            'orders' => $this->filteredOrders($filters)->with('items')->latest()->paginate(25)->withQueryString(),
+            'deleted' => ($filters['tab'] ?? 'active') === 'deleted', 'deletedCount' => ShopOrder::onlyTrashed()->count(),
+            'totalAmount' => ShopOrder::sum('total'), 'paidAmount' => ShopOrder::where('payment_status', 'paid')->sum('total'),
+            'pendingAmount' => ShopOrder::where('payment_status', 'pending')->where('status', '!=', 'cancelled')->sum('total'),
+            'variants' => ShopProductVariant::with('product')->get(),
+        ]);
+    }
+    public function export(Request $request)
+    {
+        $orders = $this->filteredOrders($this->filters($request))->with('items')->latest()->cursor();
+        return response()->streamDownload(function () use ($orders) {
+            $out = fopen('php://output', 'w'); fwrite($out, "\xEF\xBB\xBF");
+            fputcsv($out, ['Order', 'Name', 'Email', 'Phone', 'Products', 'Amount EGP', 'Payment status', 'Order status', 'Date']);
+            foreach ($orders as $o) {
+                $items = $o->items->map(fn ($i) => "{$i->product_name} ({$i->size}, {$i->color}) x{$i->quantity}")->implode('; ');
+                $row = [$o->id, $o->name, $o->email, $o->phone, $items, $o->total, $o->payment_status, $o->status, $o->created_at?->format('Y-m-d H:i:s')];
+                fputcsv($out, array_map(static fn ($v) => is_string($v) && preg_match('/\A[\s\x00-\x1F]*[=+\-@]/u', $v) ? "'".$v : $v, $row));
+            }
+            fclose($out);
+        }, 'store-orders.csv', ['Content-Type' => 'text/csv; charset=UTF-8', 'Cache-Control' => 'private, no-store']);
+    }
+    public function storeOrder(Request $request)
+    {
+        $data = $request->validateWithBag('manualOrder', ['name' => 'required|string|max:150|regex:/\p{L}/u', 'phone' => 'nullable|string|max:32', 'email' => 'nullable|email|max:190', 'amount' => 'nullable|numeric|min:0|max:1000000|decimal:0,2', 'payment_status' => 'nullable|in:pending,paid', 'variant_id' => 'nullable|integer|exists:shop_product_variants,id', 'quantity' => 'nullable|integer|min:1|max:100']);
+        DB::transaction(function () use ($data) {
+            $variant = ! empty($data['variant_id']) ? ShopProductVariant::with('product')->lockForUpdate()->findOrFail($data['variant_id']) : null;
+            $quantity = (int) ($data['quantity'] ?? 1);
+            if ($variant && $variant->stock < $quantity) throw \Illuminate\Validation\ValidationException::withMessages(['variant_id' => __('Not enough stock available.')])->errorBag('manualOrder');
+            $amount = $data['amount'] ?? ($variant ? $variant->product->price * $quantity : 0);
+            $status = $data['payment_status'] ?? 'pending';
+            $order = ShopOrder::create(['reference' => 'SHOP-'.strtoupper(Str::random(32)), 'name' => trim($data['name']), 'phone' => $data['phone'] ?? '', 'email' => $data['email'] ?? '', 'total' => $amount, 'payment_method' => 'manual', 'payment_status' => $status]);
+            if ($variant) {
+                $variant->decrement('stock', $quantity);
+                $order->items()->create(['variant_id' => $variant->id, 'product_name' => $variant->product->name, 'size' => $variant->size, 'color' => $variant->color, 'quantity' => $quantity, 'unit_price' => $variant->product->price]);
+            }
+            Payment::create(['shop_order_id' => $order->id, 'provider' => 'manual', 'amount' => $amount, 'currency' => 'EGP', 'status' => $status, 'verified_at' => $status === 'paid' ? now() : null, 'transaction_reference' => $order->reference]);
+        });
+        return redirect()->route('admin.shop.orders')->with('success', __('Order added.'));
+    }
+    public function destroy(ShopOrder $order) { $order->delete(); return back()->with('success', __('Order moved to deleted.')); }
+    public function restore(int $order) { ShopOrder::onlyTrashed()->findOrFail($order)->restore(); return back()->with('success', __('Order restored.')); }
     public function sales()
     {
         $sales = ShopOrder::where('payment_status', 'paid');
-        return view('admin.shop-sales', ['total' => (clone $sales)->sum('total'), 'count' => (clone $sales)->count(), 'orders' => $sales->with('items')->latest()->paginate(25)]);
+        return view('admin.shop-sales', ['total' => (clone $sales)->sum('total'), 'count' => (clone $sales)->count(), 'pendingWalletCount' => ShopOrder::where('payment_method', 'wallet')->where('payment_status', 'pending')->where('status', '!=', 'cancelled')->count(), 'orders' => $sales->with('items')->latest()->paginate(25)]);
     }
-    public function receipt(ShopOrder $order)
+    public function receipt(int $order)
     {
+        $order = ShopOrder::withTrashed()->findOrFail($order);
         abort_unless($order->receipt_path && Storage::disk('local')->exists($order->receipt_path), 404);
         return response()->file(Storage::disk('local')->path($order->receipt_path), ['Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff', 'Content-Security-Policy' => "default-src 'none'; sandbox"]);
     }
+    public function downloadReceipt(int $order)
+    {
+        $order = ShopOrder::withTrashed()->findOrFail($order);
+        abort_unless($order->receipt_path && Storage::disk('local')->exists($order->receipt_path), 404);
+        return Storage::disk('local')->download($order->receipt_path, 'order-'.$order->id.'-receipt.'.pathinfo($order->receipt_path, PATHINFO_EXTENSION), ['Cache-Control' => 'private, no-store', 'X-Content-Type-Options' => 'nosniff']);
+    }
     public function order(Request $request, ShopOrder $order)
     {
-        $data = $request->validate(['action' => ['required', Rule::in(['confirm_payment', 'ready', 'collected', 'cancel'])]]);
+        $data = $request->validate(['action' => ['required', Rule::in(['confirm_payment', 'mark_pending', 'ready', 'collected', 'cancel'])]]);
         DB::transaction(function () use ($order, $data) {
             $order = ShopOrder::whereKey($order->id)->lockForUpdate()->firstOrFail();
-            if ($data['action'] === 'confirm_payment') {
-                abort_unless($order->payment_method === 'wallet' && $order->status !== 'cancelled', 403);
-                $order->update(['payment_status' => 'paid']);
-                $order->payment()->update(['status' => 'paid', 'verified_at' => now()]);
+            if (in_array($data['action'], ['confirm_payment', 'mark_pending'], true)) {
+                abort_unless(in_array($order->payment_method, ['wallet', 'manual'], true) && $order->status !== 'cancelled', 403);
+                $status = $data['action'] === 'confirm_payment' ? 'paid' : 'pending';
+                $order->update(['payment_status' => $status]);
+                $order->payment()->update(['status' => $status, 'verified_at' => $status === 'paid' ? now() : null]);
             } elseif ($data['action'] === 'cancel') {
                 abort_unless($order->status !== 'cancelled' && $order->payment_status !== 'paid' && $order->payment_method === 'wallet', 403);
                 foreach ($order->items as $item) ShopProductVariant::whereKey($item->variant_id)->increment('stock', $item->quantity);
